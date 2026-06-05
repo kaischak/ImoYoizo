@@ -1,0 +1,49 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<title>Achat Maison Yoizo</title>
+
+<style>
+body { font-family: Arial; text-align:center; margin-top:50px; }
+button { padding:15px 25px; font-size:18px; cursor:pointer; }
+#msg { margin-top:20px; font-size:18px; }
+</style>
+</head>
+
+<body>
+
+<h1>Acheter une maison Yoizo</h1>
+
+<button onclick="acheter()">Acheter (10000 argent)</button>
+
+<p id="msg"></p>
+
+<script>
+function acheter(){
+    let prix = 10000;
+
+    let argent = parseInt(localStorage.getItem("argent") || 0);
+
+    let msg = document.getElementById("msg");
+
+    if(argent < prix){
+        msg.textContent = "❌ Tu n'as pas assez d'argent !";
+        return;
+    }
+
+    // retirer argent
+    argent -= prix;
+    localStorage.setItem("argent", argent);
+
+    // ajouter inventaire
+    let inv = JSON.parse(localStorage.getItem("inventaire")) || [];
+    inv.push("Maison Yoizo");
+    localStorage.setItem("inventaire", JSON.stringify(inv));
+
+    msg.textContent = "✅ Achat réussi ! Ta maison est à l'hôtel 'Les Connards de Vinci'.";
+}
+</script>
+
+</body>
+</html>
