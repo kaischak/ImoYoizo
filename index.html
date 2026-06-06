@@ -3,109 +3,103 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
 <title>ImoYoizo!</title>
+
+<link rel="icon" type="image/png" href="logo.png">
 
 <style>
 body {
-    font-family: Arial;
+    font-family: Arial, sans-serif;
     text-align: center;
     margin: 0;
-    height: 100vh;
-    display: flex;
-    flex-direction: column;
-    justify-content: center;
+    min-height: 100vh;
     background: #f5f5f5;
+    padding-top: 50px;
 }
 
-h1 { font-size: 50px; }
-p { font-size: 20px; }
-
-.boutons {
-    display: flex;
-    justify-content: center;
-    gap: 10px;
-    flex-wrap: wrap;
-}
-
-button {
-    padding: 15px 20px;
-    font-size: 16px;
-    cursor: pointer;
+.logo {
+    width: 150px;
+    margin-bottom: 20px;
 }
 
 .argent {
-    position: absolute;
+    position: fixed;
     top: 10px;
     right: 10px;
     background: white;
     padding: 10px;
     border-radius: 10px;
+    border: 1px solid #ccc;
 }
 
-.inv {
-    position: absolute;
-    top: 10px;
-    left: 10px;
-    background: white;
-    padding: 10px;
-    border-radius: 10px;
-    width: 200px;
+.boutons {
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: center;
+    gap: 10px;
+    margin-top: 20px;
+}
+
+button {
+    padding: 12px 20px;
+    font-size: 16px;
+    cursor: pointer;
 }
 </style>
 </head>
-
 <body>
 
-<!-- 💰 argent -->
 <div class="argent">
-Argent : <span id="argent">0</span><br>
-<button onclick="addMoney()">+100</button>
+    Argent : <span id="argent">0</span><br><br>
+    <button onclick="addMoney()">+100</button>
 </div>
 
-<!-- 📦 inventaire -->
-<div class="inv">
-<h3>Inventaire</h3>
-<ul id="inv"></ul>
-</div>
+<img src="logo.png" alt="Logo ImoYoizo" class="logo">
 
 <h1>ImoYoizo!</h1>
-<p>Achète des trucs inutiles 😄</p>
+
+<p>Achetez un Yoizo ou achetez une maison Yoizo</p>
 
 <div class="boutons">
 
-<button onclick="location.href='page1.html'">Yoizo</button>
-<button onclick="location.href='page2.html'">Maison</button>
-<button onclick="location.href='page3.html'">💩 Merde</button>
-<button onclick="location.href='market.html'">🏪 Marché</button>
+    <button onclick="location.href='page1.html'">
+        🐶 Acheter un Yoizo
+    </button>
+
+    <button onclick="location.href='page2.html'">
+        🏠 Acheter une maison
+    </button>
+
+    <button onclick="location.href='page3.html'">
+        💩 Acheter merde
+    </button>
+
+    <button onclick="location.href='market.html'">
+        🏪 Marché
+    </button>
+
+    <button onclick="location.href='inventaire.html'">
+        📦 Inventaire
+    </button>
 
 </div>
 
 <script>
 
-// argent
+// Charger argent
 let argent = parseInt(localStorage.getItem("argent") || 0);
+
 document.getElementById("argent").textContent = argent;
 
-function addMoney(){
+// Ajouter argent
+function addMoney() {
     argent += 100;
+
     localStorage.setItem("argent", argent);
+
     document.getElementById("argent").textContent = argent;
 }
-
-// inventaire
-function showInv(){
-    let inv = JSON.parse(localStorage.getItem("inventaire")) || [];
-    let ul = document.getElementById("inv");
-    ul.innerHTML = "";
-
-    inv.forEach(i => {
-        let li = document.createElement("li");
-        li.textContent = i;
-        ul.appendChild(li);
-    });
-}
-
-showInv();
 
 </script>
 

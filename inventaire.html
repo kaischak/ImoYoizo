@@ -1,0 +1,60 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<title>Inventaire</title>
+
+<style>
+body{
+    font-family: Arial;
+    text-align:center;
+    margin-top:50px;
+}
+
+ul{
+    list-style:none;
+    padding:0;
+}
+
+li{
+    margin:10px;
+    padding:10px;
+    border:1px solid #ccc;
+}
+
+button{
+    padding:10px;
+    margin:5px;
+}
+</style>
+</head>
+
+<body>
+
+<h1>📦 Mon Inventaire</h1>
+
+<ul id="inventaire"></ul>
+
+<button onclick="location.href='index.html'">
+🏠 Retour à l'accueil
+</button>
+
+<script>
+let inv = JSON.parse(localStorage.getItem("inventaire")) || [];
+
+let ul = document.getElementById("inventaire");
+
+if(inv.length === 0){
+    ul.innerHTML = "<li>Inventaire vide</li>";
+}
+else{
+    inv.forEach(item => {
+        let li = document.createElement("li");
+        li.textContent = item;
+        ul.appendChild(li);
+    });
+}
+</script>
+
+</body>
+</html>
