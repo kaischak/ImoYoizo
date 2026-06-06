@@ -133,13 +133,12 @@ hr {
   // REMPLACE CES VALEURS PAR CELLES DE TA CONSOLE FIREBASE
   // -----------------------------------------------------------------
   const firebaseConfig = {
-    apiKey : "AIzaSyDzyYNWEf0NOCuDp08_Pbl2DpejTI2bE28" ,
-    authDomain : "imoyoizo.firebaseapp.com" ,
-    projectId : "imoyoizo" ,
-    storageBucket : "imoyoizo.firebasestorage.app" ,
-    messagingSenderId : "239184474650" ,
-    appId : "1:239184474650:web:ab9a4101751a92289157a3" ,
-    measurementId : "G-16S777279P"
+    apiKey: "AIzaSyC...V0", // Ta clé API (exemple)
+    authDomain: "imoyoizo.firebaseapp.com", // Ton domaine d'authentification (exemple)
+    projectId: "imoyoizo", // Ton ID de projet
+    storageBucket: "imoyoizo.appspot.com", // Ton bucket Storage (exemple)
+    messagingSenderId: "239184474650", // Ton ID d'expéditeur de messages (exemple)
+    appId: "1:239184474650:web:d2b...5d" // Ton ID d'application (exemple)
   };
 
   // Initialise Firebase dans ton application
@@ -224,4 +223,67 @@ function renderProducts(marketItems){
     });
 }
 
-// Écoute les changements en temps réel dansAucune réponse
+// Écoute les changements en temps réel dans la collection 'produits' de Firestore
+db.collection("produits").onSnapshot((snapshot) => {
+    const marketItems = [];
+    snapshot.forEach((doc) => {
+        marketItems.push({ id: doc.id, ...doc.data() });
+    });
+    renderProducts(marketItems);
+}, (error) => {
+    console.error("Erreur lors de la récupération des produits Firestore :", error);
+    document.getElementById("list").innerHTML = "<p>Erreur de chargement des produits.</p>";
+});
+
+// Fonction pour acheter un produit (le supprimer de Firestore)
+async function buy(produitId){
+    let argentLocal = parseInt(localStorage.getItem("argent") || "0"); // S'assure que c'est un nombre
+
+    // Récupère les détails du produit depuis Firestore
+    const produitDoc = await db.collection("produits").doc(produitId).get();
+
+    if (!produitDoc.exists) {
+        alert("Désolé, ce produit n'existe plus ou a déjà été vendu !");
+        return;
+    }
+
+    const item = { id: produitDoc.id, ...produitDoc.data() };
+
+    // Vérifie si l'utilisateur a assez d'argent
+    if(argentLocal < item.price){
+        alert("Pas assez d'argent ! Tu as " + argentLocal + "€ et l'article coûte " + item.price.toFixed(2) + "€.");
+        return;
+    }
+
+    // Débite l'argent (pour l'instant, c'est local dans localStorage)
+    argentLocal -= item.price;
+    localStorage.setItem("argent", argentLocal);
+
+    // Mise à jour de l'affichage de l'argent sur la page si l'élément existe
+    const argentDisplay = document.getElementById("argent");
+    if (argentDisplay) {
+        argentDisplay.textContent = argentLocal;
+    } else {
+      console.warn("L'élément 'argent' n'est pas trouvé sur cette page. L'affichage de l'argent ne sera pas mis à jour ici.");
+    }
+
+
+    // Ajoute à l'inventaire (pour l'instant, c'est local dans localStorage)
+    let inv = JSON.parse(localStorage.getItem("inventaire") || "[]");
+    inv.push(item.name);
+    localStorage.setItem("inventaire", JSON.stringify(inv));
+
+    // Supprime le produit de Firestore
+    try {
+        await db.collection("produits").doc(produitId).delete();
+        alert(`"${item.name}" acheté pour ${item.price.toFixed(2)}€ et ajouté à ton inventaire !`);
+        // L'onSnapshot va rafraîchir l'affichage des produits automatiquement après la suppression.
+    } catch (error) {
+        console.error("Erreur lors de l'achat du produit (suppression Firestore) :", error);
+        alert("Erreur lors de l'achat. Vérifiez la console pour les détails et les règles Firestore.");
+    }
+}
+</script>
+
+</body>
+</html>
