@@ -5,18 +5,28 @@
 <title>Marché</title>
 
 <style>
-body { font-family: Arial; text-align:center; margin:20px; }
+body {
+    font-family: Arial;
+    text-align: center;
+    margin: 20px;
+}
 
 input, textarea {
-    width:80%;
-    padding:10px;
-    margin:5px;
+    width: 80%;
+    padding: 10px;
+    margin: 5px;
 }
 
 .card {
-    border:1px solid #ccc;
-    margin:10px;
-    padding:10px;
+    border: 1px solid #ccc;
+    margin: 10px auto;
+    padding: 10px;
+    width: 80%;
+}
+
+.card img {
+    max-width: 200px;
+    max-height: 200px;
 }
 </style>
 </head>
@@ -29,10 +39,15 @@ input, textarea {
 
 <input id="name" placeholder="Nom">
 <br>
+
 <textarea id="desc" placeholder="Description"></textarea>
 <br>
+
 <input id="price" type="number" placeholder="Prix">
 <br>
+
+<input id="image" type="file" accept="image/*">
+<br><br>
 
 <button onclick="sell()">Vendre</button>
 
@@ -51,18 +66,27 @@ function saveMarket(m){
 }
 
 function render(){
+
     let list = document.getElementById("list");
     list.innerHTML = "";
 
     getMarket().forEach((item, i) => {
+
         let div = document.createElement("div");
         div.className = "card";
 
         div.innerHTML = `
         <h3>${item.name}</h3>
+
+        <img src="${item.image}">
+
         <p>${item.desc}</p>
+
         <p>💰 ${item.price}</p>
-        <button onclick="buy(${i})">Acheter</button>
+
+        <button onclick="buy(${i})">
+            Acheter
+        </button>
         `;
 
         list.appendChild(div);
@@ -70,25 +94,52 @@ function render(){
 }
 
 function sell(){
+
     let name = document.getElementById("name").value;
     let desc = document.getElementById("desc").value;
     let price = parseInt(document.getElementById("price").value);
+    let imageFile = document.getElementById("image").files[0];
 
-    let m = getMarket();
-    m.push({name, desc, price});
-    saveMarket(m);
+    if(!name || !price || !imageFile){
+        alert("Remplis tous les champs !");
+        return;
+    }
 
-    render();
+    let reader = new FileReader();
+
+    reader.onload = function(e){
+
+        let market = getMarket();
+
+        market.push({
+            name: name,
+            desc: desc,
+            price: price,
+            image: e.target.result
+        });
+
+        saveMarket(market);
+
+        document.getElementById("name").value = "";
+        document.getElementById("desc").value = "";
+        document.getElementById("price").value = "";
+        document.getElementById("image").value = "";
+
+        render();
+    };
+
+    reader.readAsDataURL(imageFile);
 }
 
 function buy(i){
-    let m = getMarket();
-    let item = m[i];
+
+    let market = getMarket();
+    let item = market[i];
 
     let money = parseInt(localStorage.getItem("argent") || 0);
 
     if(money < item.price){
-        alert("Pas assez d'argent");
+        alert("Pas assez d'argent !");
         return;
     }
 
@@ -99,8 +150,8 @@ function buy(i){
     inv.push(item.name);
     localStorage.setItem("inventaire", JSON.stringify(inv));
 
-    m.splice(i,1);
-    saveMarket(m);
+    market.splice(i, 1);
+    saveMarket(market);
 
     render();
 }
