@@ -103,5 +103,75 @@ function addMoney() {
 
 </script>
 
+<!-- market.html -->
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<title>Marché</title>
+
+<style>
+/* ... (ton CSS actuel) ... */
+</style>
+</head>
+
+<body>
+
+<h1>🏪 Marché en ligne</h1>
+
+<h3>Créer une annonce</h3>
+
+<input id="name" placeholder="Nom">
+<br>
+
+<textarea id="desc" placeholder="Description"></textarea>
+<br>
+
+<input id="price" type="number" placeholder="Prix">
+<br>
+
+<input id="image" type="file" accept="image/*">
+<br><br>
+
+<button onclick="sell()">Vendre</button>
+
+<hr>
+
+<div id="list"></div>
+
+<script>
+    // -----------------------------------------------------------
+    // AJOUTE CE CODE D'INITIALISATION FIREBASE ICI
+    // (remplace les valeurs par celles de ta console Firebase !)
+    // -----------------------------------------------------------
+    <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-auth-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-storage-compat.js"></script>
+
+    <script>
+      const firebaseConfig = {
+        apiKey: "TA_CLE_API",
+        authDomain: "TON_DOMAINE_AUTH",
+        projectId: "imoyoizo",
+        storageBucket: "TON_BUCKET_STORAGE",
+        messagingSenderId: "TON_SENDER_ID",
+        appId: "TON_APP_ID"
+      };
+
+      firebase.initializeApp(firebaseConfig);
+
+      const db = firebase.firestore();
+      const auth = firebase.auth(); // Pour la connexion future
+      const storage = firebase.storage(); // Pour les images
+      // -----------------------------------------------------------
+
+    // Le reste de ton code JavaScript ira ici...
+    </script>
+
+</body>
+</html>
+
+
 </body>
 </html>
