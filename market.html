@@ -1,0 +1,113 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<title>Marché</title>
+
+<style>
+body { font-family: Arial; text-align:center; margin:20px; }
+
+input, textarea {
+    width:80%;
+    padding:10px;
+    margin:5px;
+}
+
+.card {
+    border:1px solid #ccc;
+    margin:10px;
+    padding:10px;
+}
+</style>
+</head>
+
+<body>
+
+<h1>🏪 Marché en ligne</h1>
+
+<h3>Créer une annonce</h3>
+
+<input id="name" placeholder="Nom">
+<br>
+<textarea id="desc" placeholder="Description"></textarea>
+<br>
+<input id="price" type="number" placeholder="Prix">
+<br>
+
+<button onclick="sell()">Vendre</button>
+
+<hr>
+
+<div id="list"></div>
+
+<script>
+
+function getMarket(){
+    return JSON.parse(localStorage.getItem("market")) || [];
+}
+
+function saveMarket(m){
+    localStorage.setItem("market", JSON.stringify(m));
+}
+
+function render(){
+    let list = document.getElementById("list");
+    list.innerHTML = "";
+
+    getMarket().forEach((item, i) => {
+        let div = document.createElement("div");
+        div.className = "card";
+
+        div.innerHTML = `
+        <h3>${item.name}</h3>
+        <p>${item.desc}</p>
+        <p>💰 ${item.price}</p>
+        <button onclick="buy(${i})">Acheter</button>
+        `;
+
+        list.appendChild(div);
+    });
+}
+
+function sell(){
+    let name = document.getElementById("name").value;
+    let desc = document.getElementById("desc").value;
+    let price = parseInt(document.getElementById("price").value);
+
+    let m = getMarket();
+    m.push({name, desc, price});
+    saveMarket(m);
+
+    render();
+}
+
+function buy(i){
+    let m = getMarket();
+    let item = m[i];
+
+    let money = parseInt(localStorage.getItem("argent") || 0);
+
+    if(money < item.price){
+        alert("Pas assez d'argent");
+        return;
+    }
+
+    money -= item.price;
+    localStorage.setItem("argent", money);
+
+    let inv = JSON.parse(localStorage.getItem("inventaire")) || [];
+    inv.push(item.name);
+    localStorage.setItem("inventaire", JSON.stringify(inv));
+
+    m.splice(i,1);
+    saveMarket(m);
+
+    render();
+}
+
+render();
+
+</script>
+
+</body>
+</html>
