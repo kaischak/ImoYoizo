@@ -2,7 +2,7 @@
 <html lang="fr">
 <head>
 <meta charset="UTF-8">
-<title>Marché Supabase</title>
+<title>Marché Supabase Clean</title>
 
 <style>
 body {
@@ -49,34 +49,48 @@ input, textarea {
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 
 <script>
-/* 🔥 CONFIG SUPABASE */
+/* =========================
+   🔥 SUPABASE (1 SEUL)
+========================= */
 const supabaseUrl = "https://wuxhvpiaenmhipjfrojj.supabase.co";
 const supabaseKey = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Ind1eGh2cGlhZW5taGlwamZyb2pqIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODA3NTI0OTMsImV4cCI6MjA5NjMyODQ5M30.N-gARZEGnpy0gobbx34DL-1t-IklcbtTmUnvhYm1rUE";
 
-const supabase = window.supabase.createClient(URL, KEY);
+const supabase = window.supabase.createClient(supabaseUrl, supabaseKey);
 
-/* 📦 CHARGER PRODUITS */
+/* =========================
+   📦 CHARGER PRODUITS
+========================= */
 async function loadProducts(){
 
-    let { data, error } = await supabase
+    const { data, error } = await supabase
         .from("market")
-        .select("*");
+        .select("*")
+        .order("created_at", { ascending: false });
 
-    console.log("DATA =", data);
-    console.log("ERROR =", error);
+    if(error){
+        console.log("Erreur load:", error);
+        return;
+    }
 
-    render(data || []);
+    render(data);
 }
 
-/* 🎨 AFFICHAGE */
+/* =========================
+   🎨 AFFICHAGE
+========================= */
 function render(items){
 
-    let list = document.getElementById("list");
+    const list = document.getElementById("list");
     list.innerHTML = "";
+
+    if(!items || items.length === 0){
+        list.innerHTML = "<p>Aucun produit</p>";
+        return;
+    }
 
     items.forEach(item => {
 
-        let div = document.createElement("div");
+        const div = document.createElement("div");
         div.className = "card";
 
         div.innerHTML = `
@@ -90,24 +104,26 @@ function render(items){
     });
 }
 
-/* ➕ AJOUT PRODUIT */
+/* =========================
+   ➕ AJOUT PRODUIT
+========================= */
 function sell(){
 
-    let name = document.getElementById("name").value;
-    let desc = document.getElementById("desc").value;
-    let price = parseInt(document.getElementById("price").value);
-    let imageFile = document.getElementById("image").files[0];
+    const name = document.getElementById("name").value;
+    const desc = document.getElementById("desc").value;
+    const price = parseInt(document.getElementById("price").value);
+    const imageFile = document.getElementById("image").files[0];
 
     if(!name || !price || !imageFile){
         alert("Remplis tous les champs !");
         return;
     }
 
-    let reader = new FileReader();
+    const reader = new FileReader();
 
     reader.onload = async function(e){
 
-        let { error } = await supabase
+        const { error } = await supabase
             .from("market")
             .insert([{
                 name: name,
@@ -117,9 +133,14 @@ function sell(){
             }]);
 
         if(error){
-            console.log(error);
+            console.log("Erreur insert:", error);
             return;
         }
+
+        document.getElementById("name").value = "";
+        document.getElementById("desc").value = "";
+        document.getElementById("price").value = "";
+        document.getElementById("image").value = "";
 
         loadProducts();
     };
@@ -127,11 +148,10 @@ function sell(){
     reader.readAsDataURL(imageFile);
 }
 
-/* 🚀 INIT */
+/* =========================
+   🚀 INIT
+========================= */
 loadProducts();
-
-/* 🔄 refresh auto (optionnel) */
-setInterval(loadProducts, 5000);
 
 </script>
 
