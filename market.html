@@ -2,6 +2,7 @@
 <html lang="fr">
 <head>
 <meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Marché</title>
 
 <style>
@@ -9,24 +10,85 @@ body {
     font-family: Arial;
     text-align: center;
     margin: 20px;
+    background: #f5f5f5; /* Ajout d'un fond clair pour correspondre à index.html */
+}
+
+h1, h3 {
+    color: #333;
 }
 
 input, textarea {
     width: 80%;
+    max-width: 400px; /* Limite la largeur pour une meilleure lisibilité */
     padding: 10px;
+    margin: 5px 0; /* Ajuste la marge */
+    border: 1px solid #ddd;
+    border-radius: 5px;
+}
+
+button {
+    background-color: #4CAF50; /* Couleur verte pour les boutons */
+    color: white;
+    padding: 12px 20px;
+    border: none;
+    border-radius: 5px;
+    cursor: pointer;
+    font-size: 16px;
     margin: 5px;
+    transition: background-color 0.3s ease;
+}
+
+button:hover {
+    background-color: #45a049;
 }
 
 .card {
     border: 1px solid #ccc;
-    margin: 10px auto;
-    padding: 10px;
+    background: white;
+    margin: 20px auto; /* Marge ajustée */
+    padding: 15px;
     width: 80%;
+    max-width: 500px; /* Limite la largeur des cartes */
+    box-shadow: 0 2px 4px rgba(0,0,0,0.1); /* Ombre légère */
+    border-radius: 8px;
+    text-align: left; /* Aligne le texte à gauche dans la carte */
+}
+
+.card h3 {
+    text-align: center; /* Centre le titre du produit */
+    margin-top: 0;
+    color: #0056b3;
 }
 
 .card img {
-    max-width: 200px;
-    max-height: 200px;
+    max-width: 100%; /* L'image s'adapte à la largeur de la carte */
+    height: auto; /* Maintient le ratio de l'image */
+    display: block; /* Supprime l'espace sous l'image */
+    margin: 10px auto; /* Centre l'image dans la carte */
+    border-radius: 4px;
+}
+
+.card p {
+    margin: 5px 0;
+    color: #555;
+}
+
+.card button {
+    display: block; /* Le bouton prend toute la largeur */
+    width: calc(100% - 10px); /* Ajuste la largeur */
+    margin: 10px auto 0 auto; /* Centre le bouton */
+    background-color: #007bff; /* Couleur bleue pour acheter */
+}
+
+.card button:hover {
+    background-color: #0056b3;
+}
+
+hr {
+    border: 0;
+    height: 1px;
+    background-image: linear-gradient(to right, rgba(0, 0, 0, 0), rgba(0, 0, 0, 0.75), rgba(0, 0, 0, 0));
+    margin: 40px 0;
 }
 </style>
 </head>
@@ -37,127 +99,202 @@ input, textarea {
 
 <h3>Créer une annonce</h3>
 
-<input id="name" placeholder="Nom">
+<input id="name" placeholder="Nom du produit" required>
 <br>
 
-<textarea id="desc" placeholder="Description"></textarea>
+<textarea id="desc" placeholder="Description du produit" required></textarea>
 <br>
 
-<input id="price" type="number" placeholder="Prix">
+<input id="price" type="number" placeholder="Prix (en €)" required min="0">
 <br>
 
-<input id="image" type="file" accept="image/*">
+<input id="image" type="file" accept="image/*" required>
 <br><br>
 
-<button onclick="sell()">Vendre</button>
+<button onclick="sell()">Vendre l'article</button>
 
 <hr>
 
-<div id="list"></div>
+<h2>Articles en vente</h2>
+<div id="list">
+    <!-- Les produits de Firestore seront affichés ici -->
+    <p>Chargement des produits...</p>
+</div>
+
+<script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-auth-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-storage-compat.js"></script>
 
 <script>
+  // -----------------------------------------------------------------
+  // COPIE ET COLLE TA CONFIGURATION FIREBASE ICI (IMPORTANT !)
+  // REMPLACE CES VALEURS PAR CELLES DE TA CONSOLE FIREBASE
+  // -----------------------------------------------------------------
+  const firebaseConfig = {
+    apiKey: "AIzaSyC...V0", // Ta clé API
+    authDomain: "imoyoizo.firebaseapp.com", // Ton domaine d'authentification
+    projectId: "imoyoizo", // Ton ID de projet
+    storageBucket: "imoyoizo.appspot.com", // Ton bucket Storage
+    messagingSenderId: "239184474650", // Ton ID d'expéditeur de messages
+    appId: "1:239184474650:web:d2b...5d" // Ton ID d'application
+  };
 
-function getMarket(){
-    return JSON.parse(localStorage.getItem("market")) || [];
+  // Initialise Firebase dans ton application
+  firebase.initializeApp(firebaseConfig);
+
+  // Références aux services Firebase
+  const db = firebase.firestore();
+  const auth = firebase.auth();       // Pour la connexion future
+  const storage = firebase.storage(); // Pour les images
+
+  console.log("Firebase est configuré et prêt à l'emploi sur le marché !");
+  // -----------------------------------------------------------------
+
+
+// Fonction pour vendre un produit (uploader l'image sur Storage et enregistrer les infos dans Firestore)
+async function sell(){
+    const name = document.getElementById("name").value;
+    const desc = document.getElementById("desc").value;
+    const price = parseFloat(document.getElementById("price").value); // Utilise parseFloat pour les décimales
+    const imageFile = document.getElementById("image").files[0];
+
+    if(!name || !desc || isNaN(price) || price <= 0 || !imageFile){
+        alert("Veuillez remplir tous les champs correctement (Nom, Description, Prix > 0 et une Image).");
+        return;
+    }
+
+    try {
+        // 1. Uploader l'image sur Cloud Storage
+        const storageRef = storage.ref();
+        const imageFileName = `produits_images/${Date.now()}_${imageFile.name}`; // Nom unique avec timestamp
+        const imageUploadTask = storageRef.child(imageFileName).put(imageFile);
+
+        // Surveille l'upload si tu veux une barre de progression
+        // imageUploadTask.on('state_changed',
+        //   (snapshot) => {
+        //     const progress = (snapshot.bytesTransferred / snapshot.totalBytes) * 100;
+        //     console.log('Upload is ' + progress + '% done');
+        //   },
+        //   (error) => {
+        //     console.error("Erreur d'upload :", error);
+        //     alert("Erreur lors de l'upload de l'image.");
+        //   }
+        // );
+
+        await imageUploadTask; // Attend que l'upload soit terminé
+        const imageUrl = await storageRef.child(imageFileName).getDownloadURL(); // Récupère l'URL de l'image
+
+        // 2. Ajouter les informations du produit à Firestore
+        await db.collection("produits").add({
+            name: name,
+            desc: desc,
+            price: price,
+            image: imageUrl,
+            createdAt: firebase.firestore.FieldValue.serverTimestamp() // Ajoute la date de création
+        });
+
+        alert("Annonce créée avec succès !");
+
+        // Vider les champs après la vente
+        document.getElementById("name").value = "";
+        document.getElementById("desc").value = "";
+        document.getElementById("price").value = "";
+        document.getElementById("image").value = "";
+
+    } catch (error) {
+        console.error("Erreur lors de la création de l'annonce :", error);
+        alert("Erreur lors de la création de l'annonce. Vérifiez la console pour les détails et les règles de Storage.");
+    }
 }
 
-function saveMarket(m){
-    localStorage.setItem("market", JSON.stringify(m));
-}
+// Fonction pour afficher les produits depuis Firestore
+function renderProducts(marketItems){
+    const list = document.getElementById("list");
+    list.innerHTML = ""; // Vide la liste actuelle
 
-function render(){
+    if (marketItems.length === 0) {
+        list.innerHTML = "<p>Aucun article en vente pour le moment.</p>";
+        return;
+    }
 
-    let list = document.getElementById("list");
-    list.innerHTML = "";
-
-    getMarket().forEach((item, i) => {
-
-        let div = document.createElement("div");
+    marketItems.forEach((item) => {
+        const div = document.createElement("div");
         div.className = "card";
 
         div.innerHTML = `
         <h3>${item.name}</h3>
-
-        <img src="${item.image}">
-
+        <img src="${item.image}" alt="${item.name}">
         <p>${item.desc}</p>
-
-        <p>💰 ${item.price}</p>
-
-        <button onclick="buy(${i})">
-            Acheter
-        </button>
+        <p>💰 ${item.price.toFixed(2)} €</p>
+        <button onclick="buy('${item.id}')">Acheter</button>
         `;
 
         list.appendChild(div);
     });
 }
 
-function sell(){
+// Écoute les changements en temps réel dans la collection 'produits' de Firestore
+db.collection("produits").onSnapshot((snapshot) => {
+    const marketItems = [];
+    snapshot.forEach((doc) => {
+        // Pour chaque document, on récupère ses données et on ajoute son ID Firestore
+        marketItems.push({ id: doc.id, ...doc.data() });
+    });
+    renderProducts(marketItems); // Met à jour l'affichage avec les données de Firestore
+}, (error) => {
+    console.error("Erreur lors de la récupération des produits Firestore :", error);
+    document.getElementById("list").innerHTML = "<p>Erreur de chargement des produits.</p>";
+});
 
-    let name = document.getElementById("name").value;
-    let desc = document.getElementById("desc").value;
-    let price = parseInt(document.getElementById("price").value);
-    let imageFile = document.getElementById("image").files[0];
+// Fonction pour acheter un produit (le supprimer de Firestore)
+async function buy(produitId){
+    let argentLocal = parseInt(localStorage.getItem("argent") || "0"); // S'assure que c'est un nombre
 
-    if(!name || !price || !imageFile){
-        alert("Remplis tous les champs !");
+    const produitDoc = await db.collection("produits").doc(produitId).get();
+
+    if (!produitDoc.exists) {
+        alert("Désolé, ce produit n'existe plus ou a déjà été vendu !");
         return;
     }
 
-    let reader = new FileReader();
+    const item = { id: produitDoc.id, ...produitDoc.data() };
 
-    reader.onload = function(e){
-
-        let market = getMarket();
-
-        market.push({
-            name: name,
-            desc: desc,
-            price: price,
-            image: e.target.result
-        });
-
-        saveMarket(market);
-
-        document.getElementById("name").value = "";
-        document.getElementById("desc").value = "";
-        document.getElementById("price").value = "";
-        document.getElementById("image").value = "";
-
-        render();
-    };
-
-    reader.readAsDataURL(imageFile);
-}
-
-function buy(i){
-
-    let market = getMarket();
-    let item = market[i];
-
-    let money = parseInt(localStorage.getItem("argent") || 0);
-
-    if(money < item.price){
-        alert("Pas assez d'argent !");
+    if(argentLocal < item.price){
+        alert("Pas assez d'argent ! Tu as " + argentLocal + "€ et l'article coûte " + item.price + "€.");
         return;
     }
 
-    money -= item.price;
-    localStorage.setItem("argent", money);
+    // Débite l'argent (pour l'instant, c'est local dans localStorage)
+    argentLocal -= item.price;
+    localStorage.setItem("argent", argentLocal);
 
-    let inv = JSON.parse(localStorage.getItem("inventaire")) || [];
-    inv.push(item.name);
+    // Mise à jour de l'affichage de l'argent sur la page si l'élément existe
+    const argentDisplay = document.getElementById("argent");
+    if (argentDisplay) {
+        argentDisplay.textContent = argentLocal;
+    } else {
+      // Si l'élément n'est pas sur cette page, mais sur index.html, il ne sera pas mis à jour ici.
+      // Pour une vraie app, l'argent de l'utilisateur serait stocké dans Firestore pour qu'il soit global.
+      console.warn("L'élément 'argent' n'est pas trouvé sur cette page. L'affichage de l'argent ne sera pas mis à jour.");
+    }
+
+
+    // Ajoute à l'inventaire (pour l'instant, c'est local dans localStorage)
+    let inv = JSON.parse(localStorage.getItem("inventaire") || "[]");
+    inv.push(item.name); // Tu pourrais ajouter plus de détails de l'article si nécessaire
     localStorage.setItem("inventaire", JSON.stringify(inv));
 
-    market.splice(i, 1);
-    saveMarket(market);
-
-    render();
+    // Supprime le produit de Firestore
+    try {
+        await db.collection("produits").doc(produitId).delete();
+        alert(`"${item.name}" acheté pour ${item.price}€ et ajouté à ton inventaire !`);
+        // L'onSnapshot va rafraîchir l'affichage automatiquement
+    } catch (error) {
+        console.error("Erreur lors de l'achat du produit (suppression Firestore) :", error);
+        alert("Erreur lors de l'achat. Vérifiez la console pour les détails et les règles Firestore.");
+    }
 }
-
-render();
-
 </script>
 
 </body>
