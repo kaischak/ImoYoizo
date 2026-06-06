@@ -31,7 +31,6 @@ body {
     padding: 10px;
     border-radius: 10px;
     border: 1px solid #ccc;
-    box-shadow: 0 2px 4px rgba(0,0,0,0.1); /* Ajout d'une ombre légère */
 }
 
 .boutons {
@@ -46,15 +45,6 @@ button {
     padding: 12px 20px;
     font-size: 16px;
     cursor: pointer;
-    background-color: #007bff; /* Couleur bleue */
-    color: white;
-    border: none;
-    border-radius: 5px;
-    transition: background-color 0.3s ease;
-}
-
-button:hover {
-    background-color: #0056b3;
 }
 </style>
 </head>
@@ -95,47 +85,19 @@ button:hover {
 
 </div>
 
-<!-- Scripts Firebase SDK -->
-<script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-app-compat.js"></script>
-<script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore-compat.js"></script>
-<script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-auth-compat.js"></script>
-<script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-storage-compat.js"></script>
-
 <script>
-  // -----------------------------------------------------------------
-  // COPIE ET COLLE TA CONFIGURATION FIREBASE ICI (IMPORTANT !)
-  // REMPLACE CES VALEURS PAR CELLES DE TA CONSOLE FIREBASE
-  // -----------------------------------------------------------------
-  const firebaseConfig = {
-    apiKey : "AIzaSyDzyYNWEf0NOCuDp08_Pbl2DpejTI2bE28" , 
-    authDomain : "imoyoizo.firebaseapp.com" , 
-    projectId : "imoyoizo" , 
-    storageBucket : "imoyoizo.firebasestorage.app" , 
-    messagingSenderId : "239184474650" , 
-    appId : "1:239184474650:web:ab9a4101751a92289157a3" , 
-    measurementId : "G-16S777279P"
-  };
 
-  // Initialise Firebase dans ton application
-  firebase.initializeApp(firebaseConfig);
-
-  // Références aux services Firebase (même si pas tous utilisés directement ici, bonne pratique)
-  const db = firebase.firestore();
-  const auth = firebase.auth();
-  const storage = firebase.storage();
-
-  console.log("Firebase est configuré et prêt sur la page d'accueil !");
-  // -----------------------------------------------------------------
-
-// Charger argent depuis localStorage
-let argent = parseInt(localStorage.getItem("argent") || "0"); // S'assure que c'est un nombre
+// Charger argent
+let argent = parseInt(localStorage.getItem("argent") || 0);
 
 document.getElementById("argent").textContent = argent;
 
 // Ajouter argent
 function addMoney() {
     argent += 100;
+
     localStorage.setItem("argent", argent);
+
     document.getElementById("argent").textContent = argent;
 }
 
