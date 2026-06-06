@@ -2,7 +2,7 @@
 <html lang="fr">
 <head>
 <meta charset="UTF-8">
-<title>Marché</title>
+<title>Marché Supabase</title>
 
 <style>
 body {
@@ -26,7 +26,6 @@ input, textarea {
 
 .card img {
     max-width: 200px;
-    max-height: 200px;
 }
 </style>
 </head>
@@ -35,19 +34,10 @@ input, textarea {
 
 <h1>🏪 Marché en ligne</h1>
 
-<h3>Créer une annonce</h3>
-
-<input id="name" placeholder="Nom">
-<br>
-
-<textarea id="desc" placeholder="Description"></textarea>
-<br>
-
-<input id="price" type="number" placeholder="Prix">
-<br>
-
-<input id="image" type="file" accept="image/*">
-<br><br>
+<input id="name" placeholder="Nom"><br>
+<textarea id="desc" placeholder="Description"></textarea><br>
+<input id="price" type="number" placeholder="Prix"><br>
+<input id="image" type="file"><br><br>
 
 <button onclick="sell()">Vendre</button>
 
@@ -55,44 +45,55 @@ input, textarea {
 
 <div id="list"></div>
 
+<!-- SUPABASE -->
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+
 <script>
+/* 🔥 CONFIG SUPABASE */
+const supabaseUrl = "https://wuxhvpiaenmhipjfrojj.supabase.co";
+const supabaseKey = "TA_ANON_KEY_ICI";
 
-function getMarket(){
-    return JSON.parse(localStorage.getItem("market")) || [];
+const supabase = window.supabase.createClient(supabaseUrl, supabaseKey);
+
+/* 📦 CHARGER PRODUITS */
+async function loadProducts(){
+
+    let { data, error } = await supabase
+        .from("market")
+        .select("*")
+        .order("created_at", { ascending: false });
+
+    if(error){
+        console.log(error);
+        return;
+    }
+
+    render(data);
 }
 
-function saveMarket(m){
-    localStorage.setItem("market", JSON.stringify(m));
-}
-
-function render(){
+/* 🎨 AFFICHAGE */
+function render(items){
 
     let list = document.getElementById("list");
     list.innerHTML = "";
 
-    getMarket().forEach((item, i) => {
+    items.forEach(item => {
 
         let div = document.createElement("div");
         div.className = "card";
 
         div.innerHTML = `
-        <h3>${item.name}</h3>
-
-        <img src="${item.image}">
-
-        <p>${item.desc}</p>
-
-        <p>💰 ${item.price}</p>
-
-        <button onclick="buy(${i})">
-            Acheter
-        </button>
+            <h3>${item.name}</h3>
+            <img src="${item.image}">
+            <p>${item.description}</p>
+            <p>💰 ${item.price}</p>
         `;
 
         list.appendChild(div);
     });
 }
 
+/* ➕ AJOUT PRODUIT */
 function sell(){
 
     let name = document.getElementById("name").value;
@@ -107,56 +108,33 @@ function sell(){
 
     let reader = new FileReader();
 
-    reader.onload = function(e){
+    reader.onload = async function(e){
 
-        let market = getMarket();
+        let { error } = await supabase
+            .from("market")
+            .insert([{
+                name: name,
+                description: desc,
+                price: price,
+                image: e.target.result
+            }]);
 
-        market.push({
-            name: name,
-            desc: desc,
-            price: price,
-            image: e.target.result
-        });
+        if(error){
+            console.log(error);
+            return;
+        }
 
-        saveMarket(market);
-
-        document.getElementById("name").value = "";
-        document.getElementById("desc").value = "";
-        document.getElementById("price").value = "";
-        document.getElementById("image").value = "";
-
-        render();
+        loadProducts();
     };
 
     reader.readAsDataURL(imageFile);
 }
 
-function buy(i){
+/* 🚀 INIT */
+loadProducts();
 
-    let market = getMarket();
-    let item = market[i];
-
-    let money = parseInt(localStorage.getItem("argent") || 0);
-
-    if(money < item.price){
-        alert("Pas assez d'argent !");
-        return;
-    }
-
-    money -= item.price;
-    localStorage.setItem("argent", money);
-
-    let inv = JSON.parse(localStorage.getItem("inventaire")) || [];
-    inv.push(item.name);
-    localStorage.setItem("inventaire", JSON.stringify(inv));
-
-    market.splice(i, 1);
-    saveMarket(market);
-
-    render();
-}
-
-render();
+/* 🔄 refresh auto (optionnel) */
+setInterval(loadProducts, 5000);
 
 </script>
 
