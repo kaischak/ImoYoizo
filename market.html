@@ -10,7 +10,7 @@ body {
     font-family: Arial;
     text-align: center;
     margin: 20px;
-    background: #f5f5f5; /* Ajout d'un fond clair pour correspondre à index.html */
+    background: #f5f5f5;
 }
 
 h1, h3 {
@@ -19,15 +19,15 @@ h1, h3 {
 
 input, textarea {
     width: 80%;
-    max-width: 400px; /* Limite la largeur pour une meilleure lisibilité */
+    max-width: 400px;
     padding: 10px;
-    margin: 5px 0; /* Ajuste la marge */
+    margin: 5px 0;
     border: 1px solid #ddd;
     border-radius: 5px;
 }
 
 button {
-    background-color: #4CAF50; /* Couleur verte pour les boutons */
+    background-color: #4CAF50;
     color: white;
     padding: 12px 20px;
     border: none;
@@ -45,26 +45,26 @@ button:hover {
 .card {
     border: 1px solid #ccc;
     background: white;
-    margin: 20px auto; /* Marge ajustée */
+    margin: 20px auto;
     padding: 15px;
     width: 80%;
-    max-width: 500px; /* Limite la largeur des cartes */
-    box-shadow: 0 2px 4px rgba(0,0,0,0.1); /* Ombre légère */
+    max-width: 500px;
+    box-shadow: 0 2px 4px rgba(0,0,0,0.1);
     border-radius: 8px;
-    text-align: left; /* Aligne le texte à gauche dans la carte */
+    text-align: left;
 }
 
 .card h3 {
-    text-align: center; /* Centre le titre du produit */
+    text-align: center;
     margin-top: 0;
     color: #0056b3;
 }
 
 .card img {
-    max-width: 100%; /* L'image s'adapte à la largeur de la carte */
-    height: auto; /* Maintient le ratio de l'image */
-    display: block; /* Supprime l'espace sous l'image */
-    margin: 10px auto; /* Centre l'image dans la carte */
+    max-width: 100%;
+    height: auto;
+    display: block;
+    margin: 10px auto;
     border-radius: 4px;
 }
 
@@ -74,10 +74,10 @@ button:hover {
 }
 
 .card button {
-    display: block; /* Le bouton prend toute la largeur */
-    width: calc(100% - 10px); /* Ajuste la largeur */
-    margin: 10px auto 0 auto; /* Centre le bouton */
-    background-color: #007bff; /* Couleur bleue pour acheter */
+    display: block;
+    width: calc(100% - 10px);
+    margin: 10px auto 0 auto;
+    background-color: #007bff;
 }
 
 .card button:hover {
@@ -121,6 +121,7 @@ hr {
     <p>Chargement des produits...</p>
 </div>
 
+<!-- Scripts Firebase SDK -->
 <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-app-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-auth-compat.js"></script>
@@ -131,14 +132,13 @@ hr {
   // COPIE ET COLLE TA CONFIGURATION FIREBASE ICI (IMPORTANT !)
   // REMPLACE CES VALEURS PAR CELLES DE TA CONSOLE FIREBASE
   // -----------------------------------------------------------------
-  const firebaseConfig = { 
-      apiKey : "AIzaSyDzyYNWEf0NOCuDp08_Pbl2DpejTI2bE28" , 
-      authDomain : "imoyoizo.firebaseapp.com" , 
-      projectId : "imoyoizo" , 
-      storageBucket : "imoyoizo.firebasestorage.app" , 
-      messagingSenderId : "239184474650" , 
-      appId : "1:239184474650:web:ab9a4101751a92289157a3" , 
-      measurementId : "G-16S777279P" 
+  const firebaseConfig = {
+    apiKey: "AIzaSyC...V0", // Ta clé API (exemple)
+    authDomain: "imoyoizo.firebaseapp.com", // Ton domaine d'authentification (exemple)
+    projectId: "imoyoizo", // Ton ID de projet
+    storageBucket: "imoyoizo.appspot.com", // Ton bucket Storage (exemple)
+    messagingSenderId: "239184474650", // Ton ID d'expéditeur de messages (exemple)
+    appId: "1:239184474650:web:d2b...5d" // Ton ID d'application (exemple)
   };
 
   // Initialise Firebase dans ton application
@@ -157,7 +157,7 @@ hr {
 async function sell(){
     const name = document.getElementById("name").value;
     const desc = document.getElementById("desc").value;
-    const price = parseFloat(document.getElementById("price").value); // Utilise parseFloat pour les décimales
+    const price = parseFloat(document.getElementById("price").value);
     const imageFile = document.getElementById("image").files[0];
 
     if(!name || !desc || isNaN(price) || price <= 0 || !imageFile){
@@ -168,20 +168,8 @@ async function sell(){
     try {
         // 1. Uploader l'image sur Cloud Storage
         const storageRef = storage.ref();
-        const imageFileName = `produits_images/${Date.now()}_${imageFile.name}`; // Nom unique avec timestamp
+        const imageFileName = `produits_images/${Date.now()}_${imageFile.name}`;
         const imageUploadTask = storageRef.child(imageFileName).put(imageFile);
-
-        // Surveille l'upload si tu veux une barre de progression
-        // imageUploadTask.on('state_changed',
-        //   (snapshot) => {
-        //     const progress = (snapshot.bytesTransferred / snapshot.totalBytes) * 100;
-        //     console.log('Upload is ' + progress + '% done');
-        //   },
-        //   (error) => {
-        //     console.error("Erreur d'upload :", error);
-        //     alert("Erreur lors de l'upload de l'image.");
-        //   }
-        // );
 
         await imageUploadTask; // Attend que l'upload soit terminé
         const imageUrl = await storageRef.child(imageFileName).getDownloadURL(); // Récupère l'URL de l'image
@@ -192,7 +180,7 @@ async function sell(){
             desc: desc,
             price: price,
             image: imageUrl,
-            createdAt: firebase.firestore.FieldValue.serverTimestamp() // Ajoute la date de création
+            createdAt: firebase.firestore.FieldValue.serverTimestamp()
         });
 
         alert("Annonce créée avec succès !");
@@ -212,7 +200,7 @@ async function sell(){
 // Fonction pour afficher les produits depuis Firestore
 function renderProducts(marketItems){
     const list = document.getElementById("list");
-    list.innerHTML = ""; // Vide la liste actuelle
+    list.innerHTML = "";
 
     if (marketItems.length === 0) {
         list.innerHTML = "<p>Aucun article en vente pour le moment.</p>";
@@ -235,68 +223,4 @@ function renderProducts(marketItems){
     });
 }
 
-// Écoute les changements en temps réel dans la collection 'produits' de Firestore
-db.collection("produits").onSnapshot((snapshot) => {
-    const marketItems = [];
-    snapshot.forEach((doc) => {
-        // Pour chaque document, on récupère ses données et on ajoute son ID Firestore
-        marketItems.push({ id: doc.id, ...doc.data() });
-    });
-    renderProducts(marketItems); // Met à jour l'affichage avec les données de Firestore
-}, (error) => {
-    console.error("Erreur lors de la récupération des produits Firestore :", error);
-    document.getElementById("list").innerHTML = "<p>Erreur de chargement des produits.</p>";
-});
-
-// Fonction pour acheter un produit (le supprimer de Firestore)
-async function buy(produitId){
-    let argentLocal = parseInt(localStorage.getItem("argent") || "0"); // S'assure que c'est un nombre
-
-    const produitDoc = await db.collection("produits").doc(produitId).get();
-
-    if (!produitDoc.exists) {
-        alert("Désolé, ce produit n'existe plus ou a déjà été vendu !");
-        return;
-    }
-
-    const item = { id: produitDoc.id, ...produitDoc.data() };
-
-    if(argentLocal < item.price){
-        alert("Pas assez d'argent ! Tu as " + argentLocal + "€ et l'article coûte " + item.price + "€.");
-        return;
-    }
-
-    // Débite l'argent (pour l'instant, c'est local dans localStorage)
-    argentLocal -= item.price;
-    localStorage.setItem("argent", argentLocal);
-
-    // Mise à jour de l'affichage de l'argent sur la page si l'élément existe
-    const argentDisplay = document.getElementById("argent");
-    if (argentDisplay) {
-        argentDisplay.textContent = argentLocal;
-    } else {
-      // Si l'élément n'est pas sur cette page, mais sur index.html, il ne sera pas mis à jour ici.
-      // Pour une vraie app, l'argent de l'utilisateur serait stocké dans Firestore pour qu'il soit global.
-      console.warn("L'élément 'argent' n'est pas trouvé sur cette page. L'affichage de l'argent ne sera pas mis à jour.");
-    }
-
-
-    // Ajoute à l'inventaire (pour l'instant, c'est local dans localStorage)
-    let inv = JSON.parse(localStorage.getItem("inventaire") || "[]");
-    inv.push(item.name); // Tu pourrais ajouter plus de détails de l'article si nécessaire
-    localStorage.setItem("inventaire", JSON.stringify(inv));
-
-    // Supprime le produit de Firestore
-    try {
-        await db.collection("produits").doc(produitId).delete();
-        alert(`"${item.name}" acheté pour ${item.price}€ et ajouté à ton inventaire !`);
-        // L'onSnapshot va rafraîchir l'affichage automatiquement
-    } catch (error) {
-        console.error("Erreur lors de l'achat du produit (suppression Firestore) :", error);
-        alert("Erreur lors de l'achat. Vérifiez la console pour les détails et les règles Firestore.");
-    }
-}
-</script>
-
-</body>
-</html>
+// Écoute les changements en temps réel dansAucune réponse
