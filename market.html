@@ -51,7 +51,7 @@ input, textarea {
 <script>
 /* 🔥 CONFIG SUPABASE */
 const supabaseUrl = "https://wuxhvpiaenmhipjfrojj.supabase.co";
-const supabaseKey = "TA_ANON_KEY_ICI";
+const supabaseKey = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Ind1eGh2cGlhZW5taGlwamZyb2pqIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODA3NTI0OTMsImV4cCI6MjA5NjMyODQ5M30.N-gARZEGnpy0gobbx34DL-1t-IklcbtTmUnvhYm1rUE";
 
 const supabase = window.supabase.createClient(supabaseUrl, supabaseKey);
 
@@ -60,15 +60,12 @@ async function loadProducts(){
 
     let { data, error } = await supabase
         .from("market")
-        .select("*")
-        .order("created_at", { ascending: false });
+        .select("*");
 
-    if(error){
-        console.log(error);
-        return;
-    }
+    console.log("DATA =", data);
+    console.log("ERROR =", error);
 
-    render(data);
+    render(data || []);
 }
 
 /* 🎨 AFFICHAGE */
