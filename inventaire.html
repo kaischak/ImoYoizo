@@ -7,67 +7,118 @@
 <style>
 body{
     font-family: Arial;
+    margin:0;
     background:#0b0b0f;
     color:white;
     text-align:center;
 }
 
+h1{
+    margin-top:30px;
+}
+
+#inventaire{
+    display:flex;
+    flex-direction:column;
+    gap:10px;
+    padding:20px;
+    max-width:600px;
+    margin:auto;
+}
+
 .item{
     background:#16161d;
-    margin:10px;
     padding:15px;
+    border-radius:15px;
+    text-align:left;
+    display:flex;
+    justify-content:space-between;
+    align-items:center;
+    box-shadow:0 0 10px rgba(0,0,0,0.4);
+}
+
+.price{
+    color:#00ff99;
+    font-weight:bold;
+}
+
+button{
+    padding:10px 15px;
+    border:none;
     border-radius:10px;
+    cursor:pointer;
+    margin-top:20px;
 }
 </style>
 </head>
 
 <body>
 
-<h1>📦 Inventaire Synchro</h1>
+<h1>📦 Mon Inventaire</h1>
 
-<div id="list"></div>
+<div id="inventaire"></div>
 
-<button onclick="location.href='index.html'">🏠 retour</button>
+<button onclick="location.href='index.html'">🏠 Retour</button>
 
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 
 <script>
 
 const supabaseUrl = "https://eezsocswqhqgkvghhygq.supabase.co";
-const supabaseKey = "TON_KEY";
+const supabaseKey = "TON_SUPABASE_KEY";
 const client = supabase.createClient(supabaseUrl, supabaseKey);
 
 let user = localStorage.getItem("user");
 
-async function load(){
+if(!user){
+    user = "user" + Math.floor(Math.random()*9999);
+    localStorage.setItem("user", user);
+}
 
-    let { data } = await client
+const container = document.getElementById("inventaire");
+
+async function loadInventory(){
+
+    let { data, error } = await client
         .from("inventaire")
         .select("*")
         .eq("user_id", user);
 
-    let div = document.getElementById("list");
-    div.innerHTML = "";
+    console.log(data, error);
+
+    container.innerHTML = "";
+
+    if(error){
+        container.innerHTML = "<p>Erreur chargement</p>";
+        return;
+    }
 
     if(!data || data.length === 0){
-        div.innerHTML = "<p>Inventaire vide</p>";
+        container.innerHTML = "<p>Aucun item dans l'inventaire</p>";
         return;
     }
 
     data.forEach(item => {
 
-        let el = document.createElement("div");
-        el.className = "item";
-        el.innerHTML = `
-            <h3>${item.item}</h3>
-            <p>💰 ${item.price}</p>
+        let div = document.createElement("div");
+        div.className = "item";
+
+        div.innerHTML = `
+            <div>
+                <b>${item.item}</b><br>
+                <small>ID: ${item.id}</small>
+            </div>
+
+            <div class="price">
+                💰 ${item.price}
+            </div>
         `;
 
-        div.appendChild(el);
+        container.appendChild(div);
     });
 }
 
-load();
+loadInventory();
 
 </script>
 
