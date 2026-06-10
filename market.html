@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Social Market FIXED</title>
+<title>Social Market FIX</title>
 
 <style>
 body{
@@ -13,7 +13,7 @@ body{
     color:white;
 }
 
-/* TOP BAR */
+/* TOPBAR */
 .topbar{
     position:fixed;
     top:0;
@@ -29,13 +29,12 @@ body{
 }
 
 #search{
-    width:50%;
+    width:40%;
     padding:10px;
     border-radius:10px;
     border:none;
 }
 
-/* PROFILE */
 #miniProfile{
     position:absolute;
     left:10px;
@@ -43,8 +42,14 @@ body{
     cursor:pointer;
 }
 
-#miniProfile strong{
-    display:block;
+#addBtn{
+    width:45px;
+    height:45px;
+    border-radius:50%;
+    border:none;
+    background:#00ff99;
+    font-size:20px;
+    cursor:pointer;
 }
 
 /* FEED */
@@ -93,7 +98,6 @@ body{
     height:55px;
     border-radius:50%;
     border:none;
-    cursor:pointer;
 }
 
 .likeBtn{background:#ff2d55;color:white;}
@@ -137,9 +141,13 @@ input,textarea{
     <div id="miniProfile" onclick="openProfile()">
         <strong id="pname">👤 loading...</strong>
         <span id="pbio">...</span>
+        <div id="pfollowers">0 followers</div>
     </div>
 
     <input id="search" placeholder="🔎 rechercher..." oninput="render()">
+
+    <button id="addBtn" onclick="openCreatePost()">➕</button>
+
     <button onclick="openNotif()">🔔</button>
 </div>
 
@@ -153,67 +161,47 @@ input,textarea{
 
 <script>
 const supabaseUrl = "https://eezsocswqhqgkvghhygq.supabase.co";
-const supabaseKey = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImVlenNvY3N3cWhxZ2t2Z2hoeWdxIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODEwNjg5MjYsImV4cCI6MjA5NjY0NDkyNn0.TVI962lsUo67i6Ltq8okbOw-_GO-5yc4KDCyc8OkdVQ";
+const supabaseKey = "YOUR_SUPABASE_KEY";
 const client = supabase.createClient(supabaseUrl, supabaseKey);
 
-/* USER LOCAL */
-let user = localStorage.getItem("user");
-if(!user){
-    user = "user"+Math.floor(Math.random()*999999);
-    localStorage.setItem("user",user);
-}
-
 let posts = [];
+
+let user = localStorage.getItem("user") || ("user"+Math.floor(Math.random()*9999));
+localStorage.setItem("user", user);
 
 /* PROFILE */
 async function loadProfile(){
 
-    let { data, error } = await client
+    let { data } = await client
         .from("profiles")
         .select("*")
-        .eq("user_id", user)
-        .single();
+        .eq("user_id", user);
 
-    if(error && error.code !== "PGRST116"){
-        console.log("erreur select", error);
-        return;
-    }
+    let profile = data?.[0];
 
-    if(!data){
-
-        let { error: insertError } = await client
-            .from("profiles")
-            .insert([{
-                user_id: user,
-                username: user,
-                bio: "nouveau utilisateur"
-            }]);
-
-        if(insertError){
-            console.log("ERREUR INSERT PROFILE", insertError);
-            return;
-        }
+    if(!profile){
+        await client.from("profiles").insert([{
+            user_id: user,
+            username: user,
+            bio: "nouveau utilisateur"
+        }]);
 
         return loadProfile();
     }
 
-    document.getElementById("pname").textContent = "👤 " + data.username;
-    document.getElementById("pbio").textContent = data.bio;
+    document.getElementById("pname").textContent = "👤 " + profile.username;
+    document.getElementById("pbio").textContent = profile.bio;
 
     loadFollowers();
 }
 
+/* FOLLOWERS */
 async function loadFollowers(){
 
-    let { data, error } = await client
+    let { data } = await client
         .from("followers")
         .select("*")
         .eq("following", user);
-
-    if(error){
-        console.log("ERREUR followers", error);
-        return;
-    }
 
     document.getElementById("pfollowers").textContent =
         (data?.length || 0) + " followers";
@@ -221,7 +209,11 @@ async function loadFollowers(){
 
 /* POSTS */
 async function loadPosts(){
-    let { data } = await client.from("posts").select("*");
+
+    let { data } = await client
+        .from("posts")
+        .select("*");
+
     posts = data || [];
     render();
 }
@@ -232,27 +224,29 @@ function render(){
     let search = document.getElementById("search").value.toLowerCase();
     let feed = document.getElementById("feed");
 
-    feed.innerHTML="";
+    feed.innerHTML = "";
 
     posts
     .filter(p => (p.name||"").toLowerCase().includes(search))
-    .forEach(post=>{
+    .forEach(post => {
 
-        let div=document.createElement("div");
+        let div = document.createElement("div");
         div.className="post";
 
-        div.innerHTML=`
+        div.innerHTML = `
         <div class="card">
             <h2>${post.name}</h2>
             <img src="${post.image}">
             <p>💰 ${post.price}</p>
-            <p>👤 ${post.user_id}</p>
+            <p>👤 ${post.user}</p>
+
+            <button class="followBtn" onclick="follow('${post.user}')">➕ Follow</button>
         </div>
 
         <div class="actions">
-            <button class="likeBtn" onclick="like(${post.id},${post.likes||0})">❤️</button>
-            <button class="commentBtn" onclick="comment(${post.id})">💬</button>
-            <button class="buyBtn" onclick="buy(${post.id})">🛒</button>
+            <button class="likeBtn" onclick="like(${post.id},${post.likes||0},'${post.user}')">❤️</button>
+            <button class="commentBtn" onclick="comment(${post.id},'${post.user}')">💬</button>
+            <button class="buyBtn" onclick="buy(${post.id},'${post.user}')">🛒</button>
         </div>
         `;
 
@@ -260,12 +254,53 @@ function render(){
     });
 }
 
+/* CREATE POST UI */
+function openCreatePost(){
+
+    document.getElementById("box").innerHTML = `
+        <h2>Créer un post</h2>
+
+        <input id="name" placeholder="nom">
+        <input id="image" placeholder="image url">
+        <input id="price" placeholder="prix">
+
+        <button onclick="createPost()">Créer</button>
+    `;
+
+    document.getElementById("modal").style.display="flex";
+}
+
+async function createPost(){
+
+    await client.from("posts").insert([{
+        name: document.getElementById("name").value,
+        image: document.getElementById("image").value,
+        price: parseFloat(document.getElementById("price").value),
+        user: user,
+        likes: 0
+    }]);
+
+    closeModal();
+    loadPosts();
+}
+
+/* FOLLOW */
+async function follow(target){
+
+    await client.from("followers").insert([{
+        follower:user,
+        following:target
+    }]);
+
+    alert("follow ok");
+}
+
 /* LIKE */
-async function like(id,likes){
+async function like(id,likes,owner){
 
     await client.from("posts")
-    .update({likes:(likes||0)+1})
-    .eq("id",id);
+        .update({likes:(likes||0)+1})
+        .eq("id",id);
 
     loadPosts();
 }
@@ -273,44 +308,44 @@ async function like(id,likes){
 /* COMMENT */
 async function comment(id){
 
-    let text = prompt("commentaire ?");
+    let text = prompt("commentaire");
     if(!text) return;
 
     await client.from("comments").insert([{
         post_id:id,
         text,
-        user_id:user
+        user
     }]);
 }
 
 /* BUY */
 async function buy(id){
 
-    let {data}=await client.from("posts")
-    .select("*")
-    .eq("id",id)
-    .single();
+    let {data} = await client.from("posts")
+        .select("*")
+        .eq("id",id)
+        .single();
 
     let money = parseInt(localStorage.getItem("money")||0);
 
-    if(money<data.price){
+    if(money < data.price){
         alert("pas assez d'argent");
         return;
     }
 
-    money-=data.price;
+    money -= data.price;
     localStorage.setItem("money",money);
 
     alert("acheté !");
 }
 
-/* PROFILE MODAL */
+/* PROFILE */
 function openProfile(){
 
-    document.getElementById("box").innerHTML=`
+    document.getElementById("box").innerHTML = `
         <h2>Profil</h2>
-        <input id="username">
-        <input id="bio">
+        <input id="username" placeholder="pseudo">
+        <input id="bio" placeholder="bio">
         <button onclick="saveProfile()">save</button>
     `;
 
@@ -325,23 +360,28 @@ async function saveProfile(){
         bio:document.getElementById("bio").value
     }]);
 
-    document.getElementById("modal").style.display="none";
     loadProfile();
+    closeModal();
 }
 
 /* NOTIF */
 async function openNotif(){
 
-    let {data}=await client.from("notifications")
-    .select("*")
-    .eq("user_id",user);
+    let {data} = await client
+        .from("notifications")
+        .select("*")
+        .eq("user",user);
 
-    document.getElementById("box").innerHTML=`
+    document.getElementById("box").innerHTML = `
         <h2>Notifications</h2>
         ${(data||[]).map(n=>`<div>${n.text}</div>`).join("")}
     `;
 
     document.getElementById("modal").style.display="flex";
+}
+
+function closeModal(){
+    document.getElementById("modal").style.display="none";
 }
 
 loadPosts();
