@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Yoizo Ultra Feed</title>
+<title>Yoizo Market Pro</title>
 
 <style>
 body {
@@ -22,7 +22,7 @@ body {
     justify-content: center;
     padding: 10px;
     background: rgba(0,0,0,0.6);
-    backdrop-filter: blur(12px);
+    backdrop-filter: blur(10px);
     z-index: 10;
 }
 
@@ -58,11 +58,6 @@ body {
     padding: 15px;
     text-align: center;
     cursor: pointer;
-    transition: 0.2s;
-}
-
-.card:hover {
-    transform: scale(1.02);
 }
 
 .card img {
@@ -92,53 +87,46 @@ body {
 .commentBtn { background: #2d6bff; color: white; }
 .buyBtn { background: #00ff99; }
 
-/* SELL */
-#openSell {
-    position: fixed;
-    bottom: 20px;
-    right: 20px;
-    width: 60px;
-    height: 60px;
-    border-radius: 50%;
-    background: #00ff99;
-    border: none;
-    font-size: 30px;
-    z-index: 20;
-}
-
-/* MODALS */
-.modal {
+/* MODAL DÉTAIL */
+#detail {
     position: fixed;
     inset: 0;
-    background: rgba(0,0,0,0.92);
+    background: rgba(0,0,0,0.95);
     display: none;
     justify-content: center;
     align-items: center;
     z-index: 100;
 }
 
-.box {
+.detailBox {
     width: 90%;
-    max-width: 500px;
+    max-width: 600px;
     background: #16161d;
-    padding: 20px;
     border-radius: 20px;
+    padding: 20px;
+    text-align: center;
+    animation: pop 0.2s ease;
 }
 
-/* COMMENTS */
-.commentBox {
-    margin-top: 10px;
-    max-height: 150px;
-    overflow-y: auto;
-    text-align: left;
-    font-size: 14px;
+@keyframes pop {
+    from { transform: scale(0.9); opacity: 0; }
+    to { transform: scale(1); opacity: 1; }
 }
 
-.commentItem {
-    background: #222;
-    padding: 5px;
-    border-radius: 8px;
-    margin-bottom: 5px;
+.detailBox img {
+    width: 100%;
+    border-radius: 15px;
+}
+
+.closeBtn {
+    position: absolute;
+    top: 20px;
+    right: 20px;
+    background: red;
+    border: none;
+    padding: 10px;
+    border-radius: 10px;
+    cursor: pointer;
 }
 </style>
 </head>
@@ -153,25 +141,10 @@ body {
 <!-- FEED -->
 <div id="feed"></div>
 
-<!-- SELL -->
-<button id="openSell" onclick="openSell()">+</button>
-
-<div id="sellModal" class="modal">
-    <div class="box">
-        <h2>Vendre</h2>
-        <input id="name" placeholder="Nom">
-        <textarea id="desc" placeholder="Description"></textarea>
-        <input id="price" type="number" placeholder="Prix">
-        <input id="image" type="file">
-
-        <button onclick="sell()">Publier</button>
-        <button onclick="closeSell()">Fermer</button>
-    </div>
-</div>
-
 <!-- DETAIL -->
-<div id="detailModal" class="modal">
-    <div class="box" id="detailBox"></div>
+<div id="detail">
+    <button class="closeBtn" onclick="closeDetail()">X</button>
+    <div class="detailBox" id="detailBox"></div>
 </div>
 
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
@@ -182,24 +155,12 @@ const supabaseKey = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZS
 const client = supabase.createClient(supabaseUrl, supabaseKey);
 
 let posts = [];
-let commentsCache = {};
 
-/* LOAD POSTS */
+/* LOAD */
 async function loadPosts(){
     let { data } = await client.from("posts").select("*");
     posts = data || [];
     render();
-}
-
-/* LOAD COMMENTS */
-async function loadComments(postId){
-
-    let { data } = await client
-        .from("comments")
-        .select("*")
-        .eq("post_id", postId);
-
-    commentsCache[postId] = data || [];
 }
 
 /* RENDER */
@@ -224,14 +185,7 @@ function render(){
         <div class="card" onclick="openDetail(${post.id})">
             <h2>${post.name}</h2>
             <img src="${post.image}">
-            <p>${post.desc}</p>
             <p>💰 ${post.price}</p>
-
-            <div class="commentBox">
-                ${(commentsCache[post.id] || []).map(c =>
-                    `<div class="commentItem">💬 ${c.text}</div>`
-                ).join("")}
-            </div>
         </div>
 
         <div class="actions">
@@ -242,9 +196,31 @@ function render(){
         `;
 
         feed.appendChild(div);
-
-        loadComments(post.id);
     });
+}
+
+/* 🔥 OPEN DETAIL */
+function openDetail(id){
+
+    let post = posts.find(p => p.id === id);
+
+    document.getElementById("detailBox").innerHTML = `
+        <h2>${post.name}</h2>
+        <img src="${post.image}">
+        <h3>💰 ${post.price}</h3>
+        <p>${post.desc}</p>
+
+        <button onclick="like(${post.id}, ${post.likes || 0})">❤️ Like</button>
+        <button onclick="comment(${post.id})">💬 Commenter</button>
+        <button onclick="buyPost(${post.id})">🛒 Acheter</button>
+    `;
+
+    document.getElementById("detail").style.display = "flex";
+}
+
+/* CLOSE DETAIL */
+function closeDetail(){
+    document.getElementById("detail").style.display = "none";
 }
 
 /* LIKE */
@@ -258,15 +234,11 @@ async function like(id, likes){
 
 /* COMMENT */
 async function comment(id){
-
     let text = prompt("Commentaire :");
     if(!text) return;
 
     await client.from("comments")
         .insert([{ post_id: id, text }]);
-
-    await loadComments(id);
-    render();
 }
 
 /* BUY */
@@ -288,43 +260,6 @@ async function buyPost(id){
     localStorage.setItem("argent", money);
 
     alert("Acheté !");
-}
-
-/* SELL */
-function openSell(){
-    document.getElementById("sellModal").style.display = "flex";
-}
-
-function closeSell(){
-    document.getElementById("sellModal").style.display = "none";
-}
-
-async function sell(){
-
-    let name = document.getElementById("name").value;
-    let desc = document.getElementById("desc").value;
-    let price = parseInt(document.getElementById("price").value);
-    let file = document.getElementById("image").files[0];
-
-    if(!name || !price || !file) return;
-
-    let reader = new FileReader();
-
-    reader.onload = async function(e){
-
-        await client.from("posts").insert([{
-            name,
-            desc,
-            price,
-            image: e.target.result,
-            likes: 0
-        }]);
-
-        closeSell();
-        loadPosts();
-    };
-
-    reader.readAsDataURL(file);
 }
 
 loadPosts();
