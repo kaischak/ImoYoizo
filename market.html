@@ -172,19 +172,27 @@ localStorage.setItem("user", user);
 /* PROFILE */
 async function loadProfile(){
 
-    let { data } = await client
+    let { data, error } = await client
         .from("profiles")
         .select("*")
         .eq("user_id", user);
 
     let profile = data?.[0];
 
+    if(error) console.log(error);
+
     if(!profile){
-        await client.from("profiles").insert([{
+
+        const { error: insertError } = await client.from("profiles").insert([{
             user_id: user,
             username: user,
             bio: "nouveau utilisateur"
         }]);
+
+        if(insertError){
+            console.log("INSERT ERROR", insertError);
+            return;
+        }
 
         return loadProfile();
     }
@@ -254,34 +262,59 @@ function render(){
     });
 }
 
-/* CREATE POST UI */
+/* CREATE POST */
 function openCreatePost(){
 
     document.getElementById("box").innerHTML = `
         <h2>Créer un post</h2>
 
-        <input id="name" placeholder="nom">
-        <input id="image" placeholder="image url">
-        <input id="price" placeholder="prix">
+        <input id="name" placeholder="Nom du produit">
+        <textarea id="desc" placeholder="Description"></textarea>
+        <input id="price" type="number" placeholder="Prix">
+        <input id="image" type="file">
 
-        <button onclick="createPost()">Créer</button>
+        <button onclick="createPost()">Publier</button>
     `;
 
     document.getElementById("modal").style.display="flex";
 }
-
+    
 async function createPost(){
 
-    await client.from("posts").insert([{
-        name: document.getElementById("name").value,
-        image: document.getElementById("image").value,
-        price: parseFloat(document.getElementById("price").value),
-        user: user,
-        likes: 0
-    }]);
+    let name = document.getElementById("name").value;
+    let desc = document.getElementById("desc").value;
+    let price = parseFloat(document.getElementById("price").value);
+    let file = document.getElementById("image").files[0];
 
-    closeModal();
-    loadPosts();
+    if(!name || !price || !file){
+        alert("Remplis nom, prix et image");
+        return;
+    }
+
+    const reader = new FileReader();
+
+    reader.onload = async function(e){
+
+        const { error } = await client.from("posts").insert([{
+            name,
+            desc,
+            price,
+            image: e.target.result,
+            user,
+            likes: 0
+        }]);
+
+        if(error){
+            console.log(error);
+            alert("Erreur upload post");
+            return;
+        }
+
+        closeModal();
+        loadPosts();
+    };
+
+    reader.readAsDataURL(file);
 }
 
 /* FOLLOW */
@@ -291,12 +324,10 @@ async function follow(target){
         follower:user,
         following:target
     }]);
-
-    alert("follow ok");
 }
 
 /* LIKE */
-async function like(id,likes,owner){
+async function like(id,likes){
 
     await client.from("posts")
         .update({likes:(likes||0)+1})
@@ -339,7 +370,7 @@ async function buy(id){
     alert("acheté !");
 }
 
-/* PROFILE */
+/* PROFILE MODAL */
 function openProfile(){
 
     document.getElementById("box").innerHTML = `
