@@ -7,48 +7,68 @@
 <style>
 body{
     font-family: Arial;
+    background:#0b0b0f;
+    color:white;
     text-align:center;
-    margin-top:50px;
 }
 
-li{
+.item{
+    background:#16161d;
     margin:10px;
-    padding:10px;
-    border:1px solid #ccc;
+    padding:15px;
+    border-radius:10px;
 }
 </style>
 </head>
 
 <body>
 
-<h1>📦 Mon Inventaire</h1>
+<h1>📦 Inventaire Synchro</h1>
 
-<ul id="inventaire"></ul>
+<div id="list"></div>
 
-<button onclick="location.href='index.html'">🏠 Retour</button>
+<button onclick="location.href='index.html'">🏠 retour</button>
+
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 
 <script>
-let inv = JSON.parse(localStorage.getItem("inventaire") || "[]");
 
-console.log(inv);
+const supabaseUrl = "https://eezsocswqhqgkvghhygq.supabase.co";
+const supabaseKey = "TON_KEY";
+const client = supabase.createClient(supabaseUrl, supabaseKey);
 
-let ul = document.getElementById("inventaire");
+let user = localStorage.getItem("user");
 
-if(inv.length === 0){
-    ul.innerHTML = "<li>Inventaire vide</li>";
-} else {
-    inv.forEach(item => {
-        let li = document.createElement("li");
+async function load(){
 
-        li.innerHTML = `
-            <strong>${item.name}</strong><br>
-            💰 ${item.price}<br>
-            👤 ${item.owner || "system"}
+    let { data } = await client
+        .from("inventaire")
+        .select("*")
+        .eq("user_id", user);
+
+    let div = document.getElementById("list");
+    div.innerHTML = "";
+
+    if(!data || data.length === 0){
+        div.innerHTML = "<p>Inventaire vide</p>";
+        return;
+    }
+
+    data.forEach(item => {
+
+        let el = document.createElement("div");
+        el.className = "item";
+        el.innerHTML = `
+            <h3>${item.item}</h3>
+            <p>💰 ${item.price}</p>
         `;
 
-        ul.appendChild(li);
+        div.appendChild(el);
     });
 }
+
+load();
+
 </script>
 
 </body>
