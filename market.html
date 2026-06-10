@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Social Market FULL FIX</title>
+<title>Social Market FIX ULTIME</title>
 
 <style>
 body{
@@ -13,7 +13,7 @@ body{
     color:white;
 }
 
-/* TOPBAR */
+/* TOP */
 .topbar{
     position:fixed;
     top:0;
@@ -35,22 +35,20 @@ body{
     border:none;
 }
 
-#addBtn, #notifBtn{
-    width:45px;
-    height:45px;
-    border-radius:50%;
-    border:none;
-    cursor:pointer;
-}
-
-#addBtn{ background:#00ff99; }
-#notifBtn{ background:#2d6bff; color:white; }
-
-/* PROFILE MINI */
 #miniProfile{
     position:absolute;
     left:10px;
     font-size:12px;
+    cursor:pointer;
+}
+
+#addBtn{
+    width:45px;
+    height:45px;
+    border-radius:50%;
+    border:none;
+    background:#00ff99;
+    font-size:20px;
     cursor:pointer;
 }
 
@@ -78,11 +76,20 @@ body{
     border-radius:20px;
     padding:15px;
     text-align:center;
+    cursor:pointer;
 }
 
 .card img{
     width:100%;
     border-radius:15px;
+}
+
+/* INFO UNDER POST */
+.info{
+    text-align:left;
+    margin-top:10px;
+    font-size:14px;
+    opacity:0.9;
 }
 
 /* ACTIONS */
@@ -106,6 +113,15 @@ body{
 .commentBtn{background:#2d6bff;color:white;}
 .buyBtn{background:#00ff99;}
 
+/* FOLLOW */
+.followBtn{
+    background:#ffcc00;
+    border:none;
+    padding:6px;
+    border-radius:10px;
+    margin-top:5px;
+}
+
 /* MODAL */
 .modal{
     position:fixed;
@@ -125,46 +141,11 @@ body{
     border-radius:20px;
 }
 
-input,textarea{
-    width:100%;
-    margin:5px 0;
-    padding:10px;
-    border-radius:10px;
-    border:none;
-}
-
-/* COMMENTS */
-.commentItem{
+.comment{
     background:#222;
-    padding:8px;
+    padding:6px;
     margin:5px 0;
-    border-radius:10px;
-}
-
-.commentList{
-    max-height:60vh;
-    overflow-y:auto;
-}
-
-.commentInputBar{
-    display:flex;
-    gap:5px;
-    margin-top:10px;
-}
-
-.commentInputBar input{
-    flex:1;
-    padding:10px;
-    border-radius:10px;
-    border:none;
-}
-
-.commentInputBar button{
-    width:80px;
-    border:none;
-    border-radius:10px;
-    background:#2d6bff;
-    color:white;
+    border-radius:8px;
 }
 </style>
 </head>
@@ -175,24 +156,20 @@ input,textarea{
 
     <div id="miniProfile" onclick="openProfile()">
         <strong id="pname">👤 loading...</strong>
-        <div id="pbio"></div>
-        <div id="pfollowers">0 followers</div>
+        <div id="pbio">...</div>
     </div>
 
     <input id="search" placeholder="🔎 rechercher..." oninput="render()">
 
-    <button id="addBtn" onclick="openCreatePost()">➕</button>
-    <button id="notifBtn" onclick="openNotif()">🔔</button>
+    <button id="addBtn" onclick="openCreatePost()">+</button>
+
+    <button onclick="openNotif()">🔔</button>
 </div>
 
 <div id="feed"></div>
 
 <div id="modal" class="modal">
     <div class="box" id="box"></div>
-</div>
-
-<div id="commentModal" class="modal">
-    <div class="box" id="commentBox"></div>
 </div>
 
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
@@ -203,82 +180,10 @@ const supabaseKey = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZS
 const client = supabase.createClient(supabaseUrl, supabaseKey);
 
 let posts = [];
-let commentsCache = {};
-let currentPostId = null;
+let comments = {};
 
 let user = localStorage.getItem("user") || ("user"+Math.floor(Math.random()*9999));
 localStorage.setItem("user", user);
-
-/* INIT */
-loadPosts();
-loadProfile();
-
-/* POSTS */
-async function loadPosts(){
-    let { data } = await client.from("posts").select("*");
-    posts = data || [];
-    render();
-}
-
-function render(){
-
-    let search = document.getElementById("search").value.toLowerCase();
-    let feed = document.getElementById("feed");
-
-    feed.innerHTML = "";
-
-    posts
-    .filter(p => (p.name||"").toLowerCase().includes(search))
-    .forEach(post => {
-
-        let div = document.createElement("div");
-        div.className="post";
-
-        div.innerHTML = `
-        <div class="card">
-            <h2>${post.name}</h2>
-            <img src="${post.image}">
-            <p>💰 ${post.price}</p>
-        </div>
-
-        <div class="actions">
-            <button class="likeBtn" onclick="like(${post.id},${post.likes||0})">❤️</button>
-            <button class="commentBtn" onclick="openComments(${post.id})">💬</button>
-            <button class="buyBtn" onclick="buy(${post.id})">🛒</button>
-        </div>
-        `;
-
-        feed.appendChild(div);
-    });
-}
-
-/* CREATE POST */
-function openCreatePost(){
-
-    document.getElementById("box").innerHTML = `
-        <h2>Créer un post</h2>
-        <input id="name" placeholder="Nom">
-        <input id="image" placeholder="Image URL">
-        <input id="price" placeholder="Prix">
-        <button onclick="createPost()">Publier</button>
-    `;
-
-    document.getElementById("modal").style.display="flex";
-}
-
-async function createPost(){
-
-    await client.from("posts").insert([{
-        name: name.value,
-        image: image.value,
-        price: parseFloat(price.value),
-        user,
-        likes:0
-    }]);
-
-    closeModal();
-    loadPosts();
-}
 
 /* PROFILE */
 async function loadProfile(){
@@ -300,8 +205,111 @@ async function loadProfile(){
         return loadProfile();
     }
 
-    pname.textContent = "👤 " + profile.username;
-    pbio.textContent = profile.bio;
+    document.getElementById("pname").textContent = "👤 " + profile.username;
+    document.getElementById("pbio").textContent = profile.bio;
+}
+
+/* POSTS */
+async function loadPosts(){
+
+    let { data } = await client
+        .from("posts")
+        .select("*");
+
+    posts = data || [];
+    render();
+}
+
+/* COMMENTS */
+async function loadComments(postId){
+
+    let { data } = await client
+        .from("comments")
+        .select("*")
+        .eq("post_id", postId);
+
+    comments[postId] = data || [];
+}
+
+/* RENDER */
+function render(){
+
+    let search = document.getElementById("search").value.toLowerCase();
+    let feed = document.getElementById("feed");
+
+    feed.innerHTML = "";
+
+    posts
+    .filter(p =>
+        (p.name||"").toLowerCase().includes(search) ||
+        (p.desc||"").toLowerCase().includes(search)
+    )
+    .forEach(post => {
+
+        let div = document.createElement("div");
+        div.className="post";
+
+        div.innerHTML = `
+        <div class="card" onclick="openPost(${post.id})">
+            <h2>${post.name}</h2>
+            <img src="${post.image}">
+            
+            <div class="info">
+                <div>💰 ${post.price}</div>
+                <div>❤️ ${post.likes || 0}</div>
+                <div>${post.desc || ""}</div>
+            </div>
+        </div>
+
+        <div class="actions">
+            <button class="likeBtn" onclick="event.stopPropagation(); like(${post.id},${post.likes||0})">❤️</button>
+            <button class="commentBtn" onclick="event.stopPropagation(); comment(${post.id})">💬</button>
+        </div>
+        `;
+
+        feed.appendChild(div);
+
+        loadComments(post.id);
+    });
+}
+
+/* OPEN POST DETAIL */
+function openPost(id){
+
+    let post = posts.find(p => p.id === id);
+
+    document.getElementById("box").innerHTML = `
+        <h2>${post.name}</h2>
+        <img src="${post.image}" style="width:100%;border-radius:10px;">
+        <p>💰 ${post.price}</p>
+        <p>${post.desc}</p>
+
+        <h3>Commentaires</h3>
+        ${(comments[id]||[]).map(c=>`
+            <div class="comment">💬 ${c.user}: ${c.text}</div>
+        `).join("")}
+
+        <input id="cText" placeholder="commentaire">
+        <button onclick="addComment(${id})">Envoyer</button>
+    `;
+
+    document.getElementById("modal").style.display="flex";
+}
+
+/* COMMENT */
+async function addComment(id){
+
+    let text = document.getElementById("cText").value;
+    if(!text) return;
+
+    await client.from("comments").insert([{
+        post_id:id,
+        text,
+        user
+    }]);
+
+    loadComments(id);
+    openPost(id);
 }
 
 /* LIKE */
@@ -314,86 +322,35 @@ async function like(id,likes){
     loadPosts();
 }
 
-/* BUY */
-async function buy(id){
+/* CREATE POST */
+function openCreatePost(){
 
-    let {data} = await client.from("posts")
-        .select("*")
-        .eq("id",id)
-        .single();
+    document.getElementById("box").innerHTML=`
+        <h2>Créer post</h2>
+        <input id="name" placeholder="nom">
+        <input id="image" placeholder="image url">
+        <input id="price" placeholder="prix">
+        <textarea id="desc" placeholder="description"></textarea>
 
-    let money = parseInt(localStorage.getItem("money")||0);
-
-    if(money < data.price){
-        alert("pas assez d'argent");
-        return;
-    }
-
-    localStorage.setItem("money", money - data.price);
-
-    alert("acheté !");
-}
-
-/* COMMENTS */
-async function openComments(postId){
-
-    currentPostId = postId;
-
-    await loadComments(postId);
-    renderComments(postId);
-
-    commentModal.style.display="flex";
-}
-
-async function loadComments(postId){
-
-    let { data } = await client
-        .from("comments")
-        .select("*")
-        .eq("post_id", postId);
-
-    commentsCache[postId] = data || [];
-}
-
-function renderComments(postId){
-
-    let comments = commentsCache[postId] || [];
-
-    commentBox.innerHTML = `
-        <h2>💬 Commentaires</h2>
-
-        <div class="commentList">
-            ${comments.map(c=>`
-                <div class="commentItem">
-                    <b>${c.user}</b> : ${c.text}
-                </div>
-            `).join("")}
-        </div>
-
-        <div class="commentInputBar">
-            <input id="cText" placeholder="commentaire...">
-            <button onclick="sendComment()">Envoyer</button>
-        </div>
-
-        <button onclick="closeComments()">Fermer</button>
+        <button onclick="createPost()">Publier</button>
     `;
+
+    document.getElementById("modal").style.display="flex";
 }
 
-async function sendComment(){
+async function createPost(){
 
-    await client.from("comments").insert([{
-        post_id:currentPostId,
-        text:cText.value,
-        user
+    await client.from("posts").insert([{
+        name:document.getElementById("name").value,
+        image:document.getElementById("image").value,
+        price:parseFloat(document.getElementById("price").value),
+        desc:document.getElementById("desc").value,
+        user,
+        likes:0
     }]);
 
-    cText.value="";
-    await loadComments(currentPostId);
-    renderComments(currentPostId);
-}
-
-function closeComments(){
-    commentModal.style.display="none";
+    closeModal();
+    loadPosts();
 }
 
 /* NOTIF */
@@ -402,20 +359,23 @@ async function openNotif(){
     let { data } = await client
         .from("notifications")
         .select("*")
-        .eq("user", user);
+        .eq("user",user);
 
-    box.innerHTML = `
+    document.getElementById("box").innerHTML = `
         <h2>Notifications</h2>
         ${(data||[]).map(n=>`<div>${n.text}</div>`).join("")}
     `;
 
-    modal.style.display="flex";
+    document.getElementById("modal").style.display="flex";
 }
 
-/* MODAL */
 function closeModal(){
-    modal.style.display="none";
+    document.getElementById("modal").style.display="none";
 }
+
+/* INIT */
+loadPosts();
+loadProfile();
 </script>
 
 </body>
