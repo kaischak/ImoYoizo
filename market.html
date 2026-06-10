@@ -365,35 +365,40 @@ async function buy(id){
 
     if(!data) return;
 
-    // ✅ FORCE NUMBER PROPRE
-    let argent = Number(localStorage.getItem("argent") || 0);
+    // ✅ FORCE CLEAN NUMBER
+    let argent = Number(String(localStorage.getItem("argent")).trim());
     let price = Number(data.price);
+
+    if(isNaN(argent)) argent = 0;
+    if(isNaN(price)) price = 0;
 
     console.log("ARGENT =", argent);
     console.log("PRICE =", price);
 
-    if(isNaN(argent)) argent = 0;
-
+    // ❌ debug important
     if(argent < price){
         alert("❌ Pas assez d'argent !");
         return;
     }
 
-    // retirer argent
+    // 💰 retirer argent
     argent = argent - price;
     localStorage.setItem("argent", String(argent));
 
-    // inventaire
+    // 📦 inventaire
     let inv = JSON.parse(localStorage.getItem("inventaire") || "[]");
 
     inv.push({
         name: data.name,
         image: data.image,
         price: price,
-        owner: data.user
+        owner: data.user,
+        time: Date.now()
     });
 
     localStorage.setItem("inventaire", JSON.stringify(inv));
+
+    console.log("INVENTAIRE =", inv);
 
     alert("✅ Achat réussi !");
 }
