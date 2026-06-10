@@ -49,6 +49,7 @@ body {
     justify-content: center;
     align-items: center;
     padding: 20px;
+    position: relative;
 }
 
 .card {
@@ -59,7 +60,7 @@ body {
     padding: 15px;
     box-shadow: 0 10px 30px rgba(0,0,0,0.5);
     text-align: center;
-    animation: pop 0.3s ease;
+    animation: pop 0.2s ease;
 }
 
 @keyframes pop {
@@ -73,31 +74,33 @@ body {
     margin-top: 10px;
 }
 
-/* 🔘 BUTTONS */
-button {
-    padding: 10px;
-    margin: 5px;
+/* ❤️💬🛒 ACTIONS */
+.actions {
+    position: absolute;
+    right: 15px;
+    bottom: 120px;
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+}
+
+.actions button {
+    width: 55px;
+    height: 55px;
+    border-radius: 50%;
+    font-size: 18px;
     border: none;
-    border-radius: 10px;
     cursor: pointer;
-    transition: 0.2s;
+    display: flex;
+    justify-content: center;
+    align-items: center;
 }
 
-button:hover {
-    transform: scale(1.05);
-}
+.likeBtn { background: #ff2d55; color: white; }
+.commentBtn { background: #2d6bff; color: white; }
+.buyBtn { background: #00ff99; color: black; }
 
-.like {
-    background: #ff2d55;
-    color: white;
-}
-
-.comment {
-    background: #2d6bff;
-    color: white;
-}
-
-/* ➕ BOUTON VENDRE */
+/* ➕ VENDRE */
 #openSell {
     position: fixed;
     bottom: 20px;
@@ -112,7 +115,7 @@ button:hover {
     z-index: 20;
 }
 
-/* 🟦 POPUP */
+/* 🟦 POPUP SELL */
 #sellBox {
     position: fixed;
     inset: 0;
@@ -146,17 +149,13 @@ button:hover {
     #search {
         width: 90%;
     }
-
-    .card {
-        width: 95%;
-    }
 }
 </style>
 </head>
 
 <body>
 
-<!-- 🔎 TOP -->
+<!-- 🔎 SEARCH -->
 <div class="topbar">
     <input id="search" placeholder="🔎 rechercher..." oninput="render()">
 </div>
@@ -164,7 +163,7 @@ button:hover {
 <!-- 📱 FEED -->
 <div id="feed"></div>
 
-<!-- ➕ VENDRE -->
+<!-- ➕ BUTTON -->
 <button id="openSell" onclick="openSell()">+</button>
 
 <!-- 🟦 SELL POPUP -->
@@ -222,11 +221,12 @@ function render(){
             <img src="${post.image}">
             <p>${post.desc}</p>
             <p>💰 ${post.price}</p>
+        </div>
 
-            <p>❤️ ${post.likes || 0}</p>
-
-            <button class="like" onclick="like(${post.id}, ${post.likes || 0})">Like</button>
-            <button class="comment" onclick="comment(${post.id})">Comment</button>
+        <div class="actions">
+            <button class="likeBtn" onclick="like(${post.id}, ${post.likes || 0})">❤️</button>
+            <button class="commentBtn" onclick="comment(${post.id})">💬</button>
+            <button class="buyBtn" onclick="buyPost(${post.id})">🛒</button>
         </div>
         `;
 
@@ -250,6 +250,32 @@ async function comment(id){
 
     await client.from("comments")
         .insert([{ post_id: id, text }]);
+}
+
+/* BUY */
+async function buyPost(id){
+
+    let { data } = await client
+        .from("posts")
+        .select("*")
+        .eq("id", id)
+        .single();
+
+    let money = parseInt(localStorage.getItem("argent") || 0);
+
+    if(money < data.price){
+        alert("Pas assez d'argent !");
+        return;
+    }
+
+    money -= data.price;
+    localStorage.setItem("argent", money);
+
+    let inv = JSON.parse(localStorage.getItem("inventaire")) || [];
+    inv.push(data.name);
+    localStorage.setItem("inventaire", JSON.stringify(inv));
+
+    alert("Acheté !");
 }
 
 /* SELL UI */
