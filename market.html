@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Social Market FIX</title>
+<title>Social Market FIXED</title>
 
 <style>
 body{
@@ -13,6 +13,7 @@ body{
     color:white;
 }
 
+/* TOP BAR */
 .topbar{
     position:fixed;
     top:0;
@@ -34,6 +35,7 @@ body{
     border:none;
 }
 
+/* PROFILE */
 #miniProfile{
     position:absolute;
     left:10px;
@@ -45,10 +47,12 @@ body{
     display:block;
 }
 
+/* FEED */
 #feed{
     height:100vh;
     overflow-y:scroll;
     scroll-snap-type:y mandatory;
+    padding-top:60px;
 }
 
 .post{
@@ -74,6 +78,7 @@ body{
     border-radius:15px;
 }
 
+/* ACTIONS */
 .actions{
     position:absolute;
     right:15px;
@@ -88,6 +93,7 @@ body{
     height:55px;
     border-radius:50%;
     border:none;
+    cursor:pointer;
 }
 
 .likeBtn{background:#ff2d55;color:white;}
@@ -95,6 +101,7 @@ body{
 .buyBtn{background:#00ff99;}
 .followBtn{background:#ffcc00;color:black;padding:8px;border-radius:10px;margin-top:5px;}
 
+/* MODAL */
 .modal{
     position:fixed;
     inset:0;
@@ -130,7 +137,6 @@ input,textarea{
     <div id="miniProfile" onclick="openProfile()">
         <strong id="pname">👤 loading...</strong>
         <span id="pbio">...</span>
-        <div id="pfollowers">0 followers</div>
     </div>
 
     <input id="search" placeholder="🔎 rechercher..." oninput="render()">
@@ -150,13 +156,16 @@ const supabaseUrl = "https://eezsocswqhqgkvghhygq.supabase.co";
 const supabaseKey = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImVlenNvY3N3cWhxZ2t2Z2hoeWdxIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODEwNjg5MjYsImV4cCI6MjA5NjY0NDkyNn0.TVI962lsUo67i6Ltq8okbOw-_GO-5yc4KDCyc8OkdVQ";
 const client = supabase.createClient(supabaseUrl, supabaseKey);
 
+/* USER LOCAL */
+let user = localStorage.getItem("user");
+if(!user){
+    user = "user"+Math.floor(Math.random()*999999);
+    localStorage.setItem("user",user);
+}
+
 let posts = [];
 
-let user = localStorage.getItem("user") || ("user"+Math.floor(Math.random()*9999));
-localStorage.setItem("user", user);
-
-/* ================= PROFILE ================= */
-
+/* PROFILE */
 async function loadProfile(){
 
     let { data } = await client
@@ -168,79 +177,52 @@ async function loadProfile(){
     if(!data){
 
         await client.from("profiles").insert([{
-            user_id: user,
-            username: user,
-            bio: "nouvel utilisateur"
+            user_id:user,
+            username:user,
+            bio:"nouvel utilisateur"
         }]);
 
         return loadProfile();
     }
 
-    document.getElementById("pname").textContent = "👤 " + data.username;
-    document.getElementById("pbio").textContent = data.bio || "";
-
-    loadFollowers();
+    document.getElementById("pname").textContent="👤 "+data.username;
+    document.getElementById("pbio").textContent=data.bio;
 }
 
-/* ================= FOLLOWERS ================= */
-
-async function loadFollowers(){
-
-    let { data } = await client
-        .from("followers")
-        .select("*")
-        .eq("following", user);
-
-    document.getElementById("pfollowers").textContent =
-        (data?.length || 0) + " followers";
-}
-
-/* ================= POSTS ================= */
-
+/* POSTS */
 async function loadPosts(){
-
-    let { data } = await client
-        .from("posts")
-        .select("*");
-
+    let { data } = await client.from("posts").select("*");
     posts = data || [];
     render();
 }
 
-/* ================= RENDER ================= */
-
+/* RENDER */
 function render(){
 
     let search = document.getElementById("search").value.toLowerCase();
     let feed = document.getElementById("feed");
 
-    feed.innerHTML = "";
+    feed.innerHTML="";
 
     posts
     .filter(p => (p.name||"").toLowerCase().includes(search))
-    .forEach(post => {
+    .forEach(post=>{
 
-        let div = document.createElement("div");
-        div.className = "post";
+        let div=document.createElement("div");
+        div.className="post";
 
-        div.innerHTML = `
+        div.innerHTML=`
         <div class="card">
-
             <h2>${post.name}</h2>
             <img src="${post.image}">
             <p>💰 ${post.price}</p>
             <p>👤 ${post.user_id}</p>
-
-            <button class="followBtn" onclick="follow('${post.user_id}')">
-                ➕ Follow
-            </button>
-
         </div>
 
         <div class="actions">
-            <button class="likeBtn" onclick="like(${post.id},${post.likes||0},'${post.user_id}')">❤️</button>
-            <button class="commentBtn" onclick="comment(${post.id},'${post.user_id}')">💬</button>
-            <button class="buyBtn" onclick="buy(${post.id},'${post.user_id}')">🛒</button>
+            <button class="likeBtn" onclick="like(${post.id},${post.likes||0})">❤️</button>
+            <button class="commentBtn" onclick="comment(${post.id})">💬</button>
+            <button class="buyBtn" onclick="buy(${post.id})">🛒</button>
         </div>
         `;
 
@@ -248,46 +230,20 @@ function render(){
     });
 }
 
-/* ================= FOLLOW ================= */
-
-async function follow(target){
-
-    if(target === user) return;
-
-    await client.from("followers").insert([{
-        follower:user,
-        following:target
-    }]);
-
-    await client.from("notifications").insert([{
-        user:target,
-        text:"➕ nouveau follower"
-    }]);
-
-    loadFollowers();
-}
-
-/* ================= LIKE ================= */
-
-async function like(id,likes,owner){
+/* LIKE */
+async function like(id,likes){
 
     await client.from("posts")
-        .update({likes:(likes||0)+1})
-        .eq("id",id);
-
-    await client.from("notifications").insert([{
-        user:owner,
-        text:"❤️ like"
-    }]);
+    .update({likes:(likes||0)+1})
+    .eq("id",id);
 
     loadPosts();
 }
 
-/* ================= COMMENT ================= */
+/* COMMENT */
+async function comment(id){
 
-async function comment(id,owner){
-
-    let text = prompt("commentaire");
+    let text = prompt("commentaire ?");
     if(!text) return;
 
     await client.from("comments").insert([{
@@ -295,49 +251,36 @@ async function comment(id,owner){
         text,
         user_id:user
     }]);
-
-    await client.from("notifications").insert([{
-        user:owner,
-        text:"💬 commentaire"
-    }]);
 }
 
-/* ================= BUY ================= */
+/* BUY */
+async function buy(id){
 
-async function buy(id,owner){
+    let {data}=await client.from("posts")
+    .select("*")
+    .eq("id",id)
+    .single();
 
-    let {data} = await client
-        .from("posts")
-        .select("*")
-        .eq("id",id)
-        .single();
+    let money = parseInt(localStorage.getItem("money")||0);
 
-    let money = parseInt(localStorage.getItem("argent")||0);
-
-    if(money < data.price){
+    if(money<data.price){
         alert("pas assez d'argent");
         return;
     }
 
-    money -= data.price;
-    localStorage.setItem("argent",money);
-
-    await client.from("notifications").insert([{
-        user:owner,
-        text:"🛒 achat"
-    }]);
+    money-=data.price;
+    localStorage.setItem("money",money);
 
     alert("acheté !");
 }
 
-/* ================= PROFILE MODAL ================= */
-
+/* PROFILE MODAL */
 function openProfile(){
 
-    document.getElementById("box").innerHTML = `
+    document.getElementById("box").innerHTML=`
         <h2>Profil</h2>
-        <input id="username" placeholder="pseudo">
-        <input id="bio" placeholder="bio">
+        <input id="username">
+        <input id="bio">
         <button onclick="saveProfile()">save</button>
     `;
 
@@ -356,16 +299,14 @@ async function saveProfile(){
     loadProfile();
 }
 
-/* ================= NOTIFS ================= */
-
+/* NOTIF */
 async function openNotif(){
 
-    let {data} = await client
-        .from("notifications")
-        .select("*")
-        .eq("user",user);
+    let {data}=await client.from("notifications")
+    .select("*")
+    .eq("user_id",user);
 
-    document.getElementById("box").innerHTML = `
+    document.getElementById("box").innerHTML=`
         <h2>Notifications</h2>
         ${(data||[]).map(n=>`<div>${n.text}</div>`).join("")}
     `;
@@ -373,10 +314,9 @@ async function openNotif(){
     document.getElementById("modal").style.display="flex";
 }
 
-/* ================= START ================= */
-
 loadPosts();
 loadProfile();
+
 </script>
 
 </body>
