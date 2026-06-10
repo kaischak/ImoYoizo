@@ -28,19 +28,24 @@ li{
 <button onclick="location.href='index.html'">🏠 Retour</button>
 
 <script>
-let inv = JSON.parse(localStorage.getItem("inventaire")) || [];
+let inv = JSON.parse(localStorage.getItem("inventaire") || "[]");
+
+console.log(inv);
+
 let ul = document.getElementById("inventaire");
 
 if(inv.length === 0){
-    ul.innerHTML = "<li>Vide</li>";
+    ul.innerHTML = "<li>Inventaire vide</li>";
 } else {
     inv.forEach(item => {
         let li = document.createElement("li");
+
         li.innerHTML = `
             <strong>${item.name}</strong><br>
             💰 ${item.price}<br>
-            👤 ${item.owner}
+            👤 ${item.owner || "system"}
         `;
+
         ul.appendChild(li);
     });
 }
