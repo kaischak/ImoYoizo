@@ -37,17 +37,10 @@ input, textarea {
 
 <h3>Créer une annonce</h3>
 
-<input id="name" placeholder="Nom">
-<br>
-
-<textarea id="desc" placeholder="Description"></textarea>
-<br>
-
-<input id="price" type="number" placeholder="Prix">
-<br>
-
-<input id="image" type="file" accept="image/*">
-<br><br>
+<input id="name" placeholder="Nom"><br>
+<textarea id="desc" placeholder="Description"></textarea><br>
+<input id="price" type="number" placeholder="Prix"><br>
+<input id="image" type="file" accept="image/*"><br><br>
 
 <button onclick="sell()">Vendre</button>
 
@@ -59,16 +52,21 @@ input, textarea {
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 
 <script>
-const supabaseUrl = "https://eezsocswqhqgkvghhygq.supabase.co/rest/v1/market";
+const supabaseUrl = "https://eezsocswqhqgkvghhygq.supabase.co";
 const supabaseKey = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImVlenNvY3N3cWhxZ2t2Z2hoeWdxIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODEwNjg5MjYsImV4cCI6MjA5NjY0NDkyNn0.TVI962lsUo67i6Ltq8okbOw-_GO-5yc4KDCyc8OkdVQ";
 
 const client = supabase.createClient(supabaseUrl, supabaseKey);
 
-/* 📦 CHARGER LE MARCHÉ */
+/* 📦 LIRE LE MARCHÉ */
 async function getMarket(){
     let { data, error } = await client
         .from("market")
         .select("*");
+
+    if(error){
+        console.log("Erreur Supabase:", error);
+        return [];
+    }
 
     return data || [];
 }
@@ -118,19 +116,22 @@ async function sell(){
 
     reader.onload = async function(e){
 
-        await client
+        console.log("INSERT START");
+
+        let { error } = await client
             .from("market")
             .insert([{
-                name: name,
-                desc: desc,
-                price: price,
+                name,
+                desc,
+                price,
                 image: e.target.result
             }]);
 
-        document.getElementById("name").value = "";
-        document.getElementById("desc").value = "";
-        document.getElementById("price").value = "";
-        document.getElementById("image").value = "";
+        if(error){
+            console.log("INSERT ERROR:", error);
+        } else {
+            console.log("INSERT OK");
+        }
 
         render();
     };
@@ -146,6 +147,11 @@ async function buy(id){
         .select("*")
         .eq("id", id)
         .single();
+
+    if(error){
+        console.log(error);
+        return;
+    }
 
     let money = parseInt(localStorage.getItem("argent") || 0);
 
