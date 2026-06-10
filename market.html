@@ -3,173 +3,151 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Marketplace Ultra Pro</title>
+<title>Ultimate Market Final</title>
 
 <style>
-body {
-    margin: 0;
-    font-family: Arial;
-    background: #0b0b0f;
-    color: white;
+body{
+    margin:0;
+    font-family:Arial;
+    background:#0b0b0f;
+    color:white;
 }
 
 /* TOP */
-.topbar {
-    position: fixed;
-    top: 0;
-    width: 100%;
-    display: flex;
-    justify-content: center;
-    padding: 10px;
-    background: rgba(0,0,0,0.6);
-    backdrop-filter: blur(12px);
-    z-index: 10;
+.topbar{
+    position:fixed;
+    top:0;
+    width:100%;
+    display:flex;
+    justify-content:center;
+    padding:10px;
+    background:rgba(0,0,0,0.6);
+    backdrop-filter:blur(10px);
+    z-index:10;
 }
 
-#search {
-    width: 60%;
-    max-width: 500px;
-    padding: 10px;
-    border-radius: 10px;
-    border: none;
+#search{
+    width:60%;
+    max-width:500px;
+    padding:10px;
+    border-radius:10px;
+    border:none;
 }
 
 /* FEED */
-#feed {
-    height: 100vh;
-    overflow-y: scroll;
-    scroll-snap-type: y mandatory;
+#feed{
+    height:100vh;
+    overflow-y:scroll;
+    scroll-snap-type:y mandatory;
 }
 
-.post {
-    height: 100vh;
-    scroll-snap-align: start;
-    display: flex;
-    justify-content: center;
-    align-items: center;
-    position: relative;
+.post{
+    height:100vh;
+    scroll-snap-align:start;
+    display:flex;
+    justify-content:center;
+    align-items:center;
+    position:relative;
 }
 
 /* CARD */
-.card {
-    width: 90%;
-    max-width: 450px;
-    background: #16161d;
-    border-radius: 20px;
-    padding: 15px;
-    text-align: center;
-    cursor: pointer;
-    transition: 0.2s;
+.card{
+    width:90%;
+    max-width:450px;
+    background:#16161d;
+    border-radius:20px;
+    padding:15px;
+    text-align:center;
+    cursor:pointer;
 }
 
-.card:hover {
-    transform: scale(1.02);
-}
-
-.card img {
-    width: 100%;
-    border-radius: 15px;
+.card img{
+    width:100%;
+    border-radius:15px;
 }
 
 /* ACTIONS */
-.actions {
-    position: absolute;
-    right: 15px;
-    bottom: 120px;
-    display: flex;
-    flex-direction: column;
-    gap: 10px;
+.actions{
+    position:absolute;
+    right:15px;
+    bottom:120px;
+    display:flex;
+    flex-direction:column;
+    gap:10px;
 }
 
-.actions button {
-    width: 55px;
-    height: 55px;
-    border-radius: 50%;
-    border: none;
-    cursor: pointer;
+.actions button{
+    width:55px;
+    height:55px;
+    border-radius:50%;
+    border:none;
+    cursor:pointer;
 }
 
-.likeBtn { background: #ff2d55; color: white; }
-.commentBtn { background: #2d6bff; color: white; }
-.buyBtn { background: #00ff99; }
+.likeBtn{background:#ff2d55;color:white;}
+.commentBtn{background:#2d6bff;color:white;}
+.buyBtn{background:#00ff99;}
 
-/* ➕ BUTTON */
-#openSell {
-    position: fixed;
-    bottom: 20px;
-    right: 20px;
-    width: 60px;
-    height: 60px;
-    border-radius: 50%;
-    background: #00ff99;
-    border: none;
-    font-size: 30px;
-    z-index: 20;
+/* SELL BUTTON */
+#openSell{
+    position:fixed;
+    bottom:20px;
+    right:20px;
+    width:60px;
+    height:60px;
+    border-radius:50%;
+    background:#00ff99;
+    border:none;
+    font-size:30px;
 }
 
-/* MODALS */
-.modal {
-    position: fixed;
-    inset: 0;
-    background: rgba(0,0,0,0.92);
-    display: none;
-    justify-content: center;
-    align-items: center;
-    z-index: 100;
+/* MODAL */
+.modal{
+    position:fixed;
+    inset:0;
+    background:rgba(0,0,0,0.92);
+    display:none;
+    justify-content:center;
+    align-items:center;
+    z-index:100;
+}
+
+.box{
+    width:90%;
+    max-width:500px;
+    background:#16161d;
+    padding:20px;
+    border-radius:20px;
 }
 
 /* DETAIL */
-.detailBox {
-    width: 90%;
-    max-width: 650px;
-    background: #16161d;
-    border-radius: 20px;
-    padding: 20px;
-    text-align: center;
-    animation: pop 0.2s ease;
-}
-
-@keyframes pop {
-    from { transform: scale(0.9); opacity: 0; }
-    to { transform: scale(1); opacity: 1; }
-}
-
-.detailBox img {
-    width: 100%;
-    border-radius: 15px;
+.detail img{
+    width:100%;
+    border-radius:15px;
 }
 
 /* COMMENTS */
-.commentBox {
-    margin-top: 10px;
-    max-height: 180px;
-    overflow-y: auto;
-    text-align: left;
+.commentBox{
+    margin-top:10px;
+    max-height:200px;
+    overflow-y:auto;
+    text-align:left;
 }
 
-.commentItem {
-    background: #222;
-    padding: 6px;
-    margin: 5px 0;
-    border-radius: 8px;
-    font-size: 14px;
+.commentItem{
+    background:#222;
+    padding:6px;
+    margin:5px 0;
+    border-radius:8px;
 }
 
-/* SELL */
-.sellBox {
-    width: 90%;
-    max-width: 400px;
-    background: #16161d;
-    padding: 20px;
-    border-radius: 20px;
-}
-
-input, textarea {
-    width: 100%;
-    margin: 5px 0;
-    padding: 10px;
-    border-radius: 10px;
-    border: none;
+/* INPUT */
+input,textarea{
+    width:100%;
+    margin:5px 0;
+    padding:10px;
+    border-radius:10px;
+    border:none;
 }
 </style>
 </head>
@@ -188,7 +166,7 @@ input, textarea {
 <button id="openSell" onclick="openSell()">+</button>
 
 <div id="sellModal" class="modal">
-    <div class="sellBox">
+    <div class="box">
         <h2>Vendre un item</h2>
         <input id="name" placeholder="Nom">
         <textarea id="desc" placeholder="Description"></textarea>
@@ -202,7 +180,7 @@ input, textarea {
 
 <!-- DETAIL -->
 <div id="detailModal" class="modal">
-    <div class="detailBox" id="detailBox"></div>
+    <div class="box" id="detailBox"></div>
 </div>
 
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
@@ -214,6 +192,9 @@ const client = supabase.createClient(supabaseUrl, supabaseKey);
 
 let posts = [];
 let commentsCache = {};
+
+let user = localStorage.getItem("user") || ("user" + Math.floor(Math.random()*9999));
+localStorage.setItem("user", user);
 
 /* LOAD POSTS */
 async function loadPosts(){
@@ -241,8 +222,8 @@ function render(){
     feed.innerHTML = "";
 
     let filtered = posts.filter(p =>
-        p.name.toLowerCase().includes(search) ||
-        p.desc.toLowerCase().includes(search)
+        (p.name || "").toLowerCase().includes(search) ||
+        (p.desc || "").toLowerCase().includes(search)
     );
 
     filtered.forEach(post => {
@@ -252,13 +233,14 @@ function render(){
 
         div.innerHTML = `
         <div class="card" onclick="openDetail(${post.id})">
+
             <h2>${post.name}</h2>
             <img src="${post.image}">
             <p>💰 ${post.price}</p>
 
             <div class="commentBox">
                 ${(commentsCache[post.id] || []).map(c =>
-                    `<div class="commentItem">💬 ${c.text}</div>`
+                    `<div class="commentItem">💬 ${c.user}: ${c.text}</div>`
                 ).join("")}
             </div>
         </div>
@@ -282,20 +264,22 @@ function openDetail(id){
     let post = posts.find(p => p.id === id);
 
     document.getElementById("detailBox").innerHTML = `
-        <h2>${post.name}</h2>
-        <img src="${post.image}">
-        <h3>💰 ${post.price}</h3>
-        <p>${post.desc}</p>
+        <div class="detail">
+            <h2>${post.name}</h2>
+            <img src="${post.image}">
+            <h3>💰 ${post.price}</h3>
+            <p>${post.desc}</p>
 
-        <div class="commentBox">
-            ${(commentsCache[id] || []).map(c =>
-                `<div class="commentItem">💬 ${c.text}</div>`
-            ).join("")}
+            <div class="commentBox">
+                ${(commentsCache[id] || []).map(c =>
+                    `<div class="commentItem">💬 ${c.user}: ${c.text}</div>`
+                ).join("")}
+            </div>
+
+            <button onclick="like(${post.id}, ${post.likes || 0})">❤️ Like</button>
+            <button onclick="comment(${post.id})">💬 Commenter</button>
+            <button onclick="buyPost(${post.id})">🛒 Acheter</button>
         </div>
-
-        <button onclick="like(${post.id}, ${post.likes || 0})">❤️ Like</button>
-        <button onclick="comment(${post.id})">💬 Commenter</button>
-        <button onclick="buyPost(${post.id})">🛒 Acheter</button>
     `;
 
     document.getElementById("detailModal").style.display = "flex";
@@ -316,11 +300,12 @@ async function like(id, likes){
 
 /* COMMENT */
 async function comment(id){
+
     let text = prompt("Commentaire :");
     if(!text) return;
 
     await client.from("comments")
-        .insert([{ post_id: id, text }]);
+        .insert([{ post_id: id, text, user }]);
 
     await loadComments(id);
     render();
@@ -374,7 +359,8 @@ async function sell(){
             desc,
             price,
             image: e.target.result,
-            likes: 0
+            likes: 0,
+            user
         }]);
 
         closeSell();
