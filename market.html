@@ -171,10 +171,9 @@ async function loadProfile(){
     let { data } = await client
         .from("profiles")
         .select("*")
-        .eq("user", user)
-        .single();
+        .eq("user", user);
 
-    profile = data;
+    profile = data?.[0]; // 👈 IMPORTANT (plus de single)
 
     document.getElementById("pname").textContent =
         "👤 " + (profile?.username || user);
@@ -343,16 +342,19 @@ function openProfile(){
 
 async function saveProfile(){
 
-    await client.from("profiles").upsert([{
-        user,
-        username:document.getElementById("username").value,
-        bio:document.getElementById("bio").value
-    }]);
+    let username = document.getElementById("username").value;
+    let bio = document.getElementById("bio").value;
 
-    loadProfile();
+    await client.from("profiles").upsert([{
+        user,          // clé logique
+        username,
+        bio
+    }], { onConflict: "user" }); // 👈 IMPORTANT
+
+    await loadProfile(); // refresh UI direct
     closeModal();
 }
-
+    
 /* NOTIFS */
 async function openNotif(){
 
