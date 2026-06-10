@@ -2,7 +2,7 @@
 <html lang="fr">
 <head>
 <meta charset="UTF-8">
-<title>Marché Supabase</title>
+<title>Marché</title>
 
 <style>
 body {
@@ -26,6 +26,7 @@ input, textarea {
 
 .card img {
     max-width: 200px;
+    max-height: 200px;
 }
 </style>
 </head>
@@ -34,117 +35,129 @@ input, textarea {
 
 <h1>🏪 Marché en ligne</h1>
 
-<input id="name" placeholder="Nom"><br>
-<textarea id="desc" placeholder="Description"></textarea><br>
-<input id="price" type="number" placeholder="Prix"><br>
-<input id="image" type="file"><br><br>
+<h3>Créer une annonce</h3>
+
+<input id="name" placeholder="Nom">
+<br>
+
+<textarea id="desc" placeholder="Description"></textarea>
+<br>
+
+<input id="price" type="number" placeholder="Prix">
+<br>
+
+<input id="image" type="file" accept="image/*">
+<br><br>
 
 <button onclick="sell()">Vendre</button>
 
 <hr>
 
-<div id="list">Chargement...</div>
-
-<!-- SUPABASE -->
-<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<div id="list"></div>
 
 <script>
-document.addEventListener("DOMContentLoaded", () => {
 
-    const supabaseUrl = "https://wuxhvpiaenmhipjfrojj.supabase.co";
-    const supabaseKey = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Ind1eGh2cGlhZW5taGlwamZyb2pqIiwicm9sZSI6InNlcnZpY2Vfcm9sZSIsImlhdCI6MTc4MDc1MjQ5MywiZXhwIjoyMDk2MzI4NDkzfQ.ssRZDspgNOgHV2__0rZrf37DfiFJS_G6GVKclGpDCq4";
+function getMarket(){
+    return JSON.parse(localStorage.getItem("market")) || [];
+}
 
-    const supabase = window.supabase.createClient(supabaseUrl, supabaseKey);
+function saveMarket(m){
+    localStorage.setItem("market", JSON.stringify(m));
+}
 
-    /* ================= LOAD ================= */
-    async function loadProducts(){
+function render(){
 
-        const { data, error } = await supabase
-            .from("market")
-            .select("*")
-            .order("created_at", { ascending: false });
+    let list = document.getElementById("list");
+    list.innerHTML = "";
 
-        if(error){
-            console.log(error);
-            return;
-        }
+    getMarket().forEach((item, i) => {
 
-        render(data);
+        let div = document.createElement("div");
+        div.className = "card";
+
+        div.innerHTML = `
+        <h3>${item.name}</h3>
+
+        <img src="${item.image}">
+
+        <p>${item.desc}</p>
+
+        <p>💰 ${item.price}</p>
+
+        <button onclick="buy(${i})">
+            Acheter
+        </button>
+        `;
+
+        list.appendChild(div);
+    });
+}
+
+function sell(){
+
+    let name = document.getElementById("name").value;
+    let desc = document.getElementById("desc").value;
+    let price = parseInt(document.getElementById("price").value);
+    let imageFile = document.getElementById("image").files[0];
+
+    if(!name || !price || !imageFile){
+        alert("Remplis tous les champs !");
+        return;
     }
 
-    /* ================= RENDER ================= */
-    function render(items){
+    let reader = new FileReader();
 
-        const list = document.getElementById("list");
-        list.innerHTML = "";
+    reader.onload = function(e){
 
-        if(!items || items.length === 0){
-            list.innerHTML = "<p>Aucun produit pour le moment</p>";
-            return;
-        }
+        let market = getMarket();
 
-        items.forEach(item => {
-
-            const div = document.createElement("div");
-            div.className = "card";
-
-            div.innerHTML = `
-                <h3>${item.name}</h3>
-                <img src="${item.image}">
-                <p>${item.description}</p>
-                <p>💰 ${item.price}</p>
-            `;
-
-            list.appendChild(div);
+        market.push({
+            name: name,
+            desc: desc,
+            price: price,
+            image: e.target.result
         });
-    }
 
-    /* ================= SELL ================= */
-    window.sell = function(){
+        saveMarket(market);
 
-        const name = document.getElementById("name").value;
-        const desc = document.getElementById("desc").value;
-        const price = parseInt(document.getElementById("price").value);
-        const imageFile = document.getElementById("image").files[0];
+        document.getElementById("name").value = "";
+        document.getElementById("desc").value = "";
+        document.getElementById("price").value = "";
+        document.getElementById("image").value = "";
 
-        if(!name || !price || !imageFile){
-            alert("Remplis tous les champs !");
-            return;
-        }
-
-        const reader = new FileReader();
-
-        reader.onload = async function(e){
-
-            const { error } = await supabase
-                .from("market")
-                .insert([{
-                    name,
-                    description: desc,
-                    price,
-                    image: e.target.result
-                }]);
-
-            if(error){
-                console.log(error);
-                return;
-            }
-
-            document.getElementById("name").value = "";
-            document.getElementById("desc").value = "";
-            document.getElementById("price").value = "";
-            document.getElementById("image").value = "";
-
-            loadProducts();
-        };
-
-        reader.readAsDataURL(imageFile);
+        render();
     };
 
-    /* ================= INIT ================= */
-    loadProducts();
+    reader.readAsDataURL(imageFile);
+}
 
-});
+function buy(i){
+
+    let market = getMarket();
+    let item = market[i];
+
+    let money = parseInt(localStorage.getItem("argent") || 0);
+
+    if(money < item.price){
+        alert("Pas assez d'argent !");
+        return;
+    }
+
+    money -= item.price;
+    localStorage.setItem("argent", money);
+
+    let inv = JSON.parse(localStorage.getItem("inventaire")) || [];
+    inv.push(item.name);
+    localStorage.setItem("inventaire", JSON.stringify(inv));
+
+    market.splice(i, 1);
+    saveMarket(market);
+
+    render();
+}
+
+render();
+
 </script>
 
 </body>
