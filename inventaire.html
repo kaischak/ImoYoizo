@@ -11,20 +11,10 @@ body{
     margin-top:50px;
 }
 
-ul{
-    list-style:none;
-    padding:0;
-}
-
 li{
     margin:10px;
     padding:10px;
     border:1px solid #ccc;
-}
-
-button{
-    padding:10px;
-    margin:5px;
 }
 </style>
 </head>
@@ -35,22 +25,22 @@ button{
 
 <ul id="inventaire"></ul>
 
-<button onclick="location.href='index.html'">
-🏠 Retour à l'accueil
-</button>
+<button onclick="location.href='index.html'">🏠 Retour</button>
 
 <script>
 let inv = JSON.parse(localStorage.getItem("inventaire")) || [];
-
 let ul = document.getElementById("inventaire");
 
 if(inv.length === 0){
-    ul.innerHTML = "<li>Inventaire vide</li>";
-}
-else{
+    ul.innerHTML = "<li>Vide</li>";
+} else {
     inv.forEach(item => {
         let li = document.createElement("li");
-        li.textContent = item;
+        li.innerHTML = `
+            <strong>${item.name}</strong><br>
+            💰 ${item.price}<br>
+            👤 ${item.owner}
+        `;
         ul.appendChild(li);
     });
 }
