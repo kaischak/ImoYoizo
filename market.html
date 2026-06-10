@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Social Market ULTIMATE</title>
+<title>Social Market FIX ULTIME</title>
 
 <style>
 body{
@@ -43,12 +43,12 @@ body{
 }
 
 #addBtn{
-    width:50px;
-    height:50px;
+    width:45px;
+    height:45px;
     border-radius:50%;
     border:none;
-    background:linear-gradient(45deg,#00ff99,#00ccff);
-    font-size:22px;
+    background:#00ff99;
+    font-size:20px;
     cursor:pointer;
 }
 
@@ -112,6 +112,15 @@ body{
 .commentBtn{background:#2d6bff;color:white;}
 .buyBtn{background:#00ff99;}
 
+/* FOLLOW */
+.followBtn{
+    background:#ffcc00;
+    border:none;
+    padding:6px;
+    border-radius:10px;
+    margin-top:5px;
+}
+
 /* MODAL */
 .modal{
     position:fixed;
@@ -124,68 +133,19 @@ body{
 }
 
 .box{
-    width:92%;
-    max-width:520px;
+    width:90%;
+    max-width:500px;
     background:#16161d;
     padding:20px;
     border-radius:20px;
 }
 
-/* DROPZONE */
-.dropZone{
-    border:2px dashed #00ff99;
-    padding:20px;
-    border-radius:15px;
-    text-align:center;
-    cursor:pointer;
-    background:#1a1a1f;
-    transition:0.2s;
-}
-
-.dropZone:hover{
-    background:#222;
-}
-
-.dropZone p{
-    margin:0;
-    opacity:0.8;
-}
-
 input,textarea{
     width:100%;
-    margin:6px 0;
-    padding:12px;
+    margin:5px 0;
+    padding:10px;
     border-radius:10px;
     border:none;
-    background:#222;
-    color:white;
-}
-
-.primaryBtn{
-    width:100%;
-    padding:12px;
-    border:none;
-    border-radius:12px;
-    background:linear-gradient(45deg,#00ff99,#00ccff);
-    font-weight:bold;
-    margin-top:10px;
-    cursor:pointer;
-}
-
-.closeBtn{
-    margin-top:8px;
-    width:100%;
-    padding:10px;
-    border:none;
-    border-radius:12px;
-    background:#333;
-    color:white;
-    cursor:pointer;
-}
-
-.detailImg{
-    width:100%;
-    border-radius:15px;
 }
 </style>
 </head>
@@ -193,9 +153,10 @@ input,textarea{
 <body>
 
 <div class="topbar">
+
     <div id="miniProfile" onclick="openProfile()">
-        <strong id="pname">👤 loading...</strong><br>
-        <span id="pbio"></span>
+        <strong id="pname">👤 loading...</strong>
+        <div id="pbio">...</div>
     </div>
 
     <input id="search" placeholder="🔎 rechercher..." oninput="render()">
@@ -215,53 +176,75 @@ input,textarea{
 
 <script>
 const supabaseUrl = "https://eezsocswqhqgkvghhygq.supabase.co";
-const supabaseKey = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImVlenNvY3N3cWhxZ2t2Z2hoeWdxIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODEwNjg5MjYsImV4cCI6MjA5NjY0NDkyNn0.TVI962lsUo67i6Ltq8okbOw-_GO-5yc4KDCyc8OkdVQ";
+const supabaseKey = "YOUR_SUPABASE_KEY";
 const client = supabase.createClient(supabaseUrl, supabaseKey);
 
 let posts = [];
 let comments = {};
-let selectedImage = "";
 
 let user = localStorage.getItem("user") || ("user"+Math.floor(Math.random()*9999));
 localStorage.setItem("user", user);
 
 /* PROFILE */
 async function loadProfile(){
-    let { data } = await client.from("profiles").select("*").eq("user_id", user);
-    let p = data?.[0];
 
-    if(!p){
-        await client.from("profiles").insert([{user_id:user,username:user,bio:"nouveau"}]);
+    let { data } = await client
+        .from("profiles")
+        .select("*")
+        .eq("user_id", user);
+
+    let profile = data?.[0];
+
+    if(!profile){
+        await client.from("profiles").insert([{
+            user_id:user,
+            username:user,
+            bio:"nouveau utilisateur"
+        }]);
+
         return loadProfile();
     }
 
-    document.getElementById("pname").innerText = "👤 "+p.username;
-    document.getElementById("pbio").innerText = p.bio;
+    document.getElementById("pname").textContent = "👤 " + profile.username;
+    document.getElementById("pbio").textContent = profile.bio;
 }
 
 /* POSTS */
 async function loadPosts(){
-    let { data } = await client.from("posts").select("*");
+
+    let { data } = await client
+        .from("posts")
+        .select("*");
+
     posts = data || [];
     render();
 }
 
 /* COMMENTS */
-async function loadComments(id){
-    let { data } = await client.from("comments").select("*").eq("post_id",id);
-    comments[id] = data || [];
+async function loadComments(postId){
+
+    let { data } = await client
+        .from("comments")
+        .select("*")
+        .eq("post_id", postId);
+
+    comments[postId] = data || [];
 }
 
 /* RENDER */
 function render(){
-    let s = document.getElementById("search").value.toLowerCase();
+
+    let search = document.getElementById("search").value.toLowerCase();
     let feed = document.getElementById("feed");
+
     feed.innerHTML = "";
 
-    posts.filter(p =>
-        (p.name||"").toLowerCase().includes(s) ||
-        (p.desc||"").toLowerCase().includes(s)
-    ).forEach(post => {
+    posts
+    .filter(p =>
+        (p.name||"").toLowerCase().includes(search) ||
+        (p.desc||"").toLowerCase().includes(search)
+    )
+    .forEach(post => {
 
         let div = document.createElement("div");
         div.className="post";
@@ -270,43 +253,45 @@ function render(){
         <div class="card" onclick="openPost(${post.id})">
             <h2>${post.name}</h2>
             <img src="${post.image}">
+            
             <div class="info">
-                💰 ${post.price}<br>
-                ❤️ ${post.likes||0}<br>
-                👤 ${post.user}<br>
-                ${post.desc||""}
+                <div>💰 ${post.price}</div>
+                <div>❤️ ${post.likes || 0}</div>
+                <div>${post.desc || ""}</div>
             </div>
         </div>
 
         <div class="actions">
-            <button class="likeBtn" onclick="event.stopPropagation();like(${post.id},${post.likes||0})">❤️</button>
-            <button class="commentBtn" onclick="event.stopPropagation();openPost(${post.id})">💬</button>
-            <button class="buyBtn" onclick="event.stopPropagation();buy(${post.id})">🛒</button>
+            <button class="likeBtn" onclick="event.stopPropagation(); like(${post.id},${post.likes||0})">❤️</button>
+            <button class="commentBtn" onclick="event.stopPropagation(); comment(${post.id})">💬</button>
+            <button class="buyBtn" onclick="event.stopPropagation(); buy(${post.id})">🛒</button>
         </div>
         `;
 
         feed.appendChild(div);
+
         loadComments(post.id);
     });
 }
 
 /* OPEN POST */
 function openPost(id){
-    let p = posts.find(x=>x.id===id);
+
+    let post = posts.find(p => p.id === id);
 
     document.getElementById("box").innerHTML = `
-        <h2>${p.name}</h2>
-        <img class="detailImg" src="${p.image}">
-        <p>💰 ${p.price}</p>
-        <p>${p.desc}</p>
+        <h2>${post.name}</h2>
+        <img src="${post.image}" style="width:100%;border-radius:10px;">
+        <p>💰 ${post.price}</p>
+        <p>${post.desc}</p>
 
         <h3>Commentaires</h3>
         ${(comments[id]||[]).map(c=>`
-            <div>💬 ${c.user}: ${c.text}</div>
+            <div class="comment">💬 ${c.user}: ${c.text}</div>
         `).join("")}
 
-        <input id="c" placeholder="commentaire">
-        <button class="primaryBtn" onclick="addComment(${id})">Envoyer</button>
+        <input id="cText" placeholder="commentaire">
+        <button onclick="addComment(${id})">Envoyer</button>
     `;
 
     document.getElementById("modal").style.display="flex";
@@ -314,105 +299,53 @@ function openPost(id){
 
 /* COMMENT */
 async function addComment(id){
-    let text = document.getElementById("c").value;
+
+    let text = document.getElementById("cText").value;
     if(!text) return;
 
-    await client.from("comments").insert([{post_id:id,text,user}]);
+    await client.from("comments").insert([{
+        post_id:id,
+        text,
+        user
+    }]);
+
     loadComments(id);
     openPost(id);
 }
 
 /* LIKE */
 async function like(id,likes){
-    await client.from("posts").update({likes:(likes||0)+1}).eq("id",id);
+
+    await client.from("posts")
+        .update({likes:(likes||0)+1})
+        .eq("id",id);
+
     loadPosts();
 }
 
-/* BUY */
-async function buy(id){
-    let {data} = await client.from("posts").select("*").eq("id",id).single();
-
-    let money = parseInt(localStorage.getItem("money")||0);
-
-    if(money < data.price){
-        alert("Pas assez d'argent");
-        return;
-    }
-
-    money -= data.price;
-    localStorage.setItem("money",money);
-
-    alert("Acheté !");
-}
-
-/* CREATE UI */
+/* CREATE */
 function openCreatePost(){
 
-    selectedImage = "";
+    document.getElementById("box").innerHTML=`
+        <h2>Créer post</h2>
+        <input id="name" placeholder="nom">
+        <input id="image" placeholder="image url">
+        <input id="price" placeholder="prix">
+        <textarea id="desc" placeholder="description"></textarea>
 
-    document.getElementById("box").innerHTML = `
-        <h2>Créer une annonce</h2>
-
-        <input id="n" placeholder="Nom">
-        <input id="p" placeholder="Prix">
-        <textarea id="d" placeholder="Description"></textarea>
-
-        <div id="dropZone" class="dropZone">
-            <p>📁 Glisse une image ici ou clique</p>
-            <input type="file" id="fileInput" accept="image/*" hidden>
-            <img id="preview" style="display:none;width:100%;margin-top:10px;border-radius:10px;">
-        </div>
-
-        <button class="primaryBtn" onclick="create()">Publier</button>
-        <button class="closeBtn" onclick="closeModal()">Fermer</button>
+        <button onclick="createPost()">Publier</button>
     `;
 
     document.getElementById("modal").style.display="flex";
-
-    setupUpload();
 }
 
-/* UPLOAD SYSTEM */
-function setupUpload(){
+async function createPost(){
 
-    document.getElementById("dropZone").onclick = () => {
-        document.getElementById("fileInput").click();
-    };
-
-    document.getElementById("fileInput").onchange = (e)=>{
-        handleFile(e.target.files[0]);
-    };
-
-    document.addEventListener("dragover",(e)=>e.preventDefault());
-
-    document.addEventListener("drop",(e)=>{
-        e.preventDefault();
-        if(e.dataTransfer.files.length){
-            handleFile(e.dataTransfer.files[0]);
-        }
-    });
-}
-
-function handleFile(file){
-    let reader = new FileReader();
-
-    reader.onload = function(e){
-        selectedImage = e.target.result;
-        let img = document.getElementById("preview");
-        img.src = selectedImage;
-        img.style.display = "block";
-    };
-
-    reader.readAsDataURL(file);
-}
-
-/* CREATE */
-async function create(){
     await client.from("posts").insert([{
-        name:n.value,
-        price:parseFloat(p.value),
-        desc:d.value,
-        image:selectedImage,
+        name:document.getElementById("name").value,
+        image:document.getElementById("image").value,
+        price:parseFloat(document.getElementById("price").value),
+        desc:document.getElementById("desc").value,
         user,
         likes:0
     }]);
@@ -421,9 +354,46 @@ async function create(){
     loadPosts();
 }
 
+/* BUY FIX 🔥 */
+async function buy(id){
+
+    let { data } = await client
+        .from("posts")
+        .select("*")
+        .eq("id",id)
+        .single();
+
+    let argent = parseInt(localStorage.getItem("argent") || "0");
+
+    if(argent < data.price){
+        alert("❌ Pas assez d'argent !");
+        return;
+    }
+
+    argent -= data.price;
+    localStorage.setItem("argent", argent);
+
+    let inv = JSON.parse(localStorage.getItem("inventaire") || "[]");
+
+    inv.push({
+        name: data.name,
+        image: data.image,
+        price: data.price,
+        owner: data.user
+    });
+
+    localStorage.setItem("inventaire", JSON.stringify(inv));
+
+    alert("✅ Achat réussi !");
+}
+
 /* NOTIF */
 async function openNotif(){
-    let {data} = await client.from("notifications").select("*").eq("user",user);
+
+    let { data } = await client
+        .from("notifications")
+        .select("*")
+        .eq("user",user);
 
     document.getElementById("box").innerHTML = `
         <h2>Notifications</h2>
