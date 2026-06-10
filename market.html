@@ -77,11 +77,6 @@ body{
     padding:15px;
     text-align:center;
     cursor:pointer;
-    transition:0.2s;
-}
-
-.card:hover{
-    transform:scale(1.02);
 }
 
 .card img{
@@ -94,7 +89,6 @@ body{
     text-align:left;
     margin-top:10px;
     font-size:14px;
-    opacity:0.9;
 }
 
 /* ACTIONS */
@@ -112,7 +106,6 @@ body{
     height:55px;
     border-radius:50%;
     border:none;
-    cursor:pointer;
 }
 
 .likeBtn{background:#ff2d55;color:white;}
@@ -138,10 +131,24 @@ body{
     border-radius:20px;
 }
 
-/* CREATE POST ULTRA UI */
-.createTitle{
-    font-size:20px;
-    margin-bottom:10px;
+/* DROPZONE */
+.dropZone{
+    border:2px dashed #00ff99;
+    padding:20px;
+    border-radius:15px;
+    text-align:center;
+    cursor:pointer;
+    background:#1a1a1f;
+    transition:0.2s;
+}
+
+.dropZone:hover{
+    background:#222;
+}
+
+.dropZone p{
+    margin:0;
+    opacity:0.8;
 }
 
 input,textarea{
@@ -154,10 +161,6 @@ input,textarea{
     color:white;
 }
 
-button{
-    cursor:pointer;
-}
-
 .primaryBtn{
     width:100%;
     padding:12px;
@@ -166,6 +169,7 @@ button{
     background:linear-gradient(45deg,#00ff99,#00ccff);
     font-weight:bold;
     margin-top:10px;
+    cursor:pointer;
 }
 
 .closeBtn{
@@ -176,6 +180,7 @@ button{
     border-radius:12px;
     background:#333;
     color:white;
+    cursor:pointer;
 }
 
 .detailImg{
@@ -215,6 +220,7 @@ const client = supabase.createClient(supabaseUrl, supabaseKey);
 
 let posts = [];
 let comments = {};
+let selectedImage = "";
 
 let user = localStorage.getItem("user") || ("user"+Math.floor(Math.random()*9999));
 localStorage.setItem("user", user);
@@ -339,30 +345,74 @@ async function buy(id){
     alert("Acheté !");
 }
 
-/* CREATE UI ULTRA */
+/* CREATE UI */
 function openCreatePost(){
-    document.getElementById("box").innerHTML = `
-        <div class="createTitle">🔥 Créer une annonce</div>
 
-        <input id="n" placeholder="Nom du produit">
-        <input id="i" placeholder="Image URL">
+    selectedImage = "";
+
+    document.getElementById("box").innerHTML = `
+        <h2>Créer une annonce</h2>
+
+        <input id="n" placeholder="Nom">
         <input id="p" placeholder="Prix">
-        <textarea id="d" placeholder="Description incroyable..."></textarea>
+        <textarea id="d" placeholder="Description"></textarea>
+
+        <div id="dropZone" class="dropZone">
+            <p>📁 Glisse une image ici ou clique</p>
+            <input type="file" id="fileInput" accept="image/*" hidden>
+            <img id="preview" style="display:none;width:100%;margin-top:10px;border-radius:10px;">
+        </div>
 
         <button class="primaryBtn" onclick="create()">Publier</button>
         <button class="closeBtn" onclick="closeModal()">Fermer</button>
     `;
 
     document.getElementById("modal").style.display="flex";
+
+    setupUpload();
+}
+
+/* UPLOAD SYSTEM */
+function setupUpload(){
+
+    document.getElementById("dropZone").onclick = () => {
+        document.getElementById("fileInput").click();
+    };
+
+    document.getElementById("fileInput").onchange = (e)=>{
+        handleFile(e.target.files[0]);
+    };
+
+    document.addEventListener("dragover",(e)=>e.preventDefault());
+
+    document.addEventListener("drop",(e)=>{
+        e.preventDefault();
+        if(e.dataTransfer.files.length){
+            handleFile(e.dataTransfer.files[0]);
+        }
+    });
+}
+
+function handleFile(file){
+    let reader = new FileReader();
+
+    reader.onload = function(e){
+        selectedImage = e.target.result;
+        let img = document.getElementById("preview");
+        img.src = selectedImage;
+        img.style.display = "block";
+    };
+
+    reader.readAsDataURL(file);
 }
 
 /* CREATE */
 async function create(){
     await client.from("posts").insert([{
         name:n.value,
-        image:i.value,
         price:parseFloat(p.value),
         desc:d.value,
+        image:selectedImage,
         user,
         likes:0
     }]);
