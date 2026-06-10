@@ -231,29 +231,44 @@ function render(){
 /* BUY FIX TOTAL */
 async function buy(id){
 
-    let { data } = await client
+    let { data, error } = await client
         .from("posts")
         .select("*")
         .eq("id", id)
         .single();
 
-    // ⚠️ FIX BUG ARGENT STRING
-    let money = Number(localStorage.getItem("argent") || 0);
+    if(error){
+        console.log("ERREUR GET POST", error);
+        alert("Erreur chargement produit");
+        return;
+    }
 
-    if(money < Number(data.price)){
+    let money = Number(localStorage.getItem("argent") || 0);
+    let price = Number(data.price);
+
+    if(money < price){
         alert("Pas assez d'argent !");
         return;
     }
 
-    money -= Number(data.price);
-    localStorage.setItem("argent", money);
+    // 💾 ESSAI INSERT INVENTAIRE
+    const { error: invError } = await client
+        .from("inventaire")
+        .insert([{
+            user_id: user,
+            item: data.name,
+            price: price
+        }]);
 
-    // 💾 AJOUT INVENTAIRE SUPABASE
-    await client.from("inventaire").insert([{
-        user_id: user,
-        item: data.name,
-        price: data.price
-    }]);
+    if(invError){
+        console.log("ERREUR INVENTAIRE", invError);
+        alert("Erreur inventaire (Supabase bloque l'insert)");
+        return;
+    }
+
+    // 💰 SEULEMENT SI TOUT OK
+    money -= price;
+    localStorage.setItem("argent", money);
 
     alert("Acheté !");
 }
