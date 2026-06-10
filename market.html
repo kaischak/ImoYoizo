@@ -55,45 +55,54 @@ input, textarea {
 
 <div id="list"></div>
 
+<!-- 🔥 SUPABASE -->
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+
 <script>
+const supabaseUrl = "TON_URL_ICI";
+const supabaseKey = "TA_ANON_KEY_ICI";
 
-function getMarket(){
-    return JSON.parse(localStorage.getItem("market")) || [];
+const client = supabase.createClient(supabaseUrl, supabaseKey);
+
+/* 📦 CHARGER LE MARCHÉ */
+async function getMarket(){
+    let { data, error } = await client
+        .from("market")
+        .select("*");
+
+    return data || [];
 }
 
-function saveMarket(m){
-    localStorage.setItem("market", JSON.stringify(m));
-}
-
-function render(){
+/* 🖥️ AFFICHAGE */
+async function render(){
 
     let list = document.getElementById("list");
     list.innerHTML = "";
 
-    getMarket().forEach((item, i) => {
+    let market = await getMarket();
+
+    market.forEach((item) => {
 
         let div = document.createElement("div");
         div.className = "card";
 
         div.innerHTML = `
-        <h3>${item.name}</h3>
+            <h3>${item.name}</h3>
+            <img src="${item.image}">
+            <p>${item.desc}</p>
+            <p>💰 ${item.price}</p>
 
-        <img src="${item.image}">
-
-        <p>${item.desc}</p>
-
-        <p>💰 ${item.price}</p>
-
-        <button onclick="buy(${i})">
-            Acheter
-        </button>
+            <button onclick="buy(${item.id})">
+                Acheter
+            </button>
         `;
 
         list.appendChild(div);
     });
 }
 
-function sell(){
+/* 📤 VENDRE */
+async function sell(){
 
     let name = document.getElementById("name").value;
     let desc = document.getElementById("desc").value;
@@ -107,18 +116,16 @@ function sell(){
 
     let reader = new FileReader();
 
-    reader.onload = function(e){
+    reader.onload = async function(e){
 
-        let market = getMarket();
-
-        market.push({
-            name: name,
-            desc: desc,
-            price: price,
-            image: e.target.result
-        });
-
-        saveMarket(market);
+        await client
+            .from("market")
+            .insert([{
+                name: name,
+                desc: desc,
+                price: price,
+                image: e.target.result
+            }]);
 
         document.getElementById("name").value = "";
         document.getElementById("desc").value = "";
@@ -131,33 +138,38 @@ function sell(){
     reader.readAsDataURL(imageFile);
 }
 
-function buy(i){
+/* 🛒 ACHETER */
+async function buy(id){
 
-    let market = getMarket();
-    let item = market[i];
+    let { data, error } = await client
+        .from("market")
+        .select("*")
+        .eq("id", id)
+        .single();
 
     let money = parseInt(localStorage.getItem("argent") || 0);
 
-    if(money < item.price){
+    if(money < data.price){
         alert("Pas assez d'argent !");
         return;
     }
 
-    money -= item.price;
+    money -= data.price;
     localStorage.setItem("argent", money);
 
     let inv = JSON.parse(localStorage.getItem("inventaire")) || [];
-    inv.push(item.name);
+    inv.push(data.name);
     localStorage.setItem("inventaire", JSON.stringify(inv));
 
-    market.splice(i, 1);
-    saveMarket(market);
+    await client
+        .from("market")
+        .delete()
+        .eq("id", id);
 
     render();
 }
 
 render();
-
 </script>
 
 </body>
