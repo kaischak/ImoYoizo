@@ -168,25 +168,39 @@ let posts = [];
 /* PROFILE */
 async function loadProfile(){
 
-    let { data } = await client
+    let { data, error } = await client
         .from("profiles")
         .select("*")
         .eq("user_id", user)
         .single();
 
+    if(error && error.code !== "PGRST116"){
+        console.log("erreur select", error);
+        return;
+    }
+
     if(!data){
 
-        await client.from("profiles").insert([{
-            user_id:user,
-            username:user,
-            bio:"nouvel utilisateur"
-        }]);
+        let { error: insertError } = await client
+            .from("profiles")
+            .insert([{
+                user_id: user,
+                username: user,
+                bio: "nouveau utilisateur"
+            }]);
+
+        if(insertError){
+            console.log("ERREUR INSERT PROFILE", insertError);
+            return;
+        }
 
         return loadProfile();
     }
 
-    document.getElementById("pname").textContent="👤 "+data.username;
-    document.getElementById("pbio").textContent=data.bio;
+    document.getElementById("pname").textContent = "👤 " + data.username;
+    document.getElementById("pbio").textContent = data.bio;
+
+    loadFollowers();
 }
 
 /* POSTS */
