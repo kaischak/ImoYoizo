@@ -13,12 +13,27 @@ body {
     overflow: hidden;
 }
 
+/* 🔎 search */
 #search {
-    width: 90%;
+    width: 70%;
     padding: 10px;
     margin: 10px;
 }
 
+/* ➕ bouton vendre */
+#openSell {
+    position: fixed;
+    right: 20px;
+    bottom: 20px;
+    padding: 15px 20px;
+    border-radius: 50%;
+    font-size: 22px;
+    background: #00ff99;
+    border: none;
+    cursor: pointer;
+}
+
+/* 📱 feed */
 #feed {
     height: 100vh;
     overflow-y: scroll;
@@ -32,7 +47,7 @@ body {
     justify-content: center;
     align-items: center;
     scroll-snap-align: start;
-    border-bottom: 1px solid #333;
+    border-bottom: 1px solid #222;
     padding: 20px;
 }
 
@@ -45,14 +60,52 @@ button {
     margin: 5px;
     padding: 10px;
 }
+
+/* 🟦 popup vendre */
+#sellBox {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: rgba(0,0,0,0.9);
+    display: none;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+}
+
+#sellBox input, #sellBox textarea {
+    width: 80%;
+    margin: 5px;
+    padding: 10px;
+}
 </style>
 </head>
 
 <body>
 
+<!-- 🔎 SEARCH -->
 <input id="search" placeholder="🔎 rechercher..." oninput="render()">
 
+<!-- 📱 FEED -->
 <div id="feed"></div>
+
+<!-- ➕ bouton vendre -->
+<button id="openSell" onclick="openSell()">+</button>
+
+<!-- 🟦 SELL BOX -->
+<div id="sellBox">
+    <h2>Vendre un item</h2>
+
+    <input id="name" placeholder="Nom">
+    <textarea id="desc" placeholder="Description"></textarea>
+    <input id="price" type="number" placeholder="Prix">
+    <input id="image" type="file">
+
+    <button onclick="sell()">Publier</button>
+    <button onclick="closeSell()">Fermer</button>
+</div>
 
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 
@@ -63,7 +116,7 @@ const client = supabase.createClient(supabaseUrl, supabaseKey);
 
 let posts = [];
 
-/* 📦 LOAD POSTS */
+/* 📦 LOAD */
 async function loadPosts(){
     let { data } = await client
         .from("posts")
@@ -71,31 +124,6 @@ async function loadPosts(){
 
     posts = data || [];
     render();
-}
-
-/* ❤️ LIKE */
-async function like(id, likes){
-
-    await client
-        .from("posts")
-        .update({ likes: (likes || 0) + 1 })
-        .eq("id", id);
-
-    loadPosts();
-}
-
-/* 💬 COMMENTAIRE */
-async function comment(post_id){
-
-    let text = prompt("Ton commentaire :");
-
-    if(!text) return;
-
-    await client
-        .from("comments")
-        .insert([{ post_id, text }]);
-
-    alert("Commentaire ajouté 👍");
 }
 
 /* 🖥️ RENDER */
@@ -130,6 +158,74 @@ function render(){
 
         feed.appendChild(div);
     });
+}
+
+/* ❤️ LIKE */
+async function like(id, likes){
+
+    await client
+        .from("posts")
+        .update({ likes: (likes || 0) + 1 })
+        .eq("id", id);
+
+    loadPosts();
+}
+
+/* 💬 COMMENT */
+async function comment(id){
+
+    let text = prompt("Commentaire :");
+
+    if(!text) return;
+
+    await client
+        .from("comments")
+        .insert([{ post_id: id, text }]);
+
+}
+
+/* ➕ OUVRIR SELL */
+function openSell(){
+    document.getElementById("sellBox").style.display = "flex";
+}
+
+/* ❌ FERMER SELL */
+function closeSell(){
+    document.getElementById("sellBox").style.display = "none";
+}
+
+/* 📤 SELL */
+async function sell(){
+
+    let name = document.getElementById("name").value;
+    let desc = document.getElementById("desc").value;
+    let price = parseInt(document.getElementById("price").value);
+    let file = document.getElementById("image").files[0];
+
+    if(!name || !price || !file){
+        alert("Remplis tout !");
+        return;
+    }
+
+    let reader = new FileReader();
+
+    reader.onload = async function(e){
+
+        await client
+            .from("posts")
+            .insert([{
+                name,
+                desc,
+                price,
+                image: e.target.result,
+                likes: 0
+            }]);
+
+        closeSell();
+        loadPosts();
+    };
+
+    reader.readAsDataURL(file);
 }
 
 loadPosts();
