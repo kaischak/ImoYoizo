@@ -13,7 +13,7 @@ body {
     color: white;
 }
 
-/* 🔎 TOP BAR */
+/* 🔎 TOP */
 .topbar {
     position: fixed;
     top: 0;
@@ -32,7 +32,6 @@ body {
     padding: 10px;
     border-radius: 10px;
     border: none;
-    outline: none;
 }
 
 /* 📱 FEED */
@@ -48,33 +47,27 @@ body {
     display: flex;
     justify-content: center;
     align-items: center;
-    padding: 20px;
     position: relative;
+    padding: 20px;
 }
 
+/* 🟦 CARD */
 .card {
     width: 90%;
     max-width: 450px;
     background: #16161d;
     border-radius: 20px;
     padding: 15px;
-    box-shadow: 0 10px 30px rgba(0,0,0,0.5);
     text-align: center;
-    animation: pop 0.2s ease;
-}
-
-@keyframes pop {
-    from { transform: scale(0.95); opacity: 0; }
-    to { transform: scale(1); opacity: 1; }
+    cursor: pointer;
 }
 
 .card img {
     width: 100%;
     border-radius: 15px;
-    margin-top: 10px;
 }
 
-/* ❤️💬🛒 ACTIONS */
+/* ❤️💬🛒 */
 .actions {
     position: absolute;
     right: 15px;
@@ -88,17 +81,13 @@ body {
     width: 55px;
     height: 55px;
     border-radius: 50%;
-    font-size: 18px;
     border: none;
     cursor: pointer;
-    display: flex;
-    justify-content: center;
-    align-items: center;
 }
 
 .likeBtn { background: #ff2d55; color: white; }
 .commentBtn { background: #2d6bff; color: white; }
-.buyBtn { background: #00ff99; color: black; }
+.buyBtn { background: #00ff99; }
 
 /* ➕ VENDRE */
 #openSell {
@@ -108,14 +97,12 @@ body {
     width: 60px;
     height: 60px;
     border-radius: 50%;
-    font-size: 30px;
     background: #00ff99;
     border: none;
-    cursor: pointer;
-    z-index: 20;
+    font-size: 30px;
 }
 
-/* 🟦 POPUP SELL */
+/* 🟦 SELL */
 #sellBox {
     position: fixed;
     inset: 0;
@@ -132,7 +119,6 @@ body {
     background: #1a1a22;
     padding: 20px;
     border-radius: 20px;
-    text-align: center;
 }
 
 .sell-content input,
@@ -141,21 +127,49 @@ body {
     margin: 5px 0;
     padding: 10px;
     border-radius: 10px;
-    border: none;
 }
 
-/* 📱 MOBILE */
-@media (max-width: 600px) {
-    #search {
-        width: 90%;
-    }
+/* 🟣 DÉTAIL ANNONCE */
+#detail {
+    position: fixed;
+    inset: 0;
+    background: rgba(0,0,0,0.95);
+    display: none;
+    justify-content: center;
+    align-items: center;
+    z-index: 100;
+}
+
+.detail-box {
+    width: 90%;
+    max-width: 500px;
+    background: #16161d;
+    padding: 20px;
+    border-radius: 20px;
+    text-align: center;
+}
+
+.detail-box img {
+    width: 100%;
+    border-radius: 15px;
+}
+
+.closeBtn {
+    position: absolute;
+    top: 20px;
+    right: 20px;
+    background: red;
+    color: white;
+    border: none;
+    padding: 10px;
+    border-radius: 10px;
 }
 </style>
 </head>
 
 <body>
 
-<!-- 🔎 SEARCH -->
+<!-- 🔎 -->
 <div class="topbar">
     <input id="search" placeholder="🔎 rechercher..." oninput="render()">
 </div>
@@ -163,14 +177,13 @@ body {
 <!-- 📱 FEED -->
 <div id="feed"></div>
 
-<!-- ➕ BUTTON -->
+<!-- ➕ -->
 <button id="openSell" onclick="openSell()">+</button>
 
-<!-- 🟦 SELL POPUP -->
+<!-- 🟦 SELL -->
 <div id="sellBox">
     <div class="sell-content">
-        <h2>Vendre un item</h2>
-
+        <h2>Vendre</h2>
         <input id="name" placeholder="Nom">
         <textarea id="desc" placeholder="Description"></textarea>
         <input id="price" type="number" placeholder="Prix">
@@ -179,6 +192,12 @@ body {
         <button onclick="sell()">Publier</button>
         <button onclick="closeSell()">Fermer</button>
     </div>
+</div>
+
+<!-- 🟣 DETAIL -->
+<div id="detail">
+    <button class="closeBtn" onclick="closeDetail()">X</button>
+    <div class="detail-box" id="detailBox"></div>
 </div>
 
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
@@ -216,7 +235,7 @@ function render(){
         div.className = "post";
 
         div.innerHTML = `
-        <div class="card">
+        <div class="card" onclick="openDetail(${post.id})">
             <h2>${post.name}</h2>
             <img src="${post.image}">
             <p>${post.desc}</p>
@@ -224,9 +243,9 @@ function render(){
         </div>
 
         <div class="actions">
-            <button class="likeBtn" onclick="like(${post.id}, ${post.likes || 0})">❤️</button>
-            <button class="commentBtn" onclick="comment(${post.id})">💬</button>
-            <button class="buyBtn" onclick="buyPost(${post.id})">🛒</button>
+            <button class="likeBtn" onclick="event.stopPropagation(); like(${post.id}, ${post.likes || 0})">❤️</button>
+            <button class="commentBtn" onclick="event.stopPropagation(); comment(${post.id})">💬</button>
+            <button class="buyBtn" onclick="event.stopPropagation(); buyPost(${post.id})">🛒</button>
         </div>
         `;
 
@@ -234,7 +253,7 @@ function render(){
     });
 }
 
-/* LIKE */
+/* ❤️ LIKE */
 async function like(id, likes){
     await client.from("posts")
         .update({ likes: (likes || 0) + 1 })
@@ -243,7 +262,7 @@ async function like(id, likes){
     loadPosts();
 }
 
-/* COMMENT */
+/* 💬 COMMENT */
 async function comment(id){
     let text = prompt("Commentaire :");
     if(!text) return;
@@ -252,7 +271,7 @@ async function comment(id){
         .insert([{ post_id: id, text }]);
 }
 
-/* BUY */
+/* 🛒 BUY */
 async function buyPost(id){
 
     let { data } = await client
@@ -278,7 +297,30 @@ async function buyPost(id){
     alert("Acheté !");
 }
 
-/* SELL UI */
+/* 🟣 DETAIL */
+function openDetail(id){
+
+    let post = posts.find(p => p.id === id);
+
+    document.getElementById("detailBox").innerHTML = `
+        <h2>${post.name}</h2>
+        <img src="${post.image}">
+        <p>${post.desc}</p>
+        <h3>💰 ${post.price}</h3>
+
+        <button onclick="like(${post.id}, ${post.likes || 0})">❤️ Like</button>
+        <button onclick="comment(${post.id})">💬 Commenter</button>
+        <button onclick="buyPost(${post.id})">🛒 Acheter</button>
+    `;
+
+    document.getElementById("detail").style.display = "flex";
+}
+
+function closeDetail(){
+    document.getElementById("detail").style.display = "none";
+}
+
+/* SELL */
 function openSell(){
     document.getElementById("sellBox").style.display = "flex";
 }
@@ -287,7 +329,6 @@ function closeSell(){
     document.getElementById("sellBox").style.display = "none";
 }
 
-/* SELL */
 async function sell(){
 
     let name = document.getElementById("name").value;
