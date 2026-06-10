@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Ultimate Market Final</title>
+<title>Ultimate Social Market CLEAN</title>
 
 <style>
 body{
@@ -13,13 +13,13 @@ body{
     color:white;
 }
 
-/* TOP */
 .topbar{
     position:fixed;
     top:0;
     width:100%;
     display:flex;
     justify-content:center;
+    gap:10px;
     padding:10px;
     background:rgba(0,0,0,0.6);
     backdrop-filter:blur(10px);
@@ -27,11 +27,14 @@ body{
 }
 
 #search{
-    width:60%;
-    max-width:500px;
+    width:50%;
     padding:10px;
     border-radius:10px;
     border:none;
+}
+
+button{
+    cursor:pointer;
 }
 
 /* FEED */
@@ -50,7 +53,6 @@ body{
     position:relative;
 }
 
-/* CARD */
 .card{
     width:90%;
     max-width:450px;
@@ -58,7 +60,6 @@ body{
     border-radius:20px;
     padding:15px;
     text-align:center;
-    cursor:pointer;
 }
 
 .card img{
@@ -81,25 +82,11 @@ body{
     height:55px;
     border-radius:50%;
     border:none;
-    cursor:pointer;
 }
 
 .likeBtn{background:#ff2d55;color:white;}
 .commentBtn{background:#2d6bff;color:white;}
 .buyBtn{background:#00ff99;}
-
-/* SELL BUTTON */
-#openSell{
-    position:fixed;
-    bottom:20px;
-    right:20px;
-    width:60px;
-    height:60px;
-    border-radius:50%;
-    background:#00ff99;
-    border:none;
-    font-size:30px;
-}
 
 /* MODAL */
 .modal{
@@ -120,16 +107,10 @@ body{
     border-radius:20px;
 }
 
-/* DETAIL */
-.detail img{
-    width:100%;
-    border-radius:15px;
-}
-
 /* COMMENTS */
 .commentBox{
     margin-top:10px;
-    max-height:200px;
+    max-height:180px;
     overflow-y:auto;
     text-align:left;
 }
@@ -154,33 +135,22 @@ input,textarea{
 
 <body>
 
-<!-- SEARCH -->
+<!-- TOP -->
 <div class="topbar">
     <input id="search" placeholder="🔎 rechercher..." oninput="render()">
+    <button onclick="openProfile()">👤</button>
+    <button onclick="openNotif()">🔔</button>
 </div>
 
 <!-- FEED -->
 <div id="feed"></div>
 
 <!-- SELL -->
-<button id="openSell" onclick="openSell()">+</button>
+<button onclick="openSell()" style="position:fixed;bottom:20px;right:20px;width:60px;height:60px;border-radius:50%;background:#00ff99;border:none;font-size:30px;">+</button>
 
-<div id="sellModal" class="modal">
-    <div class="box">
-        <h2>Vendre un item</h2>
-        <input id="name" placeholder="Nom">
-        <textarea id="desc" placeholder="Description"></textarea>
-        <input id="price" type="number" placeholder="Prix">
-        <input id="image" type="file">
-
-        <button onclick="sell()">Publier</button>
-        <button onclick="closeSell()">Fermer</button>
-    </div>
-</div>
-
-<!-- DETAIL -->
-<div id="detailModal" class="modal">
-    <div class="box" id="detailBox"></div>
+<!-- MODAL -->
+<div id="modal" class="modal">
+    <div class="box" id="box"></div>
 </div>
 
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
@@ -191,9 +161,9 @@ const supabaseKey = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZS
 const client = supabase.createClient(supabaseUrl, supabaseKey);
 
 let posts = [];
-let commentsCache = {};
+let commentsCache = [];
 
-let user = localStorage.getItem("user") || ("user" + Math.floor(Math.random()*9999));
+let user = localStorage.getItem("user") || ("user"+Math.floor(Math.random()*9999));
 localStorage.setItem("user", user);
 
 /* LOAD POSTS */
@@ -203,14 +173,10 @@ async function loadPosts(){
     render();
 }
 
-/* LOAD COMMENTS */
-async function loadComments(postId){
-    let { data } = await client
-        .from("comments")
-        .select("*")
-        .eq("post_id", postId);
-
-    commentsCache[postId] = data || [];
+/* COMMENTS */
+async function loadComments(id){
+    let { data } = await client.from("comments").select("*").eq("post_id",id);
+    commentsCache[id] = data || [];
 }
 
 /* RENDER */
@@ -221,153 +187,153 @@ function render(){
 
     feed.innerHTML = "";
 
-    let filtered = posts.filter(p =>
-        (p.name || "").toLowerCase().includes(search) ||
-        (p.desc || "").toLowerCase().includes(search)
-    );
-
-    filtered.forEach(post => {
+    posts
+    .filter(p => (p.name||"").toLowerCase().includes(search))
+    .forEach(post => {
 
         let div = document.createElement("div");
-        div.className = "post";
+        div.className="post";
 
         div.innerHTML = `
-        <div class="card" onclick="openDetail(${post.id})">
-
+        <div class="card">
             <h2>${post.name}</h2>
             <img src="${post.image}">
             <p>💰 ${post.price}</p>
-
-            <div class="commentBox">
-                ${(commentsCache[post.id] || []).map(c =>
-                    `<div class="commentItem">💬 ${c.user}: ${c.text}</div>`
-                ).join("")}
-            </div>
+            <p>👤 ${post.user}</p>
         </div>
 
         <div class="actions">
-            <button class="likeBtn" onclick="event.stopPropagation(); like(${post.id}, ${post.likes || 0})">❤️</button>
-            <button class="commentBtn" onclick="event.stopPropagation(); comment(${post.id})">💬</button>
-            <button class="buyBtn" onclick="event.stopPropagation(); buyPost(${post.id})">🛒</button>
+            <button class="likeBtn" onclick="like(${post.id},${post.likes||0},'${post.user}')">❤️</button>
+            <button class="commentBtn" onclick="comment(${post.id},'${post.user}')">💬</button>
+            <button class="buyBtn" onclick="buy(${post.id},'${post.user}')">🛒</button>
         </div>
         `;
 
         feed.appendChild(div);
-
         loadComments(post.id);
     });
 }
 
-/* DETAIL */
-function openDetail(id){
-
-    let post = posts.find(p => p.id === id);
-
-    document.getElementById("detailBox").innerHTML = `
-        <div class="detail">
-            <h2>${post.name}</h2>
-            <img src="${post.image}">
-            <h3>💰 ${post.price}</h3>
-            <p>${post.desc}</p>
-
-            <div class="commentBox">
-                ${(commentsCache[id] || []).map(c =>
-                    `<div class="commentItem">💬 ${c.user}: ${c.text}</div>`
-                ).join("")}
-            </div>
-
-            <button onclick="like(${post.id}, ${post.likes || 0})">❤️ Like</button>
-            <button onclick="comment(${post.id})">💬 Commenter</button>
-            <button onclick="buyPost(${post.id})">🛒 Acheter</button>
-        </div>
-    `;
-
-    document.getElementById("detailModal").style.display = "flex";
-}
-
-function closeDetail(){
-    document.getElementById("detailModal").style.display = "none";
+/* NOTIF */
+async function notify(to,text,type){
+    await client.from("notifications").insert([{user:to,text,type}]);
 }
 
 /* LIKE */
-async function like(id, likes){
-    await client.from("posts")
-        .update({ likes: (likes || 0) + 1 })
-        .eq("id", id);
-
+async function like(id,likes,owner){
+    await client.from("posts").update({likes:(likes||0)+1}).eq("id",id);
+    await notify(owner,"❤️ like sur ton annonce","like");
     loadPosts();
 }
 
 /* COMMENT */
-async function comment(id){
+async function comment(id,owner){
 
-    let text = prompt("Commentaire :");
+    let text = prompt("Commentaire:");
     if(!text) return;
 
-    await client.from("comments")
-        .insert([{ post_id: id, text, user }]);
+    await client.from("comments").insert([{post_id:id,text,user}]);
+    await notify(owner,"💬 nouveau commentaire","comment");
 
-    await loadComments(id);
-    render();
+    loadPosts();
 }
 
 /* BUY */
-async function buyPost(id){
+async function buy(id,owner){
 
-    let { data } = await client.from("posts")
-        .select("*")
-        .eq("id", id)
-        .single();
+    let {data} = await client.from("posts").select("*").eq("id",id).single();
 
-    let money = parseInt(localStorage.getItem("argent") || 0);
+    let money = parseInt(localStorage.getItem("argent")||0);
 
     if(money < data.price){
-        alert("Pas assez d'argent !");
+        alert("Pas assez d'argent");
         return;
     }
 
     money -= data.price;
-    localStorage.setItem("argent", money);
+    localStorage.setItem("argent",money);
+
+    await notify(owner,"🛒 achat de ton annonce","buy");
 
     alert("Acheté !");
 }
 
-/* SELL */
-function openSell(){
-    document.getElementById("sellModal").style.display = "flex";
+/* PROFILE */
+function openProfile(){
+
+    document.getElementById("box").innerHTML = `
+        <h2>Profil</h2>
+        <input id="username" placeholder="pseudo">
+        <input id="bio" placeholder="bio">
+        <button onclick="saveProfile()">Save</button>
+    `;
+
+    document.getElementById("modal").style.display="flex";
 }
 
-function closeSell(){
-    document.getElementById("sellModal").style.display = "none";
+async function saveProfile(){
+
+    await client.from("profiles").upsert([{
+        user,
+        username:document.getElementById("username").value,
+        bio:document.getElementById("bio").value
+    }]);
+
+    closeModal();
+}
+
+/* NOTIFS */
+async function openNotif(){
+
+    let {data} = await client.from("notifications").select("*").eq("user",user);
+
+    document.getElementById("box").innerHTML = `
+        <h2>Notifications</h2>
+        ${(data||[]).map(n=>`<div class="commentItem">${n.text}</div>`).join("")}
+    `;
+
+    document.getElementById("modal").style.display="flex";
+}
+
+function openSell(){
+
+    document.getElementById("box").innerHTML = `
+        <h2>Vendre</h2>
+        <input id="name" placeholder="nom">
+        <textarea id="desc" placeholder="desc"></textarea>
+        <input id="price" type="number">
+        <input id="image" type="file">
+        <button onclick="sell()">Publier</button>
+    `;
+
+    document.getElementById("modal").style.display="flex";
 }
 
 async function sell(){
 
-    let name = document.getElementById("name").value;
-    let desc = document.getElementById("desc").value;
-    let price = parseInt(document.getElementById("price").value);
     let file = document.getElementById("image").files[0];
-
-    if(!name || !price || !file) return;
-
     let reader = new FileReader();
 
     reader.onload = async function(e){
 
         await client.from("posts").insert([{
-            name,
-            desc,
-            price,
-            image: e.target.result,
-            likes: 0,
+            name:document.getElementById("name").value,
+            desc:document.getElementById("desc").value,
+            price:parseInt(document.getElementById("price").value),
+            image:e.target.result,
+            likes:0,
             user
         }]);
 
-        closeSell();
+        closeModal();
         loadPosts();
     };
 
     reader.readAsDataURL(file);
+}
+
+function closeModal(){
+    document.getElementById("modal").style.display="none";
 }
 
 loadPosts();
