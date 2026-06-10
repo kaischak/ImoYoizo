@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Social Market Follow FINAL</title>
+<title>Social Market FIX</title>
 
 <style>
 body{
@@ -13,7 +13,6 @@ body{
     color:white;
 }
 
-/* TOP */
 .topbar{
     position:fixed;
     top:0;
@@ -35,12 +34,12 @@ body{
     border:none;
 }
 
-/* MINI PROFILE */
+/* PROFILE */
 #miniProfile{
     position:absolute;
     left:10px;
-    cursor:pointer;
     font-size:12px;
+    cursor:pointer;
 }
 
 #miniProfile strong{
@@ -134,8 +133,8 @@ input,textarea{
 <div class="topbar">
 
     <div id="miniProfile" onclick="openProfile()">
-        <strong id="pname">👤 ...</strong>
-        <span id="pbio">loading...</span>
+        <strong id="pname">👤 loading...</strong>
+        <span id="pbio">...</span>
         <div id="pfollowers">0 followers</div>
     </div>
 
@@ -164,27 +163,40 @@ let user = localStorage.getItem("user") || ("user"+Math.floor(Math.random()*9999
 localStorage.setItem("user", user);
 
 /* PROFILE */
-let profile = null;
-
 async function loadProfile(){
 
-    let { data } = await client
+    let { data, error } = await client
         .from("profiles")
         .select("*")
         .eq("user", user);
 
-    profile = data?.[0]; // 👈 IMPORTANT (plus de single)
+    let profile = data?.[0];
+
+    // 🔥 SI PAS DE PROFIL → ON LE CRÉE DIRECT
+    if(!profile){
+
+        let res = await client.from("profiles").insert([{
+            user,
+            username: user,
+            bio: "nouveau utilisateur"
+        }]);
+
+        console.log("profil créé", res);
+
+        loadProfile();
+        return;
+    }
 
     document.getElementById("pname").textContent =
-        "👤 " + (profile?.username || user);
+        "👤 " + profile.username;
 
     document.getElementById("pbio").textContent =
-        profile?.bio || "pas de bio";
+        profile.bio;
 
     loadFollowers();
 }
 
-/* FOLLOWERS COUNT */
+/* FOLLOWERS */
 async function loadFollowers(){
 
     let { data } = await client
@@ -246,10 +258,7 @@ function render(){
 /* FOLLOW */
 async function follow(target){
 
-    if(target === user){
-        alert("Impossible");
-        return;
-    }
+    if(target === user) return;
 
     await client.from("followers").insert([{
         follower:user,
@@ -262,7 +271,7 @@ async function follow(target){
         type:"follow"
     }]);
 
-    alert("Follow OK !");
+    alert("follow ok");
 }
 
 /* LIKE */
@@ -274,7 +283,7 @@ async function like(id,likes,owner){
 
     await client.from("notifications").insert([{
         user:owner,
-        text:"❤️ like reçu",
+        text:"❤️ like",
         type:"like"
     }]);
 
@@ -284,7 +293,7 @@ async function like(id,likes,owner){
 /* COMMENT */
 async function comment(id,owner){
 
-    let text = prompt("Commentaire:");
+    let text = prompt("commentaire");
     if(!text) return;
 
     await client.from("comments").insert([{
@@ -295,7 +304,7 @@ async function comment(id,owner){
 
     await client.from("notifications").insert([{
         user:owner,
-        text:"💬 commentaire reçu",
+        text:"💬 commentaire",
         type:"comment"
     }]);
 }
@@ -311,7 +320,7 @@ async function buy(id,owner){
     let money = parseInt(localStorage.getItem("argent")||0);
 
     if(money < data.price){
-        alert("Pas assez d'argent");
+        alert("pas assez d'argent");
         return;
     }
 
@@ -320,21 +329,21 @@ async function buy(id,owner){
 
     await client.from("notifications").insert([{
         user:owner,
-        text:"🛒 achat effectué",
+        text:"🛒 achat",
         type:"buy"
     }]);
 
-    alert("Acheté !");
+    alert("acheté !");
 }
 
-/* PROFILE */
+/* PROFILE EDIT */
 function openProfile(){
 
     document.getElementById("box").innerHTML = `
         <h2>Profil</h2>
         <input id="username" placeholder="pseudo">
         <input id="bio" placeholder="bio">
-        <button onclick="saveProfile()">Save</button>
+        <button onclick="saveProfile()">save</button>
     `;
 
     document.getElementById("modal").style.display="flex";
@@ -342,20 +351,17 @@ function openProfile(){
 
 async function saveProfile(){
 
-    let username = document.getElementById("username").value;
-    let bio = document.getElementById("bio").value;
-
     await client.from("profiles").upsert([{
-        user,          // clé logique
-        username,
-        bio
-    }], { onConflict: "user" }); // 👈 IMPORTANT
+        user,
+        username:document.getElementById("username").value,
+        bio:document.getElementById("bio").value
+    }]);
 
-    await loadProfile(); // refresh UI direct
+    loadProfile();
     closeModal();
 }
-    
-/* NOTIFS */
+
+/* NOTIF */
 async function openNotif(){
 
     let {data} = await client.from("notifications")
