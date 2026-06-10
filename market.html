@@ -2,180 +2,137 @@
 <html lang="fr">
 <head>
 <meta charset="UTF-8">
-<title>Marché</title>
+<title>Yoizo Feed</title>
 
 <style>
 body {
+    margin: 0;
     font-family: Arial;
-    text-align: center;
-    margin: 20px;
+    background: black;
+    color: white;
+    overflow: hidden;
 }
 
-input, textarea {
-    width: 80%;
+#search {
+    width: 90%;
     padding: 10px;
+    margin: 10px;
+}
+
+#feed {
+    height: 100vh;
+    overflow-y: scroll;
+    scroll-snap-type: y mandatory;
+}
+
+.post {
+    height: 100vh;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    scroll-snap-align: start;
+    border-bottom: 1px solid #333;
+    padding: 20px;
+}
+
+img {
+    max-width: 80%;
+    border-radius: 15px;
+}
+
+button {
     margin: 5px;
-}
-
-.card {
-    border: 1px solid #ccc;
-    margin: 10px auto;
     padding: 10px;
-    width: 80%;
-}
-
-.card img {
-    max-width: 200px;
-    max-height: 200px;
 }
 </style>
 </head>
 
 <body>
 
-<h1>🏪 Marché en ligne</h1>
+<input id="search" placeholder="🔎 rechercher..." oninput="render()">
 
-<h3>Créer une annonce</h3>
+<div id="feed"></div>
 
-<input id="name" placeholder="Nom"><br>
-<textarea id="desc" placeholder="Description"></textarea><br>
-<input id="price" type="number" placeholder="Prix"><br>
-<input id="image" type="file" accept="image/*"><br><br>
-
-<button onclick="sell()">Vendre</button>
-
-<hr>
-
-<div id="list"></div>
-
-<!-- 🔥 SUPABASE -->
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 
 <script>
-const supabaseUrl = "https://eezsocswqhqgkvghhygq.supabase.co";
-const supabaseKey = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImVlenNvY3N3cWhxZ2t2Z2hoeWdxIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODEwNjg5MjYsImV4cCI6MjA5NjY0NDkyNn0.TVI962lsUo67i6Ltq8okbOw-_GO-5yc4KDCyc8OkdVQ";
-
+const supabaseUrl = "TON_URL";
+const supabaseKey = "TA_KEY";
 const client = supabase.createClient(supabaseUrl, supabaseKey);
 
-/* 📦 LIRE LE MARCHÉ */
-async function getMarket(){
-    let { data, error } = await client
-        .from("market")
+let posts = [];
+
+/* 📦 LOAD POSTS */
+async function loadPosts(){
+    let { data } = await client
+        .from("posts")
         .select("*");
 
-    if(error){
-        console.log("Erreur Supabase:", error);
-        return [];
-    }
-
-    return data || [];
-}
-
-/* 🖥️ AFFICHAGE */
-async function render(){
-
-    let list = document.getElementById("list");
-    list.innerHTML = "";
-
-    let market = await getMarket();
-
-    market.forEach((item) => {
-
-        let div = document.createElement("div");
-        div.className = "card";
-
-        div.innerHTML = `
-            <h3>${item.name}</h3>
-            <img src="${item.image}">
-            <p>${item.desc}</p>
-            <p>💰 ${item.price}</p>
-
-            <button onclick="buy(${item.id})">
-                Acheter
-            </button>
-        `;
-
-        list.appendChild(div);
-    });
-}
-
-/* 📤 VENDRE */
-async function sell(){
-
-    let name = document.getElementById("name").value;
-    let desc = document.getElementById("desc").value;
-    let price = parseInt(document.getElementById("price").value);
-    let imageFile = document.getElementById("image").files[0];
-
-    if(!name || !price || !imageFile){
-        alert("Remplis tous les champs !");
-        return;
-    }
-
-    let reader = new FileReader();
-
-    reader.onload = async function(e){
-
-        console.log("INSERT START");
-
-        let { error } = await client
-            .from("market")
-            .insert([{
-                name,
-                desc,
-                price,
-                image: e.target.result
-            }]);
-
-        if(error){
-            console.log("INSERT ERROR:", error);
-        } else {
-            console.log("INSERT OK");
-        }
-
-        render();
-    };
-
-    reader.readAsDataURL(imageFile);
-}
-
-/* 🛒 ACHETER */
-async function buy(id){
-
-    let { data, error } = await client
-        .from("market")
-        .select("*")
-        .eq("id", id)
-        .single();
-
-    if(error){
-        console.log(error);
-        return;
-    }
-
-    let money = parseInt(localStorage.getItem("argent") || 0);
-
-    if(money < data.price){
-        alert("Pas assez d'argent !");
-        return;
-    }
-
-    money -= data.price;
-    localStorage.setItem("argent", money);
-
-    let inv = JSON.parse(localStorage.getItem("inventaire")) || [];
-    inv.push(data.name);
-    localStorage.setItem("inventaire", JSON.stringify(inv));
-
-    await client
-        .from("market")
-        .delete()
-        .eq("id", id);
-
+    posts = data || [];
     render();
 }
 
-render();
+/* ❤️ LIKE */
+async function like(id, likes){
+
+    await client
+        .from("posts")
+        .update({ likes: (likes || 0) + 1 })
+        .eq("id", id);
+
+    loadPosts();
+}
+
+/* 💬 COMMENTAIRE */
+async function comment(post_id){
+
+    let text = prompt("Ton commentaire :");
+
+    if(!text) return;
+
+    await client
+        .from("comments")
+        .insert([{ post_id, text }]);
+
+    alert("Commentaire ajouté 👍");
+}
+
+/* 🖥️ RENDER */
+function render(){
+
+    let search = document.getElementById("search").value.toLowerCase();
+    let feed = document.getElementById("feed");
+
+    feed.innerHTML = "";
+
+    let filtered = posts.filter(p =>
+        p.name.toLowerCase().includes(search) ||
+        p.desc.toLowerCase().includes(search)
+    );
+
+    filtered.forEach(post => {
+
+        let div = document.createElement("div");
+        div.className = "post";
+
+        div.innerHTML = `
+            <h2>${post.name}</h2>
+            <img src="${post.image}">
+            <p>${post.desc}</p>
+            <p>💰 ${post.price}</p>
+
+            <p>❤️ ${post.likes || 0}</p>
+
+            <button onclick="like(${post.id}, ${post.likes || 0})">Like</button>
+            <button onclick="comment(${post.id})">Commenter</button>
+        `;
+
+        feed.appendChild(div);
+    });
+}
+
+loadPosts();
 </script>
 
 </body>
