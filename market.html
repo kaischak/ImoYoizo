@@ -203,6 +203,22 @@ async function loadProfile(){
     loadFollowers();
 }
 
+async function loadFollowers(){
+
+    let { data, error } = await client
+        .from("followers")
+        .select("*")
+        .eq("following", user);
+
+    if(error){
+        console.log("ERREUR followers", error);
+        return;
+    }
+
+    document.getElementById("pfollowers").textContent =
+        (data?.length || 0) + " followers";
+}
+
 /* POSTS */
 async function loadPosts(){
     let { data } = await client.from("posts").select("*");
