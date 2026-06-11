@@ -276,31 +276,224 @@ async function buy(id){
 /* CREATE POST */
 function openSell(){
 
-    document.getElementById("box").innerHTML = `
-        <h2>Créer annonce</h2>
-        <input id="name" placeholder="nom">
-        <input id="image" placeholder="image url">
-        <input id="price" placeholder="prix">
-        <textarea id="desc" placeholder="desc"></textarea>
+document.getElementById("box").innerHTML = `
+<div style="
+text-align:center;
+">
 
-        <button onclick="create()">Publier</button>
-    `;
+<h1 style="
+margin-top:0;
+font-size:32px;
+">
+🚀 Nouvelle Annonce
+</h1>
 
-    document.getElementById("modal").style.display="flex";
+<p style="
+opacity:.8;
+margin-bottom:20px;
+">
+Publie ton objet sur le marché
+</p>
+
+<div style="
+background:#20202b;
+padding:15px;
+border-radius:20px;
+margin-bottom:15px;
+">
+
+<input
+id="name"
+placeholder="📦 Nom de l'objet"
+style="
+font-size:18px;
+padding:15px;
+box-sizing:border-box;
+">
+
+</div>
+
+<div style="
+background:#20202b;
+padding:15px;
+border-radius:20px;
+margin-bottom:15px;
+">
+
+<textarea
+id="desc"
+placeholder="📝 Description détaillée..."
+style="
+height:120px;
+resize:none;
+font-size:16px;
+box-sizing:border-box;
+"></textarea>
+
+</div>
+
+<div style="
+background:#20202b;
+padding:15px;
+border-radius:20px;
+margin-bottom:15px;
+">
+
+<input
+id="price"
+type="number"
+placeholder="💰 Prix"
+style="
+font-size:18px;
+padding:15px;
+box-sizing:border-box;
+">
+
+</div>
+
+<div
+id="dropZone"
+style="
+border:3px dashed #00ff99;
+border-radius:20px;
+padding:30px;
+cursor:pointer;
+margin-bottom:15px;
+background:rgba(0,255,153,.08);
+transition:.2s;
+">
+
+<div style="font-size:50px;">
+🖼️
+</div>
+
+<b>
+Glisse une image ici
+</b>
+
+<br><br>
+
+ou clique pour choisir un fichier
+
+<input
+id="fileInput"
+type="file"
+accept="image/*"
+style="display:none;"
+>
+
+</div>
+
+<img
+id="preview"
+style="
+display:none;
+width:100%;
+border-radius:20px;
+margin-bottom:15px;
+max-height:300px;
+object-fit:cover;
+">
+
+<button
+onclick="create()"
+style="
+width:100%;
+padding:18px;
+border:none;
+border-radius:20px;
+font-size:20px;
+font-weight:bold;
+background:linear-gradient(45deg,#00ff99,#00ccff);
+cursor:pointer;
+color:black;
+margin-top:10px;
+">
+🚀 Publier l'annonce
+</button>
+
+<button
+onclick="document.getElementById('modal').style.display='none'"
+style="
+width:100%;
+padding:12px;
+border:none;
+border-radius:20px;
+margin-top:10px;
+background:#333;
+color:white;
+cursor:pointer;
+">
+Fermer
+</button>
+
+</div>
+`;
+
+document.getElementById("modal").style.display = "flex";
+
+const dropZone = document.getElementById("dropZone");
+const fileInput = document.getElementById("fileInput");
+const preview = document.getElementById("preview");
+
+dropZone.onclick = () => fileInput.click();
+
+fileInput.onchange = e => {
+const file = e.target.files[0];
+if(file) loadImage(file);
+};
+
+dropZone.addEventListener("dragover", e=>{
+e.preventDefault();
+dropZone.style.background="rgba(0,255,153,.2)";
+});
+
+dropZone.addEventListener("dragleave", ()=>{
+dropZone.style.background="rgba(0,255,153,.08)";
+});
+
+dropZone.addEventListener("drop", e=>{
+e.preventDefault();
+dropZone.style.background="rgba(0,255,153,.08)";
+
+const file = e.dataTransfer.files[0];
+if(file) loadImage(file);
+});
+
+window.selectedImage = "";
+}
+
+function loadImage(file){
+
+const reader = new FileReader();
+
+reader.onload = function(e){
+
+window.selectedImage = e.target.result;
+
+const preview = document.getElementById("preview");
+
+preview.src = e.target.result;
+preview.style.display = "block";
+};
+
+reader.readAsDataURL(file);
 }
 
 async function create(){
 
-    await client.from("posts").insert([{
-        name: name.value,
-        image: image.value,
-        price: price.value,
-        desc: desc.value,
-        user
-    }]);
+await client.from("posts").insert([{
+name: document.getElementById("name").value,
+image: window.selectedImage || "",
+price: Number(document.getElementById("price").value),
+desc: document.getElementById("desc").value,
+user: user,
+likes: 0
+}]);
 
-    document.getElementById("modal").style.display="none";
-    loadPosts();
+document.getElementById("modal").style.display = "none";
+
+loadPosts();
 }
 
 async function openInv(){
