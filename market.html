@@ -228,7 +228,6 @@ function render(){
     });
 }
 
-/* BUY FIX TOTAL */
 async function buy(id){
 
     let { data, error } = await client
@@ -238,7 +237,6 @@ async function buy(id){
         .single();
 
     if(error){
-        console.log("ERREUR GET POST", error);
         alert("Erreur chargement produit");
         return;
     }
@@ -251,24 +249,26 @@ async function buy(id){
         return;
     }
 
-    // 💾 ESSAI INSERT INVENTAIRE
     const { error: invError } = await client
         .from("inventaire")
         .insert([{
             user_id: user,
             item: data.name,
-            price: price
+            image: data.image,
+            price: data.price
         }]);
 
     if(invError){
-        console.log("ERREUR INVENTAIRE", invError);
-        alert("Erreur inventaire (Supabase bloque l'insert)");
+        console.log(invError);
+        alert("Erreur inventaire");
         return;
     }
 
-    // 💰 SEULEMENT SI TOUT OK
     money -= price;
+
     localStorage.setItem("argent", money);
+
+    setMoney(money);
 
     alert("Acheté !");
 }
@@ -303,7 +303,6 @@ async function create(){
     loadPosts();
 }
 
-/* INVENTAIRE CLOUD */
 async function openInv(){
 
     let { data } = await client
@@ -312,16 +311,29 @@ async function openInv(){
         .eq("user_id", user);
 
     document.getElementById("box").innerHTML = `
-        <h2>Inventaire</h2>
-        ${(data||[]).map(i=>`
-            <div>
-                <img src="${i.image}" width="80"><br>
-                ${i.name} - ${i.price}
+        <h2>📦 Inventaire</h2>
+
+        ${(data || []).map(i => `
+            <div style="
+                background:#222;
+                padding:10px;
+                margin:10px 0;
+                border-radius:10px;
+            ">
+                ${i.image ? `<img src="${i.image}" width="120" style="border-radius:10px;"><br>` : ""}
+                <b>${i.item}</b><br>
+                💰 ${i.price}
             </div>
         `).join("")}
+
+        <button onclick="
+            document.getElementById('modal').style.display='none'
+        ">
+            Fermer
+        </button>
     `;
 
-    document.getElementById("modal").style.display="flex";
+    document.getElementById("modal").style.display = "flex";
 }
 
 loadPosts();
