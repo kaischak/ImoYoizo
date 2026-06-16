@@ -51,6 +51,13 @@ navigator.serviceWorker.register("sw.js")
 
 }
 
+    let user = localStorage.getItem("user");
+
+if(!user || user.startsWith("user")){
+    localStorage.removeItem("user");
+    window.location.href = "auth.html";
+}
+
 </script>
 
 <body>
