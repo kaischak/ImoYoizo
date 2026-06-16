@@ -154,6 +154,17 @@ input,textarea{
 
 <button onclick="openInv()">📦</button>
 
+<button onclick="location.href='friends.html'" style="
+background:#2d6bff;
+color:white;
+border-radius:10px;
+padding:10px;
+border:none;
+cursor:pointer;
+">
+👥 Amis
+</button>
+
 </div>
 
 <div id="feed"></div>
@@ -171,7 +182,10 @@ const client = supabase.createClient(supabaseUrl, supabaseKey);
 
 let posts = [];
 let user = localStorage.getItem("user");
-localStorage.setItem("user", user);
+
+if(!user){
+    window.location.href = "auth.html";
+}
 
 /* MONEY SAFE */
 function getMoney(){
@@ -179,7 +193,6 @@ function getMoney(){
 }
 
 function setMoney(v){
-    localStorage.setItem("argent", String(v));
     document.getElementById("money").innerText = "💰 " + v;
 }
 
@@ -192,6 +205,7 @@ async function loadProfile(){
 /* POSTS */
 async function loadPosts(){
     let { data } = await client.from("posts").select("*");
+    console.log(data, error);
     posts = data || [];
     render();
 }
@@ -240,7 +254,7 @@ onclick="event.stopPropagation(); openVideos(${p.id})"
             <div class="info">
                 💰 ${p.price}<br>
                 ❤️ ${p.likes || 0}<br>
-                👤 ${p.user}
+                👤 ${p.user_id}
             </div>
 
             <button onclick="buy(${p.id})">🛒 BUY</button>
@@ -691,7 +705,7 @@ const { error } = await client
     price: Number(document.getElementById("price").value),
     desc: document.getElementById("desc").value,
 
-    user: user,   // 👈 ICI EXACTEMENT
+    user_id: user,
 
     likes: 0
 }]);
