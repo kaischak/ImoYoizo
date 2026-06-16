@@ -33,7 +33,7 @@ cursor:pointer;
 
 <h1>👥 Amis</h1>
 
-<input id="addUser" placeholder="pseudo ami">
+<input id="pseudo" placeholder="Pseudo ami">
 <button onclick="addFriend()">Ajouter</button>
 
 <h2>📩 Demandes</h2>
@@ -41,6 +41,8 @@ cursor:pointer;
 
 <h2>🤝 Amis</h2>
 <div id="friends"></div>
+
+<div id="friendsList"></div>
 
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 
@@ -52,60 +54,86 @@ const client = supabase.createClient(
 
 let user = localStorage.getItem("user");
 
-async function addFriend(){
+function addFriend(){
 
-    let pseudo = document.getElementById("pseudo").value.trim();
+    let input = document.getElementById("pseudo");
 
-    let { data, error } = await client
-    .from("users")
-    .select("*")
-    .eq("username", pseudo)
-    .single();
-
-    console.log("DATA =", data);
-    console.log("ERROR =", error);
-
-    if(error){
-        alert("Erreur : utilisateur introuvable");
+    if(!input){
+        alert("Input introuvable");
         return;
     }
 
-    alert("Utilisateur trouvé : " + data.username);
+    let pseudo = input.value.trim();
+
+    if(!pseudo){
+        alert("Pseudo vide");
+        return;
+    }
+
+    console.log("Pseudo recherché :", pseudo);
 }
 async function loadFriends(){
 
-let { data } = await client
-.from("friends")
-.select("*")
-.or(`user1.eq.${user},user2.eq.${user}`);
+    // 1. récupérer l'utilisateur connecté
+    let user = localStorage.getItem("user");
 
-let req = document.getElementById("requests");
-let fr = document.getElementById("friends");
+    if(!user){
+        alert("Utilisateur non connecté");
+        window.location.href = "auth.html";
+        return;
+    }
 
-req.innerHTML = "";
-fr.innerHTML = "";
+    // 2. nettoyer les espaces (TRÈS IMPORTANT)
+    let cleanUser = user.trim();
 
-(data || []).forEach(f=>{
+    // 3. requête Supabase
+    let { data, error } = await client
+        .from("friends")
+        .select("*")
+        .or(`user1.eq.${cleanUser},user2.eq.${cleanUser}`);
 
-if(f.status === "pending" && f.user2 === user){
-req.innerHTML += `
-<div class="friend">
-${f.user1}
-<button onclick="accept('${f.id}')">✔ accepter</button>
-</div>`;
-}
+    // 4. debug (hyper utile)
+    console.log("FRIENDS DATA =", data);
+    console.log("FRIENDS ERROR =", error);
 
-if(f.status === "accepted"){
-let friendName = (f.user1 === user) ? f.user2 : f.user1;
+    // 5. gestion erreur
+    if(error){
+        alert("Erreur chargement amis");
+        return;
+    }
 
-fr.innerHTML += `
-<div class="friend" onclick="openChat('${friendName}')">
-💬 ${friendName}
-</div>`;
-}
+    // 6. si aucun ami
+    if(!data || data.length === 0){
+        document.getElementById("friendsList").innerHTML =
+            "<p>Aucun ami pour le moment 😢</p>";
+        return;
+    }
 
-});
+    // 7. afficher les amis
+    let html = "";
 
+    data.forEach(f => {
+
+        // choisir l'autre utilisateur (pas toi)
+        let friend =
+            f.user1 === cleanUser ? f.user2 : f.user1;
+
+        html += `
+            <div style="
+                background:#222;
+                padding:10px;
+                margin:10px 0;
+                border-radius:10px;
+            ">
+                👤 ${friend}
+                <button onclick="openChat('${friend}')">
+                    💬 Chat
+                </button>
+            </div>
+        `;
+    });
+
+    document.getElementById("friendsList").innerHTML = html;
 }
 
 async function accept(id){
