@@ -53,17 +53,25 @@ const client = supabase.createClient(
 let user = localStorage.getItem("user");
 
 async function addFriend(){
-const friend = document.getElementById("addUser").value;
 
-let { error } = await client.from("friends").insert([{
-user1: user,
-user2: friend,
-status: "pending"
-}]);
+    let pseudo = document.getElementById("pseudo").value.trim();
 
-alert(error ? "Erreur" : "Demande envoyée");
+    let { data, error } = await client
+    .from("users")
+    .select("*")
+    .eq("username", pseudo)
+    .single();
+
+    console.log("DATA =", data);
+    console.log("ERROR =", error);
+
+    if(error){
+        alert("Erreur : utilisateur introuvable");
+        return;
+    }
+
+    alert("Utilisateur trouvé : " + data.username);
 }
-
 async function loadFriends(){
 
 let { data } = await client
