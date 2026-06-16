@@ -170,7 +170,7 @@ const supabaseKey = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZS
 const client = supabase.createClient(supabaseUrl, supabaseKey);
 
 let posts = [];
-let user = localStorage.getItem("user") || ("user"+Math.floor(Math.random()*9999));
+let user = localStorage.getItem("user");
 localStorage.setItem("user", user);
 
 /* MONEY SAFE */
@@ -690,8 +690,10 @@ const { error } = await client
     videos: window.selectedVideos,
     price: Number(document.getElementById("price").value),
     desc: document.getElementById("desc").value,
-    user: user,
-    likes:0
+
+    user: user,   // 👈 ICI EXACTEMENT
+
+    likes: 0
 }]);
 
 if(error){
@@ -701,9 +703,7 @@ if(error){
 }
 
 document.getElementById("modal").style.display="none";
-
 loadPosts();
-
 }
 
 async function openInv(){

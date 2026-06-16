@@ -1,0 +1,92 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<title>Login ImoYoizo</title>
+<style>
+body{
+font-family:Arial;
+background:#0b0b0f;
+color:white;
+display:flex;
+justify-content:center;
+align-items:center;
+height:100vh;
+flex-direction:column;
+}
+
+input{
+padding:10px;
+margin:5px;
+border-radius:10px;
+border:none;
+width:220px;
+}
+
+button{
+padding:10px;
+margin:5px;
+border:none;
+border-radius:10px;
+cursor:pointer;
+}
+</style>
+</head>
+
+<body>
+
+<h1>🔐 ImoYoizo</h1>
+
+<input id="username" placeholder="pseudo">
+<input id="password" type="password" placeholder="mot de passe">
+
+<button onclick="register()">Créer compte</button>
+<button onclick="login()">Connexion</button>
+
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+
+<script>
+const client = supabase.createClient(
+"https://eezsocswqhqgkvghhygq.supabase.co",
+"TON_KEY"
+);
+
+async function register(){
+const username = document.getElementById("username").value;
+const password = document.getElementById("password").value;
+
+let { error } = await client
+.from("users")
+.insert([{ username, password }]);
+
+if(error){
+alert("Pseudo déjà pris !");
+return;
+}
+
+alert("Compte créé !");
+}
+
+async function login(){
+const username = document.getElementById("username").value;
+const password = document.getElementById("password").value;
+
+let { data, error } = await client
+.from("users")
+.select("*")
+.eq("username", username)
+.eq("password", password)
+.single();
+
+if(error || !data){
+alert("Identifiants incorrects");
+return;
+}
+
+localStorage.setItem("user", username);
+window.location.href = "index.html";
+}
+</script>
+
+</body>
+</html>
