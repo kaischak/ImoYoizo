@@ -479,17 +479,30 @@ preview.style.display = "block";
 
 reader.readAsDataURL(file);
 }
-
 async function create(){
 
-await client.from("posts").insert([{
-name: document.getElementById("name").value,
-image: window.selectedImage || "",
-price: Number(document.getElementById("price").value),
-desc: document.getElementById("desc").value,
-user: user,
-likes: 0
-}]);
+const { data, error } = await client
+.from("posts")
+.insert([{
+    name: document.getElementById("name").value,
+    image: window.selectedImage || "",
+    price: Number(document.getElementById("price").value),
+    desc: document.getElementById("desc").value,
+    user: user,
+    likes: 0
+}])
+.select();
+
+console.log("DATA :", data);
+console.log("ERROR :", error);
+
+if(error){
+    console.log(error);
+    alert(error.message);
+    return;
+}
+
+alert("Annonce créée !");
 
 document.getElementById("modal").style.display = "none";
 
