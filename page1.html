@@ -5,90 +5,38 @@
 <title>Yoizo</title>
 
 <style>
-body{
-font-family:Arial;
-text-align:center;
-background:linear-gradient(135deg,#6a11cb,#2575fc);
-color:white;
-min-height:100vh;
-margin:0;
-padding-top:50px;
-}
-
-.box{
-background:rgba(255,255,255,0.15);
-width:90%;
-max-width:600px;
-margin:auto;
-padding:30px;
-border-radius:25px;
-}
-
-button{
-padding:15px 25px;
-font-size:18px;
-border:none;
-border-radius:15px;
-cursor:pointer;
-margin:5px;
-}
+body { font-family: Arial; text-align:center; margin-top:50px; }
+button { padding:15px; font-size:18px; }
 </style>
 </head>
-<body>
 
-<div class="box">
+<body>
 
 <h1>🐶 Yoizo</h1>
 
-<button onclick="buy()">
-Acheter 10000💰
-</button>
-
-<br><br>
-
-<button onclick="location.href='index.html'">
-🏠 Accueil
-</button>
+<button onclick="buy()">Acheter 10000💰</button>
 
 <p id="msg"></p>
 
-</div>
-
 <script>
 function buy(){
+    let price = 10000;
+    let money = parseInt(localStorage.getItem("argent") || 0);
 
-let prix=10000;
+    if(money < price){
+        document.getElementById("msg").textContent = "❌ Pas assez d'argent";
+        return;
+    }
 
-let argent=parseInt(
-localStorage.getItem("argent")||0
-);
+    money -= price;
+    localStorage.setItem("argent", money);
 
-if(argent<prix){
+    let inv = JSON.parse(localStorage.getItem("inventaire")) || [];
+    inv.push("Yoizo");
+    localStorage.setItem("inventaire", JSON.stringify(inv));
 
-document.getElementById("msg").textContent=
-"❌ Pas assez d'argent";
-
-return;
-}
-
-argent-=prix;
-
-localStorage.setItem("argent",argent);
-
-let inv=
-JSON.parse(
-localStorage.getItem("inventaire")
-)||[];
-
-inv.push("🐶 Yoizo");
-
-localStorage.setItem(
-"inventaire",
-JSON.stringify(inv)
-);
-
-document.getElementById("msg").textContent=
-"✅ Votre Yoizo se trouve à l'hôtel Les Connards de Vinci.";
+    document.getElementById("msg").textContent =
+    "✅ Yoizo acheté ! hôtel Les Connards de Vinci";
 }
 </script>
 

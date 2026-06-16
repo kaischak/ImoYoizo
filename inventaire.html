@@ -7,132 +7,53 @@
 <style>
 body{
     font-family: Arial;
-    margin:0;
-    background:#0b0b0f;
-    color:white;
     text-align:center;
+    margin-top:50px;
 }
 
-h1{
-    margin-top:25px;
+ul{
+    list-style:none;
+    padding:0;
 }
 
-#inventaire{
-    max-width:600px;
-    margin:20px auto;
-    display:flex;
-    flex-direction:column;
-    gap:10px;
+li{
+    margin:10px;
     padding:10px;
-}
-
-.item{
-    background:#16161d;
-    padding:15px;
-    border-radius:15px;
-    display:flex;
-    justify-content:space-between;
-    align-items:center;
-}
-
-.price{
-    color:#00ff99;
-    font-weight:bold;
-}
-
-.small{
-    opacity:0.6;
-    font-size:12px;
+    border:1px solid #ccc;
 }
 
 button{
-    margin-top:20px;
-    padding:10px 15px;
-    border:none;
-    border-radius:10px;
-    cursor:pointer;
+    padding:10px;
+    margin:5px;
 }
 </style>
 </head>
 
 <body>
 
-<h1>📦 Inventaire</h1>
+<h1>📦 Mon Inventaire</h1>
 
-<div id="inventaire"></div>
+<ul id="inventaire"></ul>
 
-<button onclick="location.href='index.html'">🏠 Retour</button>
-
-<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<button onclick="location.href='index.html'">
+🏠 Retour à l'accueil
+</button>
 
 <script>
+let inv = JSON.parse(localStorage.getItem("inventaire")) || [];
 
-// 🔥 CONFIG SUPABASE
-const supabaseUrl = "https://eezsocswqhqgkvghhygq.supabase.co";
-const supabaseKey = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImVlenNvY3N3cWhxZ2t2Z2hoeWdxIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODEwNjg5MjYsImV4cCI6MjA5NjY0NDkyNn0.TVI962lsUo67i6Ltq8okbOw-_GO-5yc4KDCyc8OkdVQ";
-const client = supabase.createClient(supabaseUrl, supabaseKey);
+let ul = document.getElementById("inventaire");
 
-// 👤 USER SAFE (IMPORTANT)
-let user = localStorage.getItem("user");
-
-if(!user){
-    user = "user_" + Math.floor(Math.random()*9999999);
-    localStorage.setItem("user", user);
+if(inv.length === 0){
+    ul.innerHTML = "<li>Inventaire vide</li>";
 }
-
-console.log("USER INVENTAIRE =", user);
-
-const container = document.getElementById("inventaire");
-
-// 🚀 LOAD INVENTAIRE (VERSION ULTRA SAFE)
-async function loadInventory(){
-
-    let { data, error } = await client
-        .from("inventaire")
-        .select("*");
-
-    console.log("ALL DATA =", data);
-    console.log("ERROR =", error);
-
-    if(error){
-        container.innerHTML = "<p>Erreur Supabase</p>";
-        return;
-    }
-
-    // 🔥 FILTRE MANUEL (évite tous bugs RLS / type / eq)
-    let items = (data || []).filter(i => i.user_id === user);
-
-    console.log("FILTERED =", items);
-
-    container.innerHTML = "";
-
-    if(items.length === 0){
-        container.innerHTML = "<p>Aucun objet dans l'inventaire</p>";
-        return;
-    }
-
-    items.forEach(item => {
-
-        let div = document.createElement("div");
-        div.className = "item";
-
-        div.innerHTML = `
-            <div>
-                <b>${item.item}</b>
-                <div class="small">ID: ${item.id}</div>
-            </div>
-
-            <div class="price">
-                💰 ${item.price}
-            </div>
-        `;
-
-        container.appendChild(div);
+else{
+    inv.forEach(item => {
+        let li = document.createElement("li");
+        li.textContent = item;
+        ul.appendChild(li);
     });
 }
-
-loadInventory();
-
 </script>
 
 </body>
