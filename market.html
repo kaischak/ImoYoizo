@@ -165,17 +165,12 @@ input,textarea{
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 
 <script>
-        let user = localStorage.getItem("user");
-
-if(!user || user.startsWith("user")){
-    localStorage.removeItem("user");
-    window.location.href = "auth.html";
-}
 const supabaseUrl = "https://eezsocswqhqgkvghhygq.supabase.co";
 const supabaseKey = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImVlenNvY3N3cWhxZ2t2Z2hoeWdxIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODEwNjg5MjYsImV4cCI6MjA5NjY0NDkyNn0.TVI962lsUo67i6Ltq8okbOw-_GO-5yc4KDCyc8OkdVQ";
 const client = supabase.createClient(supabaseUrl, supabaseKey);
 
 let posts = [];
+let user = localStorage.getItem("user");
 localStorage.setItem("user", user);
 
 /* MONEY SAFE */
@@ -196,10 +191,7 @@ async function loadProfile(){
 
 /* POSTS */
 async function loadPosts(){
-    let { data, error } = await client.from("posts").select("*");
-
-    console.log(data, error); // 👈 AJOUTE ÇA
-
+    let { data } = await client.from("posts").select("*");
     posts = data || [];
     render();
 }
@@ -248,7 +240,7 @@ onclick="event.stopPropagation(); openVideos(${p.id})"
             <div class="info">
                 💰 ${p.price}<br>
                 ❤️ ${p.likes || 0}<br>
-                👤 ${p.user_id}
+                👤 ${p.user}
             </div>
 
             <button onclick="buy(${p.id})">🛒 BUY</button>
@@ -699,7 +691,7 @@ const { error } = await client
     price: Number(document.getElementById("price").value),
     desc: document.getElementById("desc").value,
 
-    user_id: user,
+    user: user,   // 👈 ICI EXACTEMENT
 
     likes: 0
 }]);
