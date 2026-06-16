@@ -1,0 +1,101 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<title>Chat</title>
+<style>
+body{
+font-family:Arial;
+background:#0b0b0f;
+color:white;
+margin:0;
+display:flex;
+flex-direction:column;
+height:100vh;
+}
+
+#messages{
+flex:1;
+overflow:auto;
+padding:10px;
+}
+
+.msg{
+background:#1c1c2a;
+margin:5px;
+padding:10px;
+border-radius:10px;
+max-width:70%;
+}
+
+.me{
+background:#00ff99;
+color:black;
+margin-left:auto;
+}
+</style>
+</head>
+
+<body>
+
+<h3>💬 Chat</h3>
+
+<div id="messages"></div>
+
+<input id="input" placeholder="message...">
+<button onclick="send()">Envoyer</button>
+
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+
+<script>
+const client = supabase.createClient(
+"https://eezsocswqhqgkvghhygq.supabase.co",
+"TON_KEY"
+);
+
+let user = localStorage.getItem("user");
+let friend = localStorage.getItem("chatWith");
+
+async function load(){
+
+let { data } = await client
+.from("messages")
+.select("*")
+.or(`and(sender.eq.${user},receiver.eq.${friend}),and(sender.eq.${friend},receiver.eq.${user})`)
+.order("created_at");
+
+let box = document.getElementById("messages");
+box.innerHTML = "";
+
+(data || []).forEach(m=>{
+
+let div = document.createElement("div");
+div.className = "msg " + (m.sender === user ? "me" : "");
+div.innerText = m.message;
+
+box.appendChild(div);
+
+});
+
+}
+
+async function send(){
+
+let msg = document.getElementById("input").value;
+
+await client.from("messages").insert([{
+sender: user,
+receiver: friend,
+message: msg
+}]);
+
+document.getElementById("input").value = "";
+load();
+}
+
+setInterval(load, 2000);
+load();
+</script>
+
+</body>
+</html>
