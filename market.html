@@ -213,6 +213,22 @@ function render(){
         <div class="card">
             <h2>${p.name}</h2>
             <img src="${p.image}">
+
+            ${
+(p.videos || []).map(v=>`
+<video
+src="${v}"
+controls
+style="
+width:100%;
+margin-top:10px;
+border-radius:15px;
+max-height:300px;
+object-fit:cover;
+">
+</video>
+`).join("")
+}
             
             <div class="info">
                 💰 ${p.price}<br>
@@ -395,6 +411,42 @@ max-height:300px;
 object-fit:cover;
 ">
 
+<div
+id="videoZone"
+style="
+border:3px dashed #00ccff;
+border-radius:20px;
+padding:30px;
+cursor:pointer;
+margin-bottom:15px;
+background:rgba(0,170,255,.08);
+transition:.2s;
+">
+
+<div style="font-size:50px;">
+🎥
+</div>
+
+<b>
+Glisse jusqu'à 3 vidéos ici
+</b>
+
+<br><br>
+
+ou clique pour choisir des fichiers
+
+<input
+id="videoInput"
+type="file"
+accept="video/*"
+multiple
+style="display:none;"
+>
+
+</div>
+
+<div id="videoPreview"></div>
+
 <button
 onclick="create()"
 style="
@@ -461,6 +513,55 @@ if(file) loadImage(file);
 });
 
 window.selectedImage = "";
+window.selectedVideos = [];
+
+const videoInput = document.getElementById("videoInput");
+const videoZone = document.getElementById("videoZone");
+
+videoZone.onclick = ()=>videoInput.click();
+
+videoInput.onchange = e=>{
+
+    const files = [...e.target.files];
+
+    if(files.length > 3){
+        alert("Maximum 3 vidéos");
+        return;
+    }
+
+    window.selectedVideos = [];
+
+    let html = "";
+
+    files.forEach(file=>{
+
+        const reader = new FileReader();
+
+        reader.onload = ev=>{
+
+            window.selectedVideos.push(ev.target.result);
+
+            html += `
+            <video
+            src="${ev.target.result}"
+            controls
+            style="
+            width:100%;
+            margin-top:10px;
+            border-radius:20px;
+            ">
+            </video>
+            `;
+
+            document.getElementById("videoPreview").innerHTML = html;
+
+        };
+
+        reader.readAsDataURL(file);
+
+    });
+
+};
 }
 
 function loadImage(file){
@@ -481,20 +582,17 @@ reader.readAsDataURL(file);
 }
 async function create(){
 
-const { data, error } = await client
+const { error } = await client
 .from("posts")
 .insert([{
     name: document.getElementById("name").value,
     image: window.selectedImage || "",
+    videos: window.selectedVideos,
     price: Number(document.getElementById("price").value),
     desc: document.getElementById("desc").value,
     user: user,
-    likes: 0
-}])
-.select();
-
-console.log("DATA :", data);
-console.log("ERROR :", error);
+    likes:0
+}]);
 
 if(error){
     console.log(error);
@@ -502,11 +600,10 @@ if(error){
     return;
 }
 
-alert("Annonce créée !");
-
-document.getElementById("modal").style.display = "none";
+document.getElementById("modal").style.display="none";
 
 loadPosts();
+
 }
 
 async function openInv(){
