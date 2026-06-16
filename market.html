@@ -215,19 +215,26 @@ function render(){
             <img src="${p.image}">
 
             ${
-(p.videos || []).map(v=>`
-<video
-src="${v}"
-controls
+(p.videos && p.videos.length)
+?
+`
+<button
 style="
-width:100%;
 margin-top:10px;
+padding:10px;
+border:none;
 border-radius:15px;
-max-height:300px;
-object-fit:cover;
-">
-</video>
-`).join("")
+background:#00ccff;
+cursor:pointer;
+font-size:17px;
+"
+onclick="event.stopPropagation(); openVideos(${p.id})"
+>
+🎥 Vidéos (${p.videos.length})
+</button>
+`
+:
+""
 }
             
             <div class="info">
@@ -242,6 +249,99 @@ object-fit:cover;
 
         feed.appendChild(div);
     });
+}
+
+    function openVideos(id){
+
+let post = posts.find(p=>p.id===id);
+
+document.getElementById("box").innerHTML = `
+
+<h1>🎥 Vidéos</h1>
+
+${
+(post.videos || []).map((v,i)=>`
+
+<div
+onclick="playVideo('${v}')"
+style="
+background:#222;
+padding:15px;
+margin:10px 0;
+border-radius:20px;
+cursor:pointer;
+font-size:20px;
+"
+>
+
+▶️ Vidéo ${i+1}
+
+</div>
+
+`).join("")
+}
+
+<button
+onclick="document.getElementById('modal').style.display='none'"
+style="
+width:100%;
+padding:15px;
+border:none;
+border-radius:20px;
+background:#333;
+color:white;
+cursor:pointer;
+"
+>
+
+Fermer
+
+</button>
+
+`;
+
+document.getElementById("modal").style.display = "flex";
+
+}
+
+    function playVideo(video){
+
+document.getElementById("box").innerHTML = `
+
+<h1>🎥 Lecture vidéo</h1>
+
+<video
+src="${video}"
+controls
+autoplay
+style="
+width:100%;
+border-radius:20px;
+max-height:80vh;
+background:black;
+">
+</video>
+
+<button
+onclick="document.getElementById('modal').style.display='none'"
+style="
+width:100%;
+margin-top:15px;
+padding:15px;
+border:none;
+border-radius:20px;
+background:#333;
+color:white;
+cursor:pointer;
+"
+>
+
+Fermer
+
+</button>
+
+`;
+
 }
 
 async function buy(id){
