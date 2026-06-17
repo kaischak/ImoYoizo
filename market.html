@@ -927,61 +927,62 @@ reader.readAsDataURL(file);
 }
 async function create(){
 
-const { error } = await client
-.from("posts")
-.insert([{
-    name: document.getElementById("name").value,
-    image: window.selectedImage || "",
-    videos: window.selectedVideos,
-    price: Number(document.getElementById("price").value),
-    desc: document.getElementById("desc").value,
+    const name = document.getElementById("name").value.trim();
+    const desc = document.getElementById("desc").value.trim();
+    const price = Number(document.getElementById("price").value);
 
-    user_id: user,
+    if(!name || !price){
+        alert("Nom et prix obligatoires !");
+        return;
+    }
 
-    likes: 0
-}]);
+    // 🔥 récupérer l'avatar du user
+    let { data: userData, error: userError } = await client
+        .from("users")
+        .select("avatar")
+        .eq("username", user)
+        .single();
 
-if(error){
-    console.log(error);
-    alert(error.message);
-    return;
-}
+    if(userError){
+        console.log(userError);
+    }
 
-document.getElementById("modal").style.display="none";
-loadPosts();
-}
+    const avatar = userData?.avatar || "";
 
-async function openInv(){
+    // 🚀 insertion du post
+    let { error } = await client
+        .from("posts")
+        .insert([{
+            name: name,
+            image: window.selectedImage || "",
+            videos: window.selectedVideos || [],
+            price: price,
+            desc: desc,
+            user_id: user,
+            avatar: avatar,
+            likes: 0
+        }]);
 
-    let { data } = await client
-        .from("inventaire")
-        .select("*")
-        .eq("user_id", user);
+    if(error){
+        console.log(error);
+        alert(error.message);
+        return;
+    }
 
-    document.getElementById("box").innerHTML = `
-        <h2>📦 Inventaire</h2>
+    alert("Annonce publiée ! 🚀");
 
-        ${(data || []).map(i => `
-            <div style="
-                background:#222;
-                padding:10px;
-                margin:10px 0;
-                border-radius:10px;
-            ">
-                ${i.image ? `<img src="${i.image}" width="120" style="border-radius:10px;"><br>` : ""}
-                <b>${i.item}</b><br>
-                💰 ${i.price}
-            </div>
-        `).join("")}
+    // reset modal + refresh
+    document.getElementById("modal").style.display = "none";
 
-        <button onclick="
-            document.getElementById('modal').style.display='none'
-        ">
-            Fermer
-        </button>
-    `;
+    // reset champs
+    document.getElementById("name").value = "";
+    document.getElementById("desc").value = "";
+    document.getElementById("price").value = "";
 
-    document.getElementById("modal").style.display = "flex";
+    window.selectedImage = "";
+    window.selectedVideos = [];
+
+    loadPosts();
 }
 
 loadPosts();
