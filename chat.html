@@ -184,11 +184,14 @@ box.innerHTML = "";
 
 let div = document.createElement("div");
 div.className = "msg " + (m.sender === user ? "me" : "other");
-div.innerText = m.message;
 
-box.appendChild(div);
-
-});
+div.innerHTML = `
+<div style="display:flex;align-items:center;gap:8px;">
+<img src="${m.avatar || 'https://via.placeholder.com/25'}"
+style="width:25px;height:25px;border-radius:50%;">
+<span>${m.message}</span>
+</div>
+`;
 
 /* scroll auto */
 box.scrollTop = box.scrollHeight;
