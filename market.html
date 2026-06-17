@@ -949,47 +949,38 @@ async function create(){
         return;
     }
 
-    // 🔥 récupérer avatar user (optionnel)
+    // Récupérer l'avatar du user (facultatif)
     let { data: userData, error: userError } = await client
-.from("users")
-.select("avatar")
-.eq("username", user)
-.single();
+        .from("users")
+        .select("avatar")
+        .eq("username", user)
+        .single();
 
-if(userError){
-    console.log(userError);
-}
+    if(userError){
+        console.log(userError);
+    }
 
-    const avatar = userData?.avatar || "";
-
-    // 🚀 INSERT POST (IMPORTANT: PAS avatar ici si ta table n’a pas la colonne)
+    // Insertion du post
     let { error: postError } = await client
-.from("posts")
-.insert([{
-    name: name,
-    image: window.selectedImage || "",
-    videos: window.selectedVideos || [],
-    price: price,
-    desc: desc,
-    user_id: user,
-    likes: 0
-}]);
+        .from("posts")
+        .insert([{
+            name: name,
+            image: window.selectedImage || "",
+            videos: window.selectedVideos || [],
+            price: price,
+            desc: desc,
+            user_id: user,
+            likes: 0
+        }]);
 
-if(postError){
-    console.log(postError);
-    alert(postError.message);
-    return;
-}
-
-    if(error){
-        console.log(error);
-        alert(error.message);
+    if(postError){
+        console.log(postError);
+        alert(postError.message);
         return;
     }
 
     alert("Annonce publiée ! 🚀");
 
-    // reset UI
     document.getElementById("modal").style.display = "none";
 
     document.getElementById("name").value = "";
@@ -1008,12 +999,6 @@ async function openInv(){
         .from("inventaire")
         .select("*")
         .eq("user_id", user);
-
-    if(error){
-        console.log(error);
-        alert("Erreur inventaire");
-        return;
-    }
 
     let items = data || [];
 
