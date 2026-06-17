@@ -214,6 +214,27 @@ async function loadPosts(){
     render();
 }
 
+async function deletePost(id){
+
+    if(!confirm("Supprimer cette annonce ?")){
+        return;
+    }
+
+    let { error } = await client
+    .from("posts")
+    .delete()
+    .eq("id", id);
+
+    if(error){
+        console.log(error);
+        alert("Erreur suppression");
+        return;
+    }
+
+    alert("Annonce supprimée !");
+    loadPosts();
+}
+
 function render(){
 
     let s = document.getElementById("search").value.toLowerCase();
@@ -262,6 +283,22 @@ onclick="event.stopPropagation(); openVideos(${p.id})"
             </div>
 
             <button onclick="buy(${p.id})">🛒 BUY</button>
+
+${
+p.user === user
+?
+`<button
+onclick="deletePost(${p.id})"
+style="
+background:red;
+color:white;
+margin-top:10px;
+">
+🗑 Supprimer
+</button>`
+:
+""
+}
         </div>
         `;
 
