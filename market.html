@@ -354,14 +354,15 @@ onclick="event.stopPropagation(); openVideos(${p.id})"
             <div class="info">
                 💰 ${p.price}<br>
                 ❤️ ${p.likes || 0}<br>
-                <span
-onclick="openUserMenu('${p.user}')"
+👤 <img src="${p.avatar || 'https://via.placeholder.com/30'}"
 style="
-color:#00ccff;
-cursor:pointer;
-"
->
-👤 ${p.username}
+width:25px;
+height:25px;
+border-radius:50%;
+vertical-align:middle;
+margin-right:5px;
+">
+${p.user_id}
 </span>
             </div>
 
