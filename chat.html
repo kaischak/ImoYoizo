@@ -3,67 +3,140 @@
 <head>
 <meta charset="UTF-8">
 <title>Chat</title>
+
 <style>
 body{
+margin:0;
 font-family:Arial;
 background:#0b0b0f;
 color:white;
-margin:0;
 display:flex;
 flex-direction:column;
 height:100vh;
 }
-document.title = "Chat avec " + friend;
 
+/* HEADER */
+#header{
+padding:15px;
+background:#16161d;
+font-weight:bold;
+display:flex;
+justify-content:space-between;
+align-items:center;
+border-bottom:1px solid rgba(255,255,255,0.05);
+}
+
+#with{
+opacity:0.7;
+font-size:14px;
+}
+
+/* MESSAGES */
 #messages{
 flex:1;
-overflow:auto;
-padding:10px;
+overflow-y:auto;
+padding:15px;
+display:flex;
+flex-direction:column;
+gap:10px;
 }
 
 .msg{
-background:#1c1c2a;
-margin:5px;
-padding:10px;
-border-radius:10px;
-max-width:70%;
+max-width:75%;
+padding:10px 14px;
+border-radius:18px;
+word-wrap:break-word;
+font-size:15px;
 }
 
 .me{
 background:#00ff99;
 color:black;
-margin-left:auto;
+align-self:flex-end;
+border-bottom-right-radius:5px;
+}
+
+.other{
+background:#1c1c2a;
+align-self:flex-start;
+border-bottom-left-radius:5px;
+}
+
+/* INPUT */
+#inputBar{
+display:flex;
+padding:10px;
+background:#16161d;
+gap:10px;
+border-top:1px solid rgba(255,255,255,0.05);
+}
+
+#input{
+flex:1;
+padding:12px;
+border:none;
+border-radius:12px;
+background:#1c1c2a;
+color:white;
+outline:none;
+}
+
+#sendBtn{
+width:50px;
+border:none;
+border-radius:12px;
+background:#00ccff;
+color:black;
+font-size:18px;
+cursor:pointer;
 }
 </style>
 </head>
 
 <body>
 
-<h3>💬 Chat</h3>
+<div id="header">
+💬 Chat
+<div id="with">...</div>
+</div>
 
 <div id="messages"></div>
 
-<input id="input" placeholder="message...">
-<button onclick="send()">Envoyer</button>
+<div id="inputBar">
+<input id="input" placeholder="Écris un message...">
+<button id="sendBtn" onclick="send()">➤</button>
+</div>
 
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 
 <script>
+
 const client = supabase.createClient(
 "https://eezsocswqhqgkvghhygq.supabase.co",
-"eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImVlenNvY3N3cWhxZ2t2Z2hoeWdxIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODEwNjg5MjYsImV4cCI6MjA5NjY0NDkyNn0.TVI962lsUo67i6Ltq8okbOw-_GO-5yc4KDCyc8OkdVQ"
+"TA_KEY"
 );
 
 let user = localStorage.getItem("user");
 let friend = localStorage.getItem("chatWith");
 
+if(!user || !friend){
+alert("Erreur chat");
+location.href="index.html";
+}
+
+/* AFFICHER NOM */
+document.getElementById("with").innerText = "avec " + friend;
+
+/* LOAD MESSAGES */
 async function load(){
 
 let { data } = await client
 .from("messages")
 .select("*")
-.or(`and(sender.eq.${user},receiver.eq.${friend}),and(sender.eq.${friend},receiver.eq.${user})`)
-.order("created_at");
+.or(
+`and(sender.eq.${user},receiver.eq.${friend}),and(sender.eq.${friend},receiver.eq.${user})`
+)
+.order("created_at", { ascending: true });
 
 let box = document.getElementById("messages");
 box.innerHTML = "";
@@ -71,18 +144,24 @@ box.innerHTML = "";
 (data || []).forEach(m=>{
 
 let div = document.createElement("div");
-div.className = "msg " + (m.sender === user ? "me" : "");
+div.className = "msg " + (m.sender === user ? "me" : "other");
 div.innerText = m.message;
 
 box.appendChild(div);
 
 });
 
+/* scroll auto */
+box.scrollTop = box.scrollHeight;
+
 }
 
+/* ENVOYER MESSAGE */
 async function send(){
 
-let msg = document.getElementById("input").value;
+let msg = document.getElementById("input").value.trim();
+
+if(!msg) return;
 
 await client.from("messages").insert([{
 sender: user,
@@ -94,8 +173,16 @@ document.getElementById("input").value = "";
 load();
 }
 
+/* ENTER pour envoyer */
+document.getElementById("input").addEventListener("keydown", e=>{
+if(e.key === "Enter") send();
+});
+
+/* AUTO REFRESH */
 setInterval(load, 2000);
+
 load();
+
 </script>
 
 </body>
