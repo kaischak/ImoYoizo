@@ -1,12 +1,244 @@
 <!DOCTYPE html>
-<html>
+<html lang="fr">
 <head>
 <meta charset="UTF-8">
-<title>test</title>
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Amis</title>
+
+<style>
+body{
+    margin:0;
+    font-family:Arial;
+    background:#0b0b0f;
+    color:white;
+    text-align:center;
+}
+
+.box{
+    background:#1c1c24;
+    margin:15px;
+    padding:15px;
+    border-radius:20px;
+}
+
+input{
+    padding:10px;
+    border:none;
+    border-radius:10px;
+    width:220px;
+}
+
+button{
+    padding:10px;
+    border:none;
+    border-radius:10px;
+    cursor:pointer;
+    margin:5px;
+}
+</style>
 </head>
 <body>
 
-<h1>OK</h1>
+<h1>👥 Amis</h1>
+
+<div class="box">
+
+<h2>➕ Ajouter un ami</h2>
+
+<input id="pseudo" placeholder="Pseudo">
+
+<button onclick="addFriend()">
+Envoyer
+</button>
+
+</div>
+
+<div class="box">
+
+<h2>📩 Demandes reçues</h2>
+
+<div id="requests">
+Chargement...
+</div>
+
+</div>
+
+<div class="box">
+
+<h2>👬 Mes amis</h2>
+
+<div id="friends">
+Chargement...
+</div>
+
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+
+<script>
+
+const client = supabase.createClient(
+"https://eezsocswqhqgkvghhygq.supabase.co",
+"eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImVlenNvY3N3cWhxZ2t2Z2hoeWdxIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODEwNjg5MjYsImV4cCI6MjA5NjY0NDkyNn0.TVI962lsUo67i6Ltq8okbOw-_GO-5yc4KDCyc8OkdVQ"
+);
+
+let user = localStorage.getItem("user");
+
+if(!user){
+    alert("Connecte-toi !");
+    location.href="auth.html";
+}
+
+/* ---------------- AJOUTER AMI ---------------- */
+
+async function addFriend(){
+
+    let pseudo =
+    document.getElementById("pseudo").value.trim();
+
+    if(!pseudo){
+        alert("Entre un pseudo");
+        return;
+    }
+
+    if(pseudo === user){
+        alert("Impossible");
+        return;
+    }
+
+    let { error } = await client
+    .from("friends")
+    .insert([{
+        user1:user,
+        user2:pseudo,
+        status:"pending"
+    }]);
+
+    console.log(error);
+
+    if(error){
+        alert("Erreur");
+        return;
+    }
+
+    alert("Demande envoyée !");
+}
+
+/* ---------------- DEMANDES RECUES ---------------- */
+
+async function loadRequests(){
+
+    let { data, error } = await client
+    .from("friends")
+    .select("*")
+    .eq("user2", user)
+    .eq("status","pending");
+
+    console.log(data,error);
+
+    let html="";
+
+    (data || []).forEach(r=>{
+
+        html += `
+        <div class="box">
+
+        👤 ${r.user1}
+
+        <br><br>
+
+        <button
+        onclick="acceptFriend('${r.id}')">
+
+        ✔ Accepter
+
+        </button>
+
+        </div>
+        `;
+
+    });
+
+    if(html===""){
+        html="Aucune demande";
+    }
+
+    document.getElementById("requests").innerHTML =
+    html;
+}
+
+/* ---------------- ACCEPTER ---------------- */
+
+async function acceptFriend(id){
+
+    console.log(id);
+
+    let { data, error } = await client
+    .from("friends")
+    .update({
+        status:"accepted"
+    })
+    .eq("id",id)
+    .select();
+
+    console.log(data,error);
+
+    if(error){
+        alert("Erreur");
+        return;
+    }
+
+    alert("Demande acceptée !");
+
+    loadRequests();
+    loadFriends();
+}
+
+/* ---------------- LISTE AMIS ---------------- */
+
+async function loadFriends(){
+
+    let { data, error } = await client
+    .from("friends")
+    .select("*")
+    .eq("status","accepted")
+    .or(
+        `user1.eq.${user},user2.eq.${user}`
+    );
+
+    console.log(data,error);
+
+    let html="";
+
+    (data || []).forEach(f=>{
+
+        let friend =
+        f.user1===user
+        ? f.user2
+        : f.user1;
+
+        html += `
+        <div class="box">
+
+        👤 ${friend}
+
+        </div>
+        `;
+
+    });
+
+    if(html===""){
+        html="Aucun ami";
+    }
+
+    document.getElementById("friends").innerHTML =
+    html;
+}
+
+loadRequests();
+loadFriends();
+
+</script>
 
 </body>
 </html>
