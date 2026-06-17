@@ -1,0 +1,81 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<title>Inbox</title>
+<style>
+body{
+font-family:Arial;
+background:#0b0b0f;
+color:white;
+margin:0;
+padding:20px;
+}
+
+.box{
+background:#1c1c2a;
+padding:15px;
+margin:10px 0;
+border-radius:10px;
+cursor:pointer;
+}
+</style>
+</head>
+
+<body>
+
+<h2>💬 Messages</h2>
+
+<div id="list">Chargement...</div>
+
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+
+<script>
+
+const client = supabase.createClient(
+"https://eezsocswqhqgkvghhygq.supabase.co",
+"eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImVlenNvY3N3cWhxZ2t2Z2hoeWdxIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODEwNjg5MjYsImV4cCI6MjA5NjY0NDkyNn0.TVI962lsUo67i6Ltq8okbOw-_GO-5yc4KDCyc8OkdVQ"
+);
+
+let user = localStorage.getItem("user");
+
+async function loadInbox(){
+
+let { data } = await client
+.from("messages")
+.select("*")
+.or(`sender.eq.${user},receiver.eq.${user}`);
+
+let users = new Set();
+
+(data || []).forEach(m=>{
+if(m.sender !== user) users.add(m.sender);
+if(m.receiver !== user) users.add(m.receiver);
+});
+
+let html = "";
+
+users.forEach(u=>{
+html += `
+<div class="box" onclick="openChat('${u}')">
+💬 ${u}
+</div>
+`;
+});
+
+document.getElementById("list").innerHTML =
+html || "Aucun message";
+
+}
+
+function openChat(u){
+localStorage.setItem("chatWith", u);
+location.href="chat.html";
+}
+
+loadInbox();
+
+</script>
+
+</body>
+</html>
