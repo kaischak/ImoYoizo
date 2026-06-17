@@ -168,37 +168,43 @@ document.getElementById("with").innerText = "avec " + friend;
 /* LOAD MESSAGES */
 async function load(){
 
-let { data } = await client
-.from("messages")
-.select("*")
-.or(
-`and(sender.eq.${user},receiver.eq.${friend}),and(sender.eq.${friend},receiver.eq.${user})`
-)
-.order("created_at", { ascending: true });
+    // 🔥 1. récupérer les users (AVANT messages)
+    let { data: users } = await client
+        .from("users")
+        .select("username, avatar");
 
-let box = document.getElementById("messages");
-box.innerHTML = "";
+    let { data } = await client
+        .from("messages")
+        .select("*")
+        .or(
+        `and(sender.eq.${user},receiver.eq.${friend}),and(sender.eq.${friend},receiver.eq.${user})`
+        )
+        .order("created_at", { ascending: true });
 
-(data || []).forEach(m=>{
+    let box = document.getElementById("messages");
+    box.innerHTML = "";
 
-let div = document.createElement("div");
-div.className = "msg " + (m.sender === user ? "me" : "other");
+    (data || []).forEach(m => {
 
-div.innerHTML = `
-<div style="display:flex;align-items:center;gap:8px;">
-<img src="${m.avatar || 'https://via.placeholder.com/25'}"
-style="width:25px;height:25px;border-radius:50%;">
-<span>${m.message}</span>
-</div>
-`;
+        let div = document.createElement("div");
+        div.className = "msg " + (m.sender === user ? "me" : "other");
 
-box.appendChild(div);
+        // 🔥 fonction avatar
+        let u = users.find(x => x.username === m.sender);
+        let avatar = u?.avatar || `https://ui-avatars.com/api/?name=${m.sender}`;
 
-});
+        div.innerHTML = `
+        <div style="display:flex;align-items:center;gap:8px;">
+            <img src="${avatar}"
+            style="width:25px;height:25px;border-radius:50%;">
+            <span>${m.message}</span>
+        </div>
+        `;
 
-/* scroll auto */
-box.scrollTop = box.scrollHeight;
+        box.appendChild(div);
+    });
 
+    box.scrollTop = box.scrollHeight;
 }
 
 /* ENVOYER MESSAGE */
