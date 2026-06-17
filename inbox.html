@@ -2,29 +2,50 @@
 <html lang="fr">
 <head>
 <meta charset="UTF-8">
-<title>Inbox</title>
+<title>Messages</title>
+
 <style>
 body{
+margin:0;
 font-family:Arial;
 background:#0b0b0f;
 color:white;
-margin:0;
-padding:20px;
 }
 
-.box{
-background:#1c1c2a;
+.header{
 padding:15px;
-margin:10px 0;
-border-radius:10px;
+font-size:20px;
+font-weight:bold;
+}
+
+.chat{
+display:flex;
+justify-content:space-between;
+align-items:center;
+padding:15px;
+margin:10px;
+background:#1c1c2a;
+border-radius:15px;
 cursor:pointer;
+}
+
+.chat:hover{
+background:#2a2a3a;
+}
+
+.badge{
+background:#00ccff;
+color:black;
+padding:5px 10px;
+border-radius:20px;
+font-size:12px;
 }
 </style>
 </head>
 
 <body>
 
-<h2>💬 Messages</h2>
+<div class="header">💬 Messages</div>
 
 <div id="list">Chargement...</div>
 
@@ -46,19 +67,20 @@ let { data } = await client
 .select("*")
 .or(`sender.eq.${user},receiver.eq.${user}`);
 
-let users = new Set();
+let map = {};
 
 (data || []).forEach(m=>{
-if(m.sender !== user) users.add(m.sender);
-if(m.receiver !== user) users.add(m.receiver);
+let other = m.sender === user ? m.receiver : m.sender;
+map[other] = true;
 });
 
 let html = "";
 
-users.forEach(u=>{
+Object.keys(map).forEach(u=>{
 html += `
-<div class="box" onclick="openChat('${u}')">
-💬 ${u}
+<div class="chat" onclick="openChat('${u}')">
+<div>👤 ${u}</div>
+<div class="badge">ouvrir</div>
 </div>
 `;
 });
