@@ -40,18 +40,13 @@ cursor:pointer;
 <input id="username" placeholder="pseudo">
 <input id="password" type="password" placeholder="mot de passe">
 
-<button onclick="register()">Créer compte</button>
-<button onclick="login()">Connexion</button>
+<button id="registerBtn">Créer compte</button>
+<button id="loginBtn">Connexion</button>
 
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 
 <script>
-      let user = localStorage.getItem("user");
 
-if(!user || user.startsWith("user")){
-    localStorage.removeItem("user");
-    window.location.href = "auth.html";
-}
 const client = supabase.createClient(
 "https://eezsocswqhqgkvghhygq.supabase.co",
 "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImVlenNvY3N3cWhxZ2t2Z2hoeWdxIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODEwNjg5MjYsImV4cCI6MjA5NjY0NDkyNn0.TVI962lsUo67i6Ltq8okbOw-_GO-5yc4KDCyc8OkdVQ"
@@ -66,8 +61,9 @@ let { error } = await client
 .insert([{ username, password }]);
 
 if(error){
-alert("Pseudo déjà pris !");
-return;
+    console.log(error);
+    alert(error.message);
+    return;
 }
 
 alert("Compte créé !");
@@ -92,6 +88,8 @@ return;
 localStorage.setItem("user", username);
 window.location.href = "index.html";
 }
+document.getElementById("registerBtn").addEventListener("click", register);
+document.getElementById("loginBtn").addEventListener("click", login);
 </script>
 
 </body>
