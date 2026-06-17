@@ -256,25 +256,18 @@ async function loadAvatar(post){
         .from("users")
         .select("avatar")
         .eq("username", post.user_id)
-        .single();
+        .maybeSingle();
 
-    let img = data?.avatar || "https://via.placeholder.com/30";
+    let img = data?.avatar || "";
 
     let el = document.getElementById(`avatar-${post.id}`);
 
     if(el){
-        el.innerHTML = `
-        <img src="${img}"
-        style="
-        width:28px;
-        height:28px;
-        border-radius:50%;
-        vertical-align:middle;
-        margin-right:6px;">
-        `;
+        el.innerHTML = img
+            ? `<img src="${img}" style="width:28px;height:28px;border-radius:50%;">`
+            : "";
     }
 }
-
 /* POSTS */
 async function loadPosts(){
     let { data, error } = await client.from("posts").select("*");
@@ -595,6 +588,37 @@ Fermer
 
 }
 
+async function openInv(){
+
+    let { data } = await client
+        .from("inventaire")
+        .select("*")
+        .eq("user_id", user);
+
+    document.getElementById("box").innerHTML = `
+        <h2>📦 Inventaire</h2>
+
+        ${(data || []).map(i => `
+            <div style="
+                background:#222;
+                padding:10px;
+                margin:10px 0;
+                border-radius:10px;
+            ">
+                ${i.image ? `<img src="${i.image}" width="120" style="border-radius:10px;"><br>` : ""}
+                <b>${i.item}</b><br>
+                💰 ${i.price}
+            </div>
+        `).join("")}
+
+        <button onclick="document.getElementById('modal').style.display='none'">
+            Fermer
+        </button>
+    `;
+
+    document.getElementById("modal").style.display = "flex";
+}
+    
 async function buy(id){
 
     let { data, error } = await client
@@ -975,7 +999,6 @@ async function create(){
             price: price,
             desc: desc,
             user_id: user,
-            avatar: avatar,
             likes: 0
         }]);
 
