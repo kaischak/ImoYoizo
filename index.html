@@ -1,7 +1,6 @@
 <!DOCTYPE html>
 <html lang="fr">
 <head>
-<link rel="manifest" href="manifest.json">
 <meta name="theme-color" content="#6a11cb">
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -41,15 +40,6 @@ cursor:pointer;
 </head>
 
 <script>
-
-if("serviceWorker" in navigator){
-
-navigator.serviceWorker.register("sw.js")
-.then(()=>{
-    console.log("Service Worker OK");
-});
-
-}
 
     let user = localStorage.getItem("user");
 
