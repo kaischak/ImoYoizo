@@ -185,7 +185,11 @@ input,textarea{
 </style>
 </head>
 
+
+
 <body>
+
+
 
 <div class="topbar">
 
@@ -587,37 +591,6 @@ Fermer
 `;
 
 }
-
-async function openInv(){
-
-    let { data } = await client
-        .from("inventaire")
-        .select("*")
-        .eq("user_id", user);
-
-    document.getElementById("box").innerHTML = `
-        <h2>📦 Inventaire</h2>
-
-        ${(data || []).map(i => `
-            <div style="
-                background:#222;
-                padding:10px;
-                margin:10px 0;
-                border-radius:10px;
-            ">
-                ${i.image ? `<img src="${i.image}" width="120" style="border-radius:10px;"><br>` : ""}
-                <b>${i.item}</b><br>
-                💰 ${i.price}
-            </div>
-        `).join("")}
-
-        <button onclick="document.getElementById('modal').style.display='none'">
-            Fermer
-        </button>
-    `;
-
-    document.getElementById("modal").style.display = "flex";
-}
     
 async function buy(id){
 
@@ -976,36 +949,37 @@ async function create(){
         return;
     }
 
-    let { error } = await client
-    .from("posts")
-    .insert([{
-        name: name,
-        image: window.selectedImage || "",
-        videos: window.selectedVideos || [],
-        price: price,
-        desc: desc,
-        user_id: user,
-        likes: 0
-    }]);
+    // 🔥 récupérer avatar user (optionnel)
+    let { data: userData, error: userError } = await client
+.from("users")
+.select("avatar")
+.eq("username", user)
+.single();
 
-    if(userError){
-        console.log(userError);
-    }
+if(userError){
+    console.log(userError);
+}
 
     const avatar = userData?.avatar || "";
 
-    // 🚀 insertion du post
-    let { error } = await client
-        .from("posts")
-        .insert([{
-            name: name,
-            image: window.selectedImage || "",
-            videos: window.selectedVideos || [],
-            price: price,
-            desc: desc,
-            user_id: user,
-            likes: 0
-        }]);
+    // 🚀 INSERT POST (IMPORTANT: PAS avatar ici si ta table n’a pas la colonne)
+    let { error: postError } = await client
+.from("posts")
+.insert([{
+    name: name,
+    image: window.selectedImage || "",
+    videos: window.selectedVideos || [],
+    price: price,
+    desc: desc,
+    user_id: user,
+    likes: 0
+}]);
+
+if(postError){
+    console.log(postError);
+    alert(postError.message);
+    return;
+}
 
     if(error){
         console.log(error);
@@ -1015,10 +989,9 @@ async function create(){
 
     alert("Annonce publiée ! 🚀");
 
-    // reset modal + refresh
+    // reset UI
     document.getElementById("modal").style.display = "none";
 
-    // reset champs
     document.getElementById("name").value = "";
     document.getElementById("desc").value = "";
     document.getElementById("price").value = "";
@@ -1029,6 +1002,53 @@ async function create(){
     loadPosts();
 }
 
+async function openInv(){
+
+    let { data, error } = await client
+        .from("inventaire")
+        .select("*")
+        .eq("user_id", user);
+
+    if(error){
+        console.log(error);
+        alert("Erreur inventaire");
+        return;
+    }
+
+    let items = data || [];
+
+    document.getElementById("box").innerHTML = `
+        <h2>📦 Inventaire</h2>
+
+        ${items.length === 0 ? "<p>Aucun objet 😢</p>" : ""}
+
+        ${items.map(i => `
+            <div style="
+                background:#222;
+                padding:10px;
+                margin:10px 0;
+                border-radius:15px;
+                display:flex;
+                align-items:center;
+                gap:10px;
+            ">
+                <img src="${i.image}" style="width:40px;height:40px;border-radius:10px;">
+                <div>
+                    <b>${i.item}</b><br>
+                    💰 ${i.price}
+                </div>
+            </div>
+        `).join("")}
+
+        <button onclick="document.getElementById('modal').style.display='none'"
+        style="width:100%;padding:10px;margin-top:10px;">
+            Fermer
+        </button>
+    `;
+
+    document.getElementById("modal").style.display = "flex";
+}
+    
 loadPosts();
 loadProfile();
 </script>
