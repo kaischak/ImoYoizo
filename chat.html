@@ -147,12 +147,11 @@ font-size:20px;
 </div>
 
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-
 <script>
 
 const client = supabase.createClient(
 "https://eezsocswqhqgkvghhygq.supabase.co",
-"eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImVlenNvY3N3cWhxZ2t2Z2hoeWdxIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODEwNjg5MjYsImV4cCI6MjA5NjY0NDkyNn0.TVI962lsUo67i6Ltq8okbOw-_GO-5yc4KDCyc8OkdVQ"
+"TON_KEY"
 );
 
 let user = localStorage.getItem("user");
@@ -193,8 +192,14 @@ style="width:25px;height:25px;border-radius:50%;">
 </div>
 `;
 
+box.appendChild(div);
+
+});
+
 /* scroll auto */
 box.scrollTop = box.scrollHeight;
+
+}
 
 /* ENVOYER MESSAGE */
 async function send(){
@@ -223,5 +228,6 @@ setInterval(load, 2000);
 
 load();
 
+</script>
 </body>
 </html>
