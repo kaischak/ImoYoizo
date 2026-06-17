@@ -251,7 +251,10 @@ function render(){
         div.className = "post";
 
         div.innerHTML = `
-        <div class="card">
+<div class="card"
+onclick="openPost(${p.id})"
+style="cursor:pointer;"
+>
             <h2>${p.name}</h2>
             <img src="${p.image}">
 
@@ -281,7 +284,15 @@ onclick="event.stopPropagation(); openVideos(${p.id})"
             <div class="info">
                 💰 ${p.price}<br>
                 ❤️ ${p.likes || 0}<br>
-                👤 ${p.user_id}
+                <span
+onclick="openUserMenu('${p.user}')"
+style="
+color:#00ccff;
+cursor:pointer;
+"
+>
+👤 ${p.user}
+</span>
             </div>
 
             <button onclick="buy(${p.id})">🛒 BUY</button>
@@ -306,6 +317,88 @@ margin-top:10px;
 
         feed.appendChild(div);
     });
+}
+
+    function openPost(id){
+
+let p = posts.find(x=>x.id===id);
+
+document.getElementById("box").innerHTML = `
+
+<h1>${p.name}</h1>
+
+<img
+src="${p.image}"
+style="
+width:100%;
+border-radius:20px;
+">
+
+<br><br>
+
+📝 ${p.desc}
+
+<br><br>
+
+💰 ${p.price}
+
+<br><br>
+
+❤️ ${p.likes}
+
+<br><br>
+
+👤 ${p.user}
+
+`;
+
+document.getElementById("modal").style.display="flex";
+
+}
+
+    function openUserMenu(username){
+
+document.getElementById("box").innerHTML = `
+
+<h2>${username}</h2>
+
+<button
+onclick="subscribe('${username}')"
+style="
+width:100%;
+padding:15px;
+margin-top:10px;
+"
+>
+⭐ S'abonner
+</button>
+
+<button
+onclick="openProfile('${username}')"
+style="
+width:100%;
+padding:15px;
+margin-top:10px;
+"
+>
+👤 Voir le profil
+</button>
+
+<button
+onclick="location.href='dm.html?user=${username}'"
+style="
+width:100%;
+padding:15px;
+margin-top:10px;
+"
+>
+💬 DM
+</button>
+
+`;
+
+document.getElementById("modal").style.display="flex";
+
 }
 
     function openVideos(id){
