@@ -276,11 +276,10 @@ async function loadAvatar(post){
 async function loadPosts(){
     let { data, error } = await client.from("posts").select("*");
 
-    console.log(data, error); // 👈 AJOUTE ÇA
+    console.log(data, error);
 
     posts = data || [];
     render();
-    console.log(posts);
 }
 
 async function deletePost(id){
