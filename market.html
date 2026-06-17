@@ -19,13 +19,13 @@ body{
     top:0;
     width:100%;
     display:flex;
-    justify-content:center;
     align-items:center;
-    gap:10px;
+    justify-content:space-between;
     padding:10px;
     background:rgba(0,0,0,0.6);
     backdrop-filter:blur(10px);
     z-index:10;
+    gap:10px;
 }
 
 #search{
@@ -174,40 +174,27 @@ input,textarea{
 
 <div class="topbar">
 
+<!-- LEFT -->
 <div id="miniProfile">
 <strong id="pname">loading...</strong>
-<div id="pbio"></div>
 <div id="money"></div>
 </div>
 
+<!-- CENTER -->
 <input id="search" placeholder="recherche..." oninput="render()">
+
+<!-- RIGHT -->
+<div style="display:flex;gap:8px;align-items:center;">
 
 <button id="addBtn" onclick="openSell()">+</button>
 
 <button onclick="openInv()">📦</button>
 
-<button onclick="location.href='friends.html'" style="
-background:#2d6bff;
-color:white;
-border-radius:10px;
-padding:10px;
-border:none;
-cursor:pointer;
-">
-👥 Amis
-</button>
+<button onclick="location.href='friends.html'">👥</button>
 
-<button onclick="location.href='profile.html'"
-style="
-background:#2d6bff;
-color:white;
-border-radius:10px;
-padding:10px;
-border:none;
-cursor:pointer;
-">
-👤 Profil
-</button>
+<button onclick="location.href='profile.html'">👤</button>
+
+</div>
 
 </div>
 
