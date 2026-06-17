@@ -253,6 +253,31 @@ async function loadProfile(){
     setMoney(getMoney());
 }
 
+async function loadAvatar(post){
+
+    let { data } = await client
+        .from("users")
+        .select("avatar")
+        .eq("username", post.user_id)
+        .single();
+
+    let img = data?.avatar || "https://via.placeholder.com/30";
+
+    let el = document.getElementById(`avatar-${post.id}`);
+
+    if(el){
+        el.innerHTML = `
+        <img src="${img}"
+        style="
+        width:28px;
+        height:28px;
+        border-radius:50%;
+        vertical-align:middle;
+        margin-right:6px;">
+        `;
+    }
+}
+
 /* POSTS */
 async function loadPosts(){
     let { data, error } = await client.from("posts").select("*");
@@ -303,14 +328,14 @@ function openChat(username){
     window.location.href = "chat.html";
 }
 
-function render(){
+async function render(){
 
     let s = document.getElementById("search").value.toLowerCase();
     let feed = document.getElementById("feed");
     feed.innerHTML = "";
 
     posts
-    .filter(p => (p.name||"").toLowerCase().includes(s))
+    .filter(p => (p.name || "").toLowerCase().includes(s))
     .forEach(p => {
 
         let div = document.createElement("div");
@@ -319,84 +344,82 @@ function render(){
         div.innerHTML = `
 <div class="card"
 onclick="openPost(${p.id})"
-style="cursor:pointer;"
+style="cursor:pointer; position:relative;"
 >
-            <h2>${p.name}</h2>
-            <img src="${p.image}">
 
-            ${
-(p.videos && p.videos.length)
-?
-`
-<button
-style="
-margin-top:10px;
-padding:10px;
-border:none;
-border-radius:15px;
-background:#00ccff;
-cursor:pointer;
-font-size:17px;
-"
-onclick="event.stopPropagation(); openVideos(${p.id})"
->
-🎥 Vidéos (${p.videos.length})
-</button>
-`
-:
-""
-}
-            
-            <div class="info">
-                💰 ${p.price}<br>
-                ❤️ ${p.likes || 0}<br>
-👤 <img src="${p.avatar || 'https://via.placeholder.com/30'}"
-style="
-width:25px;
-height:25px;
-border-radius:50%;
-vertical-align:middle;
-margin-right:5px;
-">
-${p.user_id}
-</span>
-            </div>
+    <h2>${p.name}</h2>
 
-            <button onclick="buy(${p.id})">🛒 BUY</button>
+    <img src="${p.image}">
 
-<button
-onclick="event.stopPropagation(); openChat('${p.user_id}')"
-style="
-margin-top:10px;
-padding:10px;
-border:none;
-border-radius:15px;
-background:#ffcc00;
-cursor:pointer;
-font-size:16px;
-">
-💬 Chat
-</button>
+    <br>
 
-${
-p.user === user
-?
-`<button
-onclick="deletePost(${p.id})"
-style="
-background:red;
-color:white;
-margin-top:10px;
-">
-🗑 Supprimer
-</button>`
-:
-""
-}
-        </div>
-        `;
+    <!-- 💥 AVATAR DYNAMIQUE -->
+    <span id="avatar-${p.id}"></span>
+
+    <div class="info">
+        💰 ${p.price}<br>
+        ❤️ ${p.likes || 0}<br>
+
+        <span
+        onclick="event.stopPropagation(); openUserMenu('${p.user_id}')"
+        style="
+        color:#00ccff;
+        cursor:pointer;
+        ">
+        👤 ${p.user_id}
+        </span>
+    </div>
+
+    <!-- 🛒 BUY -->
+    <button onclick="event.stopPropagation(); buy(${p.id})">
+        🛒 BUY
+    </button>
+
+    <!-- 💬 CHAT -->
+    <button
+    onclick="event.stopPropagation(); openChat('${p.user_id}')"
+    style="
+    margin-top:10px;
+    padding:10px;
+    border:none;
+    border-radius:15px;
+    background:#00ccff;
+    color:black;
+    cursor:pointer;
+    width:100%;
+    font-weight:bold;
+    ">
+    💬 Chat
+    </button>
+
+    ${
+    p.user_id === user
+    ? `
+    <button
+    onclick="event.stopPropagation(); deletePost(${p.id})"
+    style="
+    background:red;
+    color:white;
+    margin-top:10px;
+    width:100%;
+    border:none;
+    border-radius:15px;
+    padding:10px;
+    ">
+    🗑 Supprimer
+    </button>
+    `
+    : ""
+    }
+
+</div>
+`;
 
         feed.appendChild(div);
+
+        // 🔥 charger avatar depuis users (IMPORTANT pour anciens posts)
+        loadAvatar(p);
+
     });
 }
 
