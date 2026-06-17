@@ -1,0 +1,111 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<title>Profil</title>
+
+<style>
+body{
+font-family:Arial;
+background:#0b0b0f;
+color:white;
+text-align:center;
+padding:20px;
+}
+
+img{
+width:120px;
+height:120px;
+border-radius:50%;
+object-fit:cover;
+margin:20px;
+border:2px solid #00ccff;
+}
+
+input{
+margin-top:10px;
+}
+
+button{
+padding:10px 15px;
+margin-top:15px;
+border:none;
+border-radius:10px;
+cursor:pointer;
+background:#00ccff;
+}
+</style>
+</head>
+
+<body>
+
+<h2>👤 Mon profil</h2>
+
+<img id="avatar" src="https://via.placeholder.com/120">
+
+<br>
+
+<input type="file" id="file" accept="image/*">
+
+<br>
+
+<button onclick="save()">💾 Sauvegarder</button>
+
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+
+<script>
+
+const client = supabase.createClient(
+"https://eezsocswqhqgkvghhygq.supabase.co",
+"eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImVlenNvY3N3cWhxZ2t2Z2hoeWdxIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODEwNjg5MjYsImV4cCI6MjA5NjY0NDkyNn0.TVI962lsUo67i6Ltq8okbOw-_GO-5yc4KDCyc8OkdVQ"
+);
+
+let user = localStorage.getItem("user");
+let imageData = "";
+
+/* charger avatar */
+async function load(){
+
+let { data } = await client
+.from("users")
+.select("*")
+.eq("username", user)
+.single();
+
+if(data?.avatar){
+document.getElementById("avatar").src = data.avatar;
+imageData = data.avatar;
+}
+
+}
+
+/* upload image */
+document.getElementById("file").onchange = e=>{
+const file = e.target.files[0];
+const reader = new FileReader();
+
+reader.onload = ev=>{
+imageData = ev.target.result;
+document.getElementById("avatar").src = imageData;
+};
+
+reader.readAsDataURL(file);
+};
+
+/* sauvegarder */
+async function save(){
+
+await client
+.from("users")
+.update({ avatar: imageData })
+.eq("username", user);
+
+alert("Profil mis à jour !");
+}
+
+load();
+
+</script>
+
+</body>
+</html>
