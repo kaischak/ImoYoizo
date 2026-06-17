@@ -55,20 +55,17 @@ body{
 /* FEED */
 #feed{
     height:100vh;
-    overflow-y:scroll;
-    scroll-snap-type:y mandatory;
+    overflow-y:auto;
     padding-top:60px;
 }
-
 .post{
-    height:100vh;
-    scroll-snap-align:start;
+    min-height:100vh;
     display:flex;
     justify-content:center;
-    align-items:center;
+    align-items:flex-start;
     position:relative;
+    padding:20px 0;
 }
-
 .card{
     width:90%;
     max-width:450px;
