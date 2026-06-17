@@ -238,6 +238,24 @@ async function deletePost(id){
     loadPosts();
 }
 
+function openChat(username){
+
+    let user = localStorage.getItem("user");
+
+    if(!user){
+        alert("Tu dois être connecté");
+        return;
+    }
+
+    if(username === user){
+        alert("Tu ne peux pas chatter avec toi-même 😅");
+        return;
+    }
+
+    localStorage.setItem("chatWith", username);
+    window.location.href = "chat.html";
+}
+
 function render(){
 
     let s = document.getElementById("search").value.toLowerCase();
