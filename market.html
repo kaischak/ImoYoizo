@@ -976,12 +976,17 @@ async function create(){
         return;
     }
 
-    // 🔥 récupérer l'avatar du user
-    let { data: userData, error: userError } = await client
-        .from("users")
-        .select("avatar")
-        .eq("username", user)
-        .single();
+    let { error } = await client
+    .from("posts")
+    .insert([{
+        name: name,
+        image: window.selectedImage || "",
+        videos: window.selectedVideos || [],
+        price: price,
+        desc: desc,
+        user_id: user,
+        likes: 0
+    }]);
 
     if(userError){
         console.log(userError);
