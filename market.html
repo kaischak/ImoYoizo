@@ -321,6 +321,22 @@ function openChat(username){
     window.location.href = "chat.html";
 }
 
+async function likePost(id, currentLikes){
+
+    let { error } = await client
+        .from("posts")
+        .update({ likes: currentLikes + 1 })
+        .eq("id", id);
+
+    if(error){
+        console.log(error);
+        alert("Erreur like");
+        return;
+    }
+
+    loadPosts(); // refresh
+}
+
 async function render(){
 
     let s = document.getElementById("search").value.toLowerCase();
@@ -399,6 +415,22 @@ width:100%;
 font-weight:bold;
 ">
 🎥 Vidéos
+</button>
+
+<button
+onclick="event.stopPropagation(); likePost(${p.id}, ${p.likes || 0})"
+style="
+margin-top:10px;
+padding:10px;
+border:none;
+border-radius:15px;
+background:#ff2d55;
+color:white;
+cursor:pointer;
+width:100%;
+font-weight:bold;
+">
+❤️ Like
 </button>
 
     ${
