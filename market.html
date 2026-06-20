@@ -395,9 +395,9 @@ function toggleLiked(id){
 }
 
 async function likePost(id, currentLikes, event){
+async function likePost(id, currentLikes, event){
 
     let btn = event.currentTarget;
-
     let liked = isLiked(id);
 
     let newLikes = liked ? currentLikes - 1 : currentLikes + 1;
@@ -414,7 +414,12 @@ async function likePost(id, currentLikes, event){
 
     toggleLiked(id);
 
-    // animation coeur
+    // 📳 vibration téléphone
+    if (navigator.vibrate) {
+        navigator.vibrate(30);
+    }
+
+    // ❤️ animation
     let pop = document.createElement("div");
     pop.className = "like-pop";
     pop.innerHTML = "❤️";
@@ -426,7 +431,7 @@ async function likePost(id, currentLikes, event){
     setTimeout(()=>pop.remove(), 600);
 
     loadPosts();
-    }
+}
 
 async function render(){
 
