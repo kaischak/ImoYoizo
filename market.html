@@ -1325,14 +1325,12 @@ async function openInv(){
 loadPosts();
 loadProfile();
 
-(async () => {
-    await client
-        .from("users")
-        .update({
-            last_seen: new Date()
-        })
-        .eq("username", user);
-})();
+client
+.from("users")
+.update({
+    last_seen: new Date()
+})
+.eq("username", user);
 </script>
 
 </body>
