@@ -294,9 +294,9 @@ input,textarea{
 
         <button onclick="location.href='profile.html'">👤</button>
 
-        <button onclick="toggleFilters()">
-
-        <button id="consoleBtn" onclick="toggleConsole()">🧪 Console</button>
+    <button onclick="toggleFilters()" title="Recherche">
+🔍
+    </button>
 
 <div id="devConsole">
   <div id="consoleContent"></div>
@@ -430,19 +430,6 @@ async function deletePost(id){
 
     alert("Annonce supprimée !");
     loadPosts();
-}
-
-    function toggleConsole(){
-    let c = document.getElementById("devConsole");
-    c.style.display = c.style.display === "block" ? "none" : "block";
-}
-
-function logConsole(msg){
-    let box = document.getElementById("consoleContent");
-    let line = document.createElement("div");
-    line.textContent = "> " + msg;
-    box.appendChild(line);
-    box.scrollTop = box.scrollHeight;
 }
 
 function openChat(username){
