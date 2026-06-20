@@ -302,7 +302,6 @@ async function loadAvatar(post){
 }
 /* POSTS */
 async function loadPosts(){
-async function loadPosts(){
     let { data, error } = await client
         .from("posts")
         .select("*")
@@ -312,7 +311,7 @@ async function loadPosts(){
 
     posts = data || [];
     render();
-}
+    }
 
 async function deletePost(id){
 
