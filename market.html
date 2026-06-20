@@ -432,73 +432,6 @@ async function likePost(id, currentLikes, event){
     loadPosts();
 }
 
-    async function openComments(postId){
-
-    let { data } = await client
-        .from("comments")
-        .select("*")
-        .eq("post_id", postId)
-        .order("id", { ascending: false });
-
-    let comments = data || [];
-
-    document.getElementById("box").innerHTML = `
-        <h2>💬 Commentaires</h2>
-
-        <div id="commentList">
-            ${comments.map(c => `
-                <div style="
-                    background:#222;
-                    padding:10px;
-                    margin:8px 0;
-                    border-radius:12px;
-                ">
-                    <b>${c.user_id}</b><br>
-                    ${c.text}
-                </div>
-            `).join("")}
-        </div>
-
-        <textarea id="c0ommentText" placeholder="Écris un commentaire..."></textarea>
-
-        <button onclick="addComment(${postId})"
-        style="
-            width:100%;
-            padding:12px;
-            margin-top:10px;
-            border:none;
-            border-radius:12px;
-            background:#00ccff;
-            font-weight:bold;
-        ">
-        Envoyer
-        </button>
-
-        <button onclick="document.getElementById('modal').style.display='none'"
-        style="width:100%;margin-top:10px;">
-            Fermer
-        </button>
-    `;
-
-    document.getElementById("modal").style.display = "flex";
-    }
-
-    async function addComment(postId){
-
-    let text = document.getElementById("commentText").value.trim();
-
-    if(!text) return;
-
-    await client
-        .from("comments")
-        .insert([{
-            post_id: postId,
-            user_id: user,
-            text: text
-        }]);
-
-    openComments(postId);
-    }
 
     async function addView(postId){
 
@@ -705,20 +638,7 @@ font-weight:bold;
     🗑 Supprimer
     </button>
 
-    <button
-onclick="event.stopPropagation(); openComments(${p.id})"
-style="
-margin-top:10px;
-width:100%;
-padding:10px;
-border:none;
-border-radius:15px;
-background:#2d6bff;
-color:white;
-font-weight:bold;
-">
-💬 Commentaires
-</button>
+    
     `
     : ""
     }
