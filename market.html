@@ -507,6 +507,22 @@ async function likePost(id, currentLikes, event){
     openComments(postId);
     }
 
+    async function addView(postId){
+
+    let seen = JSON.parse(localStorage.getItem("seenPosts") || "[]");
+
+    // évite de compter 100 fois le même post
+    if(seen.includes(postId)) return;
+
+    seen.push(postId);
+    localStorage.setItem("seenPosts", JSON.stringify(seen));
+
+    await client
+        .from("posts")
+        .update({ views: supabase.sql`views + 1` })
+        .eq("id", postId);
+    }
+
 async function render(){
 
     let s = document.getElementById("search").value.toLowerCase();
@@ -539,7 +555,7 @@ style="cursor:pointer; position:relative;"
     <div class="info">
         💰 ${p.price}<br>
         ❤️ ${p.likes || 0}<br>
-        👀 ${p.views || 0} vues
+        👀 ${p.views || 0} vues <br>
 
         <span
         onclick="event.stopPropagation(); openUserMenu('${p.user_id}')"
