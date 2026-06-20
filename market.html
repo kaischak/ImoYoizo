@@ -500,6 +500,80 @@ async function likePost(id, currentLikes, event){
     openComments(postId);
     }
 
+    async function addView(postId){
+
+    let seen = JSON.parse(localStorage.getItem("seenPosts") || "[]");
+
+    if(seen.includes(postId)) return;
+
+    seen.push(postId);
+    localStorage.setItem("seenPosts", JSON.stringify(seen));
+
+    await client
+        .from("posts")
+        .update({ views: supabase.sql`views + 1` })
+        .eq("id", postId);
+    }
+
+    function scorePost(p){
+    let likes = p.likes || 0;
+    let views = p.views || 0;
+
+    return likes * 3 + views * 0.5;
+    }
+
+    async function openComments(postId){
+
+    let { data } = await client
+        .from("comments")
+        .select("*")
+        .eq("post_id", postId)
+        .order("id", { ascending: false });
+
+    let comments = data || [];
+
+    document.getElementById("box").innerHTML = `
+        <h2>💬 Commentaires</h2>
+
+        ${comments.map(c => `
+            <div style="background:#222;padding:10px;margin:8px 0;border-radius:12px;">
+                <b>${c.user_id}</b><br>
+                ${c.text}
+            </div>
+        `).join("")}
+
+        <textarea id="commentText" placeholder="Écris..."></textarea>
+
+        <button onclick="addComment(${postId})"
+        style="width:100%;padding:12px;margin-top:10px;background:#00ccff;">
+            Envoyer
+        </button>
+
+        <button onclick="document.getElementById('modal').style.display='none'"
+        style="width:100%;margin-top:10px;">
+            Fermer
+        </button>
+    `;
+
+    document.getElementById("modal").style.display = "flex";
+    }
+    async function addComment(postId){
+
+    let text = document.getElementById("commentText").value.trim();
+
+    if(!text) return;
+
+    await client
+        .from("comments")
+        .insert([{
+            post_id: postId,
+            user_id: user,
+            text: text
+        }]);
+
+    openComments(postId);
+    }
+
 async function render(){
 
     let s = document.getElementById("search").value.toLowerCase();
@@ -507,11 +581,12 @@ async function render(){
     feed.innerHTML = "";
 
     posts
-    .filter(p => (p.name || "").toLowerCase().includes(s))
-    .forEach(p => {
+.sort((a, b) => scorePost(b) - scorePost(a))
+.filter(p => (p.name || "").toLowerCase().includes(s))
+.forEach(p => {
 
         let div = document.createElement("div");
-        div.className = "post";
+        div.className = "posts";
 
         div.innerHTML = `
 <div class="card"
@@ -531,6 +606,7 @@ style="cursor:pointer; position:relative;"
     <div class="info">
         💰 ${p.price}<br>
         ❤️ ${p.likes || 0}<br>
+        👀 ${p.views || 0} vues
 
         <span
         onclick="event.stopPropagation(); openUserMenu('${p.user_id}')"
@@ -628,6 +704,21 @@ font-weight:bold;
     ">
     🗑 Supprimer
     </button>
+
+    <button
+onclick="event.stopPropagation(); openComments(${p.id})"
+style="
+margin-top:10px;
+width:100%;
+padding:10px;
+border:none;
+border-radius:15px;
+background:#2d6bff;
+color:white;
+font-weight:bold;
+">
+💬 Commentaires
+</button>
     `
     : ""
     }
@@ -636,6 +727,7 @@ font-weight:bold;
 `;
 
         feed.appendChild(div);
+        addView(p.id);
 
         // 🔥 charger avatar depuis users (IMPORTANT pour anciens posts)
         loadAvatar(p);
