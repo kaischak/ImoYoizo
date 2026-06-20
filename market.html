@@ -469,23 +469,7 @@ async function likePost(id, currentLikes, event){
     setTimeout(()=>pop.remove(), 600);
 
     loadPosts();
-}
 
-
-    async function addView(postId){
-
-    let seen = JSON.parse(localStorage.getItem("seenPosts") || "[]");
-
-    if(seen.includes(postId)) return;
-
-    seen.push(postId);
-    localStorage.setItem("seenPosts", JSON.stringify(seen));
-
-    await client
-        .from("posts")
-        .update({ views: supabase.sql`views + 1` })
-        .eq("id", postId);
-    }
 
     function scorePost(p){
     let likes = p.likes || 0;
@@ -574,7 +558,7 @@ async function render(){
 .forEach(p => {
 
         let div = document.createElement("div");
-        div.className = "posts";
+        div.className = "post";
 
         div.innerHTML = `
 <div class="card"
