@@ -432,6 +432,74 @@ async function likePost(id, currentLikes, event){
     loadPosts();
 }
 
+    async function openComments(postId){
+
+    let { data } = await client
+        .from("comments")
+        .select("*")
+        .eq("post_id", postId)
+        .order("id", { ascending: false });
+
+    let comments = data || [];
+
+    document.getElementById("box").innerHTML = `
+        <h2>💬 Commentaires</h2>
+
+        <div id="commentList">
+            ${comments.map(c => `
+                <div style="
+                    background:#222;
+                    padding:10px;
+                    margin:8px 0;
+                    border-radius:12px;
+                ">
+                    <b>${c.user_id}</b><br>
+                    ${c.text}
+                </div>
+            `).join("")}
+        </div>
+
+        <textarea id="c0ommentText" placeholder="Écris un commentaire..."></textarea>
+
+        <button onclick="addComment(${postId})"
+        style="
+            width:100%;
+            padding:12px;
+            margin-top:10px;
+            border:none;
+            border-radius:12px;
+            background:#00ccff;
+            font-weight:bold;
+        ">
+        Envoyer
+        </button>
+
+        <button onclick="document.getElementById('modal').style.display='none'"
+        style="width:100%;margin-top:10px;">
+            Fermer
+        </button>
+    `;
+
+    document.getElementById("modal").style.display = "flex";
+    }
+
+    async function addComment(postId){
+
+    let text = document.getElementById("commentText").value.trim();
+
+    if(!text) return;
+
+    await client
+        .from("comments")
+        .insert([{
+            post_id: postId,
+            user_id: user,
+            text: text
+        }]);
+
+    openComments(postId);
+    }
+
 async function render(){
 
     let s = document.getElementById("search").value.toLowerCase();
@@ -475,9 +543,20 @@ style="cursor:pointer; position:relative;"
     </div>
 
     <!-- 🛒 BUY -->
-    <button onclick="event.stopPropagation(); buy(${p.id})">
-        🛒 BUY
-    </button>
+    <button
+onclick="event.stopPropagation(); buy(${p.id}, event)"
+style="
+margin-top:10px;
+width:100%;
+padding:10px;
+border:none;
+border-radius:15px;
+background:#00ff99;
+color:black;
+font-weight:bold;
+">
+🛒 BUY
+</button>
 
     <!-- 💬 CHAT -->
     <button
@@ -516,6 +595,21 @@ font-weight:bold;
 class="likeBtn ${isLiked(p.id) ? 'liked' : ''}"
 onclick="event.stopPropagation(); likePost(${p.id}, ${p.likes || 0}, event)">
 ❤️
+</button>
+
+<button
+onclick="event.stopPropagation(); openComments(${p.id})"
+style="
+margin-top:10px;
+width:100%;
+padding:10px;
+border:none;
+border-radius:15px;
+background:#2d6bff;
+color:white;
+font-weight:bold;
+">
+💬 Commentaires
 </button>
 
     ${
@@ -724,7 +818,9 @@ Fermer
 
 }
     
-async function buy(id){
+async function buy(id, event){
+
+    let btn = event?.currentTarget;
 
     let { data, error } = await client
         .from("posts")
@@ -732,10 +828,7 @@ async function buy(id){
         .eq("id", id)
         .single();
 
-    if(error){
-        alert("Erreur chargement produit");
-        return;
-    }
+    if(error) return;
 
     let money = Number(localStorage.getItem("argent") || 0);
     let price = Number(data.price);
@@ -745,7 +838,7 @@ async function buy(id){
         return;
     }
 
-    const { error: invError } = await client
+    await client
         .from("inventaire")
         .insert([{
             user_id: user,
@@ -754,20 +847,21 @@ async function buy(id){
             price: data.price
         }]);
 
-    if(invError){
-        console.log(invError);
-        alert("Erreur inventaire");
-        return;
-    }
-
     money -= price;
-
     localStorage.setItem("argent", money);
-
     setMoney(money);
 
+    // ⚡ animation rapide
+    if(btn){
+        btn.innerText = "✔ ACHETÉ";
+        btn.style.background = "#00ff99";
+        setTimeout(()=>btn.innerText = "🛒 BUY", 1200);
+    }
+
+    if (navigator.vibrate) navigator.vibrate([20, 30, 20]);
+
     alert("Acheté !");
-}
+        }
 
 /* CREATE POST */
 function openSell(){
@@ -1124,6 +1218,17 @@ async function create(){
 
     loadPosts();
 }
+
+    client
+  .channel('posts-channel')
+  .on(
+    'postgres_changes',
+    { event: '*', schema: 'public', table: 'posts' },
+    payload => {
+        loadPosts(); // refresh live
+    }
+  )
+  .subscribe(); 
 
 async function openInv(){
 
