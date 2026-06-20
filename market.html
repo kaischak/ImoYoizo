@@ -145,6 +145,34 @@ body{
     box-sizing:border-box;
 }
 
+.likeBtn {
+    width:55px;
+    height:55px;
+    border-radius:50%;
+    border:none;
+    cursor:pointer;
+
+    display:flex;
+    align-items:center;
+    justify-content:center;
+
+    font-size:20px;
+
+    background:#ff2d55;
+    color:white;
+
+    transition: all 0.2s ease;
+}
+
+.likeBtn.liked {
+    background:#00ff99;
+    transform: scale(1.1);
+}
+
+.likeBtn:active {
+    transform: scale(0.9);
+}
+
 .chat-btn{
 width:100%;
 margin-top:10px;
@@ -321,11 +349,35 @@ function openChat(username){
     window.location.href = "chat.html";
 }
 
+function getLikedPosts(){
+    return JSON.parse(localStorage.getItem("likedPosts") || "[]");
+}
+
+function isLiked(id){
+    return getLikedPosts().includes(id);
+}
+
+function toggleLiked(id){
+    let liked = getLikedPosts();
+
+    if(liked.includes(id)){
+        liked = liked.filter(x => x !== id);
+    } else {
+        liked.push(id);
+    }
+
+    localStorage.setItem("likedPosts", JSON.stringify(liked));
+}
+
 async function likePost(id, currentLikes){
+
+    let liked = isLiked(id);
+
+    let newLikes = liked ? currentLikes - 1 : currentLikes + 1;
 
     let { error } = await client
         .from("posts")
-        .update({ likes: currentLikes + 1 })
+        .update({ likes: newLikes })
         .eq("id", id);
 
     if(error){
@@ -334,6 +386,7 @@ async function likePost(id, currentLikes){
         return;
     }
 
+    toggleLiked(id);
     loadPosts(); // refresh
 }
 
@@ -418,19 +471,9 @@ font-weight:bold;
 </button>
 
 <button
-onclick="event.stopPropagation(); likePost(${p.id}, ${p.likes || 0})"
-style="
-margin-top:10px;
-padding:10px;
-border:none;
-border-radius:15px;
-background:#ff2d55;
-color:white;
-cursor:pointer;
-width:100%;
-font-weight:bold;
-">
-❤️ Like
+class="likeBtn ${isLiked(p.id) ? 'liked' : ''}"
+onclick="event.stopPropagation(); likePost(${p.id}, ${p.likes || 0})">
+❤️
 </button>
 
     ${
