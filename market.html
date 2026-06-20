@@ -342,6 +342,17 @@ function toggleFilters(){
     : "none";
 
 }
+    async function loadPosts(){
+    let { data, error } = await client
+        .from("posts")
+        .select("*")
+        .order("id", { ascending: false });
+
+    console.log(data, error);
+
+    posts = data || [];
+    render();
+    }
 
 async function loadAvatar(post){
 
@@ -361,18 +372,7 @@ async function loadAvatar(post){
             : "";
     }
 }
-/* POSTS */
-async function loadPosts(){
-    let { data, error } = await client
-        .from("posts")
-        .select("*")
-        .order("id", { ascending: false });
 
-    console.log(data, error);
-
-    posts = data || [];
-    render();
-    }
 
 async function deletePost(id){
 
@@ -1325,12 +1325,14 @@ async function openInv(){
 loadPosts();
 loadProfile();
 
+(async () => {
     await client
-.from("users")
-.update({
-    last_seen:new Date()
-})
-.eq("username", user);
+        .from("users")
+        .update({
+            last_seen: new Date()
+        })
+        .eq("username", user);
+})();
 </script>
 
 </body>
