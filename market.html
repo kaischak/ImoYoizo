@@ -215,6 +215,37 @@ backdrop-filter: blur(10px);
 transition: 0.2s ease;
 }
 
+#consoleBtn{
+    position:fixed;
+    bottom:15px;
+    left:15px;
+    z-index:9999;
+    padding:10px 14px;
+    border:none;
+    border-radius:12px;
+    background:#00ccff;
+    color:black;
+    font-weight:bold;
+}
+
+#devConsole{
+    position:fixed;
+    bottom:60px;
+    left:15px;
+    width:260px;
+    height:180px;
+    background:#0b0b0f;
+    border:1px solid #333;
+    border-radius:12px;
+    display:none;
+    z-index:9999;
+    overflow:auto;
+    padding:10px;
+    font-family:monospace;
+    font-size:12px;
+    color:#00ff99;
+}
+
 .chat-btn:hover{
 background: rgba(0, 255, 153, 0.15);
 border: 1px solid rgba(0, 255, 153, 0.4);
@@ -264,6 +295,12 @@ input,textarea{
         <button onclick="location.href='profile.html'">👤</button>
 
         <button onclick="toggleFilters()">
+
+        <button id="consoleBtn" onclick="toggleConsole()">🧪 Console</button>
+
+<div id="devConsole">
+  <div id="consoleContent"></div>
+</div>
 🔍
         </button>
 
@@ -393,6 +430,19 @@ async function deletePost(id){
 
     alert("Annonce supprimée !");
     loadPosts();
+}
+
+    function toggleConsole(){
+    let c = document.getElementById("devConsole");
+    c.style.display = c.style.display === "block" ? "none" : "block";
+}
+
+function logConsole(msg){
+    let box = document.getElementById("consoleContent");
+    let line = document.createElement("div");
+    line.textContent = "> " + msg;
+    box.appendChild(line);
+    box.scrollTop = box.scrollHeight;
 }
 
 function openChat(username){
