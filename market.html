@@ -263,7 +263,35 @@ input,textarea{
 
         <button onclick="location.href='profile.html'">👤</button>
 
+        <button onclick="toggleFilters()">
+🔍
+        </button>
+
     </div>
+
+</div>
+
+<div id="filters"
+style="
+display:none;
+padding:15px;
+background:#16161d;
+margin-top:60px;
+">
+
+<input id="minPrice" type="number" placeholder="💰 Prix minimum">
+
+<input id="maxPrice" type="number" placeholder="💰 Prix maximum">
+
+<label>
+<input id="videoOnly" type="checkbox">
+🎥 Avec vidéos
+</label>
+
+<label>
+<input id="popularOnly" type="checkbox">
+🔥 Populaires
+</label>
 
 </div>
 
@@ -302,6 +330,17 @@ function setMoney(v){
 async function loadProfile(){
     document.getElementById("pname").innerText = "👤 " + user;
     setMoney(getMoney());
+}
+
+function toggleFilters(){
+
+    let filters = document.getElementById("filters");
+
+    filters.style.display =
+    filters.style.display === "none"
+    ? "block"
+    : "none";
+
 }
 
 async function loadAvatar(post){
