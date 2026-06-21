@@ -604,7 +604,6 @@ function scorePost(p){
         .update({ views: supabase.sql`views + 1` })
         .eq("id", postId);
     }
-
 function getFavorites(){
     return JSON.parse(localStorage.getItem("favorites") || "[]");
 }
