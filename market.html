@@ -616,7 +616,9 @@ function isFavorite(id){
 
 function toggleFavoritePost(id){
 
-    let favs = getFavorites();
+    let favs = JSON.parse(
+        localStorage.getItem("favorites") || "[]"
+    );
 
     if(favs.includes(id)){
         favs = favs.filter(x => x !== id);
