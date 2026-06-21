@@ -359,6 +359,15 @@ let posts = [];
 localStorage.setItem("user", user);
 let showFavorites = false;
 
+async function updateLastSeen(){
+    await client
+    .from("users")
+    .update({
+        last_seen: new Date()
+    })
+    .eq("username", user);
+}
+
 function toggleFavorite(id){
 
     let favs = getFavorites();
@@ -490,6 +499,16 @@ function toggleLiked(id){
     }
 
     localStorage.setItem("likedPosts", JSON.stringify(liked));
+}
+
+function isOnline(lastSeen){
+
+    if(!lastSeen) return false;
+
+    let diff =
+        Date.now() - new Date(lastSeen).getTime();
+
+    return diff < 60000; // 1 minute = en ligne
 }
 
 async function likePost(id, currentLikes, event){
@@ -668,6 +687,12 @@ style="cursor:pointer; position:relative;"
         💰 ${p.price}<br>
         ❤️ ${p.likes || 0}<br>
         👀 ${p.views || 0} vues <br>
+        ${userData
+        ? (isOnline(userData.last_seen)
+            ? "🟢 En ligne"
+            : "⚫ Hors ligne")
+        : "⚫ Inconnu"
+    }<br>
 
         <span
         onclick="event.stopPropagation(); openUserMenu('${p.user_id}')"
@@ -1427,6 +1452,7 @@ async function openInv(){
     
 loadPosts();
 loadProfile();
+setInterval(updateLastSeen, 30000);
 
 client
 .from("users")
