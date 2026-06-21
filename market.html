@@ -791,42 +791,39 @@ font-weight:bold;
 💬 Commentaires
 </button>
 
-    ${
-    p.user_id === user
-    ? `
+${
+  p.user_id === user
+  ? `
     <button
-    onclick="event.stopPropagation(); deletePost(${p.id})"
-    style="
-    background:red;
-    color:white;
-    margin-top:10px;
-    width:100%;
-    border:none;
-    border-radius:15px;
-    padding:10px;
-    ">
-    🗑 Supprimer
+      onclick="event.stopPropagation(); deletePost(${p.id})"
+      style="
+        background:red;
+        color:white;
+        margin-top:10px;
+        width:100%;
+        border:none;
+        border-radius:15px;
+        padding:10px;
+      ">
+      🗑 Supprimer
     </button>
 
     <button
-onclick="event.stopPropagation(); toggleFavorite(${p.id}); render();"
-style="
-margin-top:10px;
-width:100%;
-padding:10px;
-border:none;
-border-radius:15px;
-background:gold;
-font-weight:bold;
-">
-${getFavorites().includes(p.id) ? "⭐ Favori" : "☆ Ajouter aux favoris"}
-</button>
-
-    
-    `
-    : ""
-    }
-
+      onclick="event.stopPropagation(); toggleFavorite(${p.id}); render();"
+      style="
+        margin-top:10px;
+        width:100%;
+        padding:10px;
+        border:none;
+        border-radius:15px;
+        background:gold;
+        font-weight:bold;
+      ">
+      ${getFavorites().includes(p.id) ? "⭐ Favori" : "☆ Ajouter aux favoris"}
+    </button>
+  `
+  : ""
+}
 </div>
 `;
 
