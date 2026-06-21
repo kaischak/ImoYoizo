@@ -358,6 +358,7 @@ const client = supabase.createClient(supabaseUrl, supabaseKey);
 let posts = [];
 localStorage.setItem("user", user);
 let showFavorites = false;
+let usersCache = {};
 
 async function updateLastSeen(){
     await client
@@ -511,6 +512,23 @@ function isOnline(lastSeen){
     return diff < 60000; // 1 minute = en ligne
 }
 
+async function getUser(username){
+
+    if(usersCache[username]){
+        return usersCache[username];
+    }
+
+    let { data } = await client
+        .from("users")
+        .select("avatar, last_seen")
+        .eq("username", username)
+        .maybeSingle();
+
+    usersCache[username] = data;
+
+    return data;
+}
+
 async function likePost(id, currentLikes, event){
 
     let btn = event.currentTarget;
@@ -659,14 +677,15 @@ async function render(){
 
 let favs = getFavorites();
 
-posts
-.sort((a, b) => scorePost(b) - scorePost(a))
-.filter(p => (p.name || "").toLowerCase().includes(s))
-.filter(p => !showFavorites || favs.includes(p.id))
-.forEach(p => {
+for (let p of posts
+    .sort((a, b) => scorePost(b) - scorePost(a))
+    .filter(p => (p.name || "").toLowerCase().includes(s))
+) {
 
-        let div = document.createElement("div");
-        div.className = "post";
+    let userData = await getUser(p.user_id);
+
+    let div = document.createElement("div");
+    div.className = "post";
 
         div.innerHTML = `
 <div class="card"
@@ -687,12 +706,10 @@ style="cursor:pointer; position:relative;"
         💰 ${p.price}<br>
         ❤️ ${p.likes || 0}<br>
         👀 ${p.views || 0} vues <br>
-        ${userData
-        ? (isOnline(userData.last_seen)
-            ? "🟢 En ligne"
-            : "⚫ Hors ligne")
-        : "⚫ Inconnu"
-    }<br>
+        ${userData && isOnline(userData.last_seen)
+    ? "🟢 En ligne"
+    : "⚫ Hors ligne"
+}
 
         <span
         onclick="event.stopPropagation(); openUserMenu('${p.user_id}')"
