@@ -506,14 +506,13 @@ async function likePost(id, currentLikes, event){
     setTimeout(()=>pop.remove(), 600);
 
     loadPosts();
+}
 
-
-    function scorePost(p){
+function scorePost(p){
     let likes = p.likes || 0;
     let views = p.views || 0;
 
     return likes * 3 + views * 0.5;
-    }
 }
 
     async function openComments(postId){
