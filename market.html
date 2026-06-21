@@ -297,6 +297,11 @@ input,textarea{
     <button onclick="toggleFilters()" title="Recherche">
 🔍
     </button>
+        <button
+class="favBtn ${isFavorite(p.id) ? 'favorited' : ''}"
+onclick="event.stopPropagation(); toggleFavoritePost(${p.id})">
+⭐
+</button>
 
 <div id="devConsole">
   <div id="consoleContent"></div>
@@ -353,6 +358,12 @@ const client = supabase.createClient(supabaseUrl, supabaseKey);
 
 let posts = [];
 localStorage.setItem("user", user);
+let showFavorites = false;
+
+function toggleFavorites(){
+    showFavorites = !showFavorites;
+    render();
+}
 
 /* MONEY SAFE */
 function getMoney(){
@@ -583,15 +594,44 @@ function scorePost(p){
         .eq("id", postId);
     }
 
+function getFavorites(){
+    return JSON.parse(localStorage.getItem("favorites") || "[]");
+}
+
+function isFavorite(id){
+    return getFavorites().includes(id);
+}
+
+function toggleFavoritePost(id){
+
+    let favs = getFavorites();
+
+    if(favs.includes(id)){
+        favs = favs.filter(x => x !== id);
+    }else{
+        favs.push(id);
+    }
+
+    localStorage.setItem(
+        "favorites",
+        JSON.stringify(favs)
+    );
+
+    render();
+}
+
 async function render(){
 
     let s = document.getElementById("search").value.toLowerCase();
     let feed = document.getElementById("feed");
     feed.innerHTML = "";
 
-    posts
+let favs = getFavorites();
+
+posts
 .sort((a, b) => scorePost(b) - scorePost(a))
 .filter(p => (p.name || "").toLowerCase().includes(s))
+.filter(p => !showFavorites || favs.includes(p.id))
 .forEach(p => {
 
         let div = document.createElement("div");
@@ -713,6 +753,20 @@ font-weight:bold;
     ">
     🗑 Supprimer
     </button>
+
+    <button
+onclick="event.stopPropagation(); toggleFavorite(${p.id}); render();"
+style="
+margin-top:10px;
+width:100%;
+padding:10px;
+border:none;
+border-radius:15px;
+background:gold;
+font-weight:bold;
+">
+${getFavorites().includes(p.id) ? "⭐ Favori" : "☆ Ajouter aux favoris"}
+</button>
 
     
     `
