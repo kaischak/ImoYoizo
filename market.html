@@ -297,8 +297,7 @@ input,textarea{
     <button onclick="toggleFilters()" title="Recherche">
 🔍
     </button>
-        <button
-class="favBtn ${isFavorite(p.id) ? 'favorited' : ''}"
+<button
 onclick="event.stopPropagation(); toggleFavoritePost(${p.id})">
 ⭐
 </button>
