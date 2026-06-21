@@ -360,9 +360,21 @@ let posts = [];
 localStorage.setItem("user", user);
 let showFavorites = false;
 
-function toggleFavorites(){
-    showFavorites = !showFavorites;
-    render();
+function toggleFavorite(id){
+
+    let favs = getFavorites();
+
+    if(favs.includes(id)){
+        favs = favs.filter(x => x !== id);
+    }
+    else{
+        favs.push(id);
+    }
+
+    localStorage.setItem(
+        "favorites",
+        JSON.stringify(favs)
+    );
 }
 
 /* MONEY SAFE */
