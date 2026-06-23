@@ -791,6 +791,20 @@ font-weight:bold;
 💬 Commentaires
 </button>
 
+<button
+      onclick="event.stopPropagation(); toggleFavorite(${p.id}); render();"
+      style="
+        margin-top:10px;
+        width:100%;
+        padding:10px;
+        border:none;
+        border-radius:15px;
+        background:gold;
+        font-weight:bold;
+      ">
+      ${getFavorites().includes(p.id) ? "⭐ Favori" : "☆ Ajouter aux favoris"}
+    </button>
+
 ${
   p.user_id === user
   ? `
@@ -806,20 +820,6 @@ ${
         padding:10px;
       ">
       🗑 Supprimer
-    </button>
-
-    <button
-      onclick="event.stopPropagation(); toggleFavorite(${p.id}); render();"
-      style="
-        margin-top:10px;
-        width:100%;
-        padding:10px;
-        border:none;
-        border-radius:15px;
-        background:gold;
-        font-weight:bold;
-      ">
-      ${getFavorites().includes(p.id) ? "⭐ Favori" : "☆ Ajouter aux favoris"}
     </button>
   `
   : ""
