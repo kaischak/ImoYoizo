@@ -32,6 +32,7 @@ body{
     gap:10px;
 }
 
+/* LEFT */
 #miniProfile{
     display:flex;
     flex-direction:column;
@@ -40,6 +41,7 @@ body{
     overflow:hidden;
 }
 
+/* CENTER */
 #search{
     width:100%;
     padding:10px;
@@ -49,24 +51,12 @@ body{
     box-sizing:border-box;
 }
 
+/* RIGHT */
 .topbar-right{
     display:flex;
     justify-content:flex-end;
     gap:8px;
-    align-items:center;
 }
-
-.topbar-right button{
-    width:36px;
-    height:36px;
-    border-radius:50%;
-    border:none;
-    background:rgba(255,255,255,0.1);
-    color:white;
-    font-size:16px;
-    cursor:pointer;
-}
-
 #addBtn{
     width:45px;
     height:45px;
@@ -75,10 +65,9 @@ body{
     background:#00ff99;
     font-size:20px;
     cursor:pointer;
-    color:black;
-    font-weight:bold;
 }
 
+/* FEED */
 #feed{
     height:100vh;
     overflow-y:auto;
@@ -106,10 +95,32 @@ body{
     border-radius:15px;
 }
 
+/* INFO */
 .info{
     text-align:left;
     margin-top:10px;
 }
+
+/* ACTIONS */
+.actions{
+    position:absolute;
+    right:15px;
+    bottom:120px;
+    display:flex;
+    flex-direction:column;
+    gap:10px;
+}
+
+.actions button{
+    width:55px;
+    height:55px;
+    border-radius:50%;
+    border:none;
+}
+
+.likeBtn{background:#ff2d55;color:white;}
+.commentBtn{background:#2d6bff;color:white;}
+.buyBtn{background:#00ff99;}
 
 .modal{
     position:fixed;
@@ -154,8 +165,6 @@ body{
     transition: transform 0.15s ease, background 0.2s ease;
     position: relative;
     overflow: hidden;
-
-    margin: 10px auto 0;
 }
 
 .likeBtn.liked {
@@ -163,10 +172,12 @@ body{
     color:#00ff99;
 }
 
+/* effet tap */
 .likeBtn:active {
     transform: scale(0.85);
 }
 
+/* animation coeur */
 .like-pop {
     position:absolute;
     font-size:18px;
@@ -185,43 +196,81 @@ body{
 }
 
 .chat-btn{
-    width:100%;
-    margin-top:10px;
-    padding:12px;
+width:100%;
+margin-top:10px;
+padding:12px;
+border:none;
+border-radius:16px;
+cursor:pointer;
+
+font-size:15px;
+font-weight:bold;
+color:white;
+
+background: rgba(255,255,255,0.08);
+border: 1px solid rgba(255,255,255,0.12);
+
+backdrop-filter: blur(10px);
+
+transition: 0.2s ease;
+}
+
+#consoleBtn{
+    position:fixed;
+    bottom:15px;
+    left:15px;
+    z-index:9999;
+    padding:10px 14px;
     border:none;
-    border-radius:16px;
-    cursor:pointer;
-    font-size:15px;
+    border-radius:12px;
+    background:#00ccff;
+    color:black;
     font-weight:bold;
-    color:white;
-    background: rgba(255,255,255,0.08);
-    border: 1px solid rgba(255,255,255,0.12);
-    backdrop-filter: blur(10px);
-    transition: 0.2s ease;
+}
+
+#devConsole{
+    position:fixed;
+    bottom:60px;
+    left:15px;
+    width:260px;
+    height:180px;
+    background:#0b0b0f;
+    border:1px solid #333;
+    border-radius:12px;
+    display:none;
+    z-index:9999;
+    overflow:auto;
+    padding:10px;
+    font-family:monospace;
+    font-size:12px;
+    color:#00ff99;
 }
 
 .chat-btn:hover{
-    background: rgba(0, 255, 153, 0.15);
-    border: 1px solid rgba(0, 255, 153, 0.4);
-    transform: translateY(-2px);
+background: rgba(0, 255, 153, 0.15);
+border: 1px solid rgba(0, 255, 153, 0.4);
+transform: translateY(-2px);
 }
 
 .chat-btn:active{
-    transform: scale(0.98);
+transform: scale(0.98);
 }
-
+    
 input,textarea{
     width:100%;
     margin:5px 0;
     padding:10px;
     border-radius:10px;
     border:none;
-    box-sizing:border-box;
 }
 </style>
 </head>
 
+
+
 <body>
+
+
 
 <div class="topbar">
 
@@ -245,65 +294,99 @@ input,textarea{
 
         <button onclick="location.href='profile.html'">👤</button>
 
-        <button onclick="toggleFilters()" title="Filtres">🔍</button>
+    <button onclick="toggleFilters()" title="Recherche">
+🔍
+    </button>
+<button
+onclick="event.stopPropagation(); toggleFavoritePost()">
+⭐
+</button>
 
-        <button onclick="toggleFavoriteFilter()">⭐</button>
+<div id="devConsole">
+  <div id="consoleContent"></div>
+</div>
+🔍
+        </button>
 
     </div>
 
 </div>
 
-<div id="filters" style="display:none; padding:15px; background:#16161d; margin-top:60px;">
+<div id="filters"
+style="
+display:none;
+padding:15px;
+background:#16161d;
+margin-top:60px;
+">
 
-    <input id="minPrice" type="number" placeholder="💰 Prix minimum">
+<input id="minPrice" type="number" placeholder="💰 Prix minimum">
 
-    <input id="maxPrice" type="number" placeholder="💰 Prix maximum">
+<input id="maxPrice" type="number" placeholder="💰 Prix maximum">
 
-    <label>
-        <input id="videoOnly" type="checkbox">
-        🎥 Avec vidéos
-    </label>
+<label>
+<input id="videoOnly" type="checkbox">
+🎥 Avec vidéos
+</label>
 
-    <label>
-        <input id="popularOnly" type="checkbox">
-        🔥 Populaires
-    </label>
+<label>
+<input id="popularOnly" type="checkbox">
+🔥 Populaires
+</label>
 
 </div>
 
 <div id="feed"></div>
 
-<div id="modal" class="modal" onclick="closeModalOutside(event)">
-    <div class="box" id="box"></div>
+<div id="modal" class="modal">
+<div class="box" id="box"></div>
 </div>
 
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 
 <script>
-let user = localStorage.getItem("user");
+        let user = localStorage.getItem("user");
 
-if(!user || user.startsWith("user_")){
+if(!user || user.startsWith("user")){
     localStorage.removeItem("user");
     window.location.href = "auth.html";
 }
-
 const supabaseUrl = "https://eezsocswqhqgkvghhygq.supabase.co";
 const supabaseKey = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImVlenNvY3N3cWhxZ2t2Z2hoeWdxIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODEwNjg5MjYsImV4cCI6MjA5NjY0NDkyNn0.TVI962lsUo67i6Ltq8okbOw-_GO-5yc4KDCyc8OkdVQ";
 const client = supabase.createClient(supabaseUrl, supabaseKey);
 
 let posts = [];
+localStorage.setItem("user", user);
 let showFavorites = false;
 let usersCache = {};
 
-/* ── LAST SEEN ── */
 async function updateLastSeen(){
     await client
-        .from("users")
-        .update({ last_seen: new Date() })
-        .eq("username", user);
+    .from("users")
+    .update({
+        last_seen: new Date()
+    })
+    .eq("username", user);
 }
 
-/* ── MONEY ── */
+function toggleFavorite(id){
+
+    let favs = getFavorites();
+
+    if(favs.includes(id)){
+        favs = favs.filter(x => x !== id);
+    }
+    else{
+        favs.push(id);
+    }
+
+    localStorage.setItem(
+        "favorites",
+        JSON.stringify(favs)
+    );
+}
+
+/* MONEY SAFE */
 function getMoney(){
     return Number(localStorage.getItem("argent") || 0);
 }
@@ -312,45 +395,93 @@ function setMoney(v){
     document.getElementById("money").innerText = "💰 " + v;
 }
 
-/* ── PROFILE ── */
+/* PROFILE SIMPLE */
 async function loadProfile(){
     document.getElementById("pname").innerText = "👤 " + user;
     setMoney(getMoney());
 }
 
-/* ── FILTERS ── */
 function toggleFilters(){
+
     let filters = document.getElementById("filters");
-    filters.style.display = filters.style.display === "none" ? "block" : "none";
-}
 
-/* ── FAVORITE FILTER (bouton étoile topbar) ── */
-function toggleFavoriteFilter(){
-    showFavorites = !showFavorites;
+    filters.style.display =
+    filters.style.display === "none"
+    ? "block"
+    : "none";
+
+}
+    async function loadPosts(){
+    let { data, error } = await client
+        .from("posts")
+        .select("*")
+        .order("id", { ascending: false });
+
+    console.log(data, error);
+
+    posts = data || [];
     render();
-}
-
-/* ── FAVORITES (cœur sur post) ── */
-function getFavorites(){
-    return JSON.parse(localStorage.getItem("favorites") || "[]");
-}
-
-function isFavorite(id){
-    return getFavorites().includes(id);
-}
-
-function toggleFavorite(id){
-    let favs = getFavorites();
-    if(favs.includes(id)){
-        favs = favs.filter(x => x !== id);
-    } else {
-        favs.push(id);
     }
-    localStorage.setItem("favorites", JSON.stringify(favs));
-    render();
+
+async function loadAvatar(post){
+
+    let { data } = await client
+        .from("users")
+        .select("avatar")
+        .eq("username", post.user_id)
+        .maybeSingle();
+
+    let img = data?.avatar || "";
+
+    let el = document.getElementById(`avatar-${post.id}`);
+
+    if(el){
+        el.innerHTML = img
+            ? `<img src="${img}" style="width:28px;height:28px;border-radius:50%;">`
+            : "";
+    }
 }
 
-/* ── LIKED POSTS ── */
+
+async function deletePost(id){
+
+    if(!confirm("Supprimer cette annonce ?")){
+        return;
+    }
+
+    let { error } = await client
+    .from("posts")
+    .delete()
+    .eq("id", id);
+
+    if(error){
+        console.log(error);
+        alert("Erreur suppression");
+        return;
+    }
+
+    alert("Annonce supprimée !");
+    loadPosts();
+}
+
+function openChat(username){
+
+    let user = localStorage.getItem("user");
+
+    if(!user){
+        alert("Tu dois être connecté");
+        return;
+    }
+
+    if(username === user){
+        alert("Tu ne peux pas chatter avec toi-même 😅");
+        return;
+    }
+
+    localStorage.setItem("chatWith", username);
+    window.location.href = "chat.html";
+}
+
 function getLikedPosts(){
     return JSON.parse(localStorage.getItem("likedPosts") || "[]");
 }
@@ -361,94 +492,48 @@ function isLiked(id){
 
 function toggleLiked(id){
     let liked = getLikedPosts();
+
     if(liked.includes(id)){
         liked = liked.filter(x => x !== id);
     } else {
         liked.push(id);
     }
+
     localStorage.setItem("likedPosts", JSON.stringify(liked));
 }
 
-/* ── ONLINE STATUS ── */
 function isOnline(lastSeen){
+
     if(!lastSeen) return false;
-    let diff = Date.now() - new Date(lastSeen).getTime();
-    return diff < 60000;
+
+    let diff =
+        Date.now() - new Date(lastSeen).getTime();
+
+    return diff < 60000; // 1 minute = en ligne
 }
 
-/* ── USER CACHE ── */
 async function getUser(username){
-    if(usersCache[username]) return usersCache[username];
+
+    if(usersCache[username]){
+        return usersCache[username];
+    }
+
     let { data } = await client
         .from("users")
         .select("avatar, last_seen")
         .eq("username", username)
         .maybeSingle();
+
     usersCache[username] = data;
+
     return data;
 }
 
-/* ── LOAD AVATAR ── */
-async function loadAvatar(post){
-    let { data } = await client
-        .from("users")
-        .select("avatar")
-        .eq("username", post.user_id)
-        .maybeSingle();
-
-    let img = data?.avatar || "";
-    let el = document.getElementById(`avatar-${post.id}`);
-    if(el){
-        el.innerHTML = img
-            ? `<img src="${img}" style="width:28px;height:28px;border-radius:50%;">`
-            : "";
-    }
-}
-
-/* ── LOAD POSTS ── */
-async function loadPosts(){
-    let { data, error } = await client
-        .from("posts")
-        .select("*")
-        .order("id", { ascending: false });
-
-    if(error) console.error(error);
-    posts = data || [];
-    render();
-}
-
-/* ── DELETE POST ── */
-async function deletePost(id){
-    if(!confirm("Supprimer cette annonce ?")) return;
-
-    let { error } = await client.from("posts").delete().eq("id", id);
-    if(error){
-        console.error(error);
-        alert("Erreur suppression");
-        return;
-    }
-    alert("Annonce supprimée !");
-    loadPosts();
-}
-
-/* ── OPEN CHAT ── */
-function openChat(username){
-    if(!user){
-        alert("Tu dois être connecté");
-        return;
-    }
-    if(username === user){
-        alert("Tu ne peux pas chatter avec toi-même 😅");
-        return;
-    }
-    localStorage.setItem("chatWith", username);
-    window.location.href = "chat.html";
-}
-
-/* ── LIKE ── */
 async function likePost(id, currentLikes, event){
+
     let btn = event.currentTarget;
     let liked = isLiked(id);
+
     let newLikes = liked ? currentLikes - 1 : currentLikes + 1;
 
     let { error } = await client
@@ -456,32 +541,41 @@ async function likePost(id, currentLikes, event){
         .update({ likes: newLikes })
         .eq("id", id);
 
-    if(error){ console.error(error); return; }
+    if(error){
+        console.log(error);
+        return;
+    }
 
     toggleLiked(id);
 
-    if(navigator.vibrate) navigator.vibrate(60);
+    // 📳 vibration téléphone
+    if (navigator.vibrate) {
+        navigator.vibrate(60);
+    }
 
+    // ❤️ animation
     let pop = document.createElement("div");
     pop.className = "like-pop";
     pop.innerHTML = "❤️";
     pop.style.left = "50%";
     pop.style.top = "50%";
+
     btn.appendChild(pop);
-    setTimeout(() => pop.remove(), 600);
+
+    setTimeout(()=>pop.remove(), 600);
 
     loadPosts();
 }
 
-/* ── SCORE ── */
 function scorePost(p){
     let likes = p.likes || 0;
     let views = p.views || 0;
+
     return likes * 3 + views * 0.5;
 }
 
-/* ── COMMENTS ── */
-async function openComments(postId){
+    async function openComments(postId){
+
     let { data } = await client
         .from("comments")
         .select("*")
@@ -492,241 +586,444 @@ async function openComments(postId){
 
     document.getElementById("box").innerHTML = `
         <h2>💬 Commentaires</h2>
+
         ${comments.map(c => `
             <div style="background:#222;padding:10px;margin:8px 0;border-radius:12px;">
-                <b>${c.user_id}</b><br>${c.text}
+                <b>${c.user_id}</b><br>
+                ${c.text}
             </div>
         `).join("")}
+
         <textarea id="commentText" placeholder="Écris..."></textarea>
+
         <button onclick="addComment(${postId})"
-            style="width:100%;padding:12px;margin-top:10px;background:#00ccff;border:none;border-radius:12px;color:black;font-weight:bold;cursor:pointer;">
+        style="width:100%;padding:12px;margin-top:10px;background:#00ccff;">
             Envoyer
         </button>
-        <button onclick="closeModal()"
-            style="width:100%;margin-top:10px;padding:12px;border:none;border-radius:12px;background:#333;color:white;cursor:pointer;">
+
+        <button onclick="document.getElementById('modal').style.display='none'"
+        style="width:100%;margin-top:10px;">
             Fermer
         </button>
     `;
+
     document.getElementById("modal").style.display = "flex";
-}
+    }
+    async function addComment(postId){
 
-async function addComment(postId){
     let text = document.getElementById("commentText").value.trim();
-    if(!text) return;
-    await client.from("comments").insert([{ post_id: postId, user_id: user, text: text }]);
-    openComments(postId);
-}
 
-/* ── VIEWS ── */
-async function addView(postId){
+    if(!text) return;
+
+    await client
+        .from("comments")
+        .insert([{
+            post_id: postId,
+            user_id: user,
+            text: text
+        }]);
+
+    openComments(postId);
+    }
+
+    async function addView(postId){
+
     let seen = JSON.parse(localStorage.getItem("seenPosts") || "[]");
+
+    // évite de compter 100 fois le même post
     if(seen.includes(postId)) return;
+
     seen.push(postId);
     localStorage.setItem("seenPosts", JSON.stringify(seen));
 
-    // Incrémentation côté DB via RPC ou update simple avec valeur récupérée
-    let { data } = await client.from("posts").select("views").eq("id", postId).single();
-    if(data){
-        await client.from("posts").update({ views: (data.views || 0) + 1 }).eq("id", postId);
+    await client
+        .from("posts")
+        .update({ views: supabase.sql`views + 1` })
+        .eq("id", postId);
     }
+function getFavorites(){
+    return JSON.parse(localStorage.getItem("favorites") || "[]");
 }
 
-/* ── RENDER ── */
+function isFavorite(id){
+    return getFavorites().includes(id);
+}
+
+function toggleFavoritePost(id){
+
+    let favs = JSON.parse(
+        localStorage.getItem("favorites") || "[]"
+    );
+
+    if(favs.includes(id)){
+        favs = favs.filter(x => x !== id);
+    }else{
+        favs.push(id);
+    }
+
+    localStorage.setItem(
+        "favorites",
+        JSON.stringify(favs)
+    );
+
+    render();
+}
+
 async function render(){
+
     let s = document.getElementById("search").value.toLowerCase();
-    let minPrice = Number(document.getElementById("minPrice")?.value || 0);
-    let maxPrice = Number(document.getElementById("maxPrice")?.value || 0);
-    let videoOnly = document.getElementById("videoOnly")?.checked;
-    let popularOnly = document.getElementById("popularOnly")?.checked;
     let feed = document.getElementById("feed");
     feed.innerHTML = "";
 
-    let favs = getFavorites();
+let favs = getFavorites();
 
-    let filtered = posts
-        .sort((a, b) => scorePost(b) - scorePost(a))
-        .filter(p => {
-            if(!(p.name || "").toLowerCase().includes(s)) return false;
-            if(showFavorites && !favs.includes(p.id)) return false;
-            if(minPrice && p.price < minPrice) return false;
-            if(maxPrice && p.price > maxPrice) return false;
-            if(videoOnly && !(p.videos && p.videos.length > 0)) return false;
-            if(popularOnly && (p.likes || 0) < 5) return false;
-            return true;
-        });
+for (let p of posts
+    .sort((a, b) => scorePost(b) - scorePost(a))
+    .filter(p => (p.name || "").toLowerCase().includes(s))
+) {
 
-    for(let p of filtered){
-        let userData = await getUser(p.user_id);
+    let userData = await getUser(p.user_id);
 
-        let div = document.createElement("div");
-        div.className = "post";
+    let div = document.createElement("div");
+    div.className = "post";
 
         div.innerHTML = `
-<div class="card" onclick="openPost(${p.id})" style="cursor:pointer; position:relative;">
+<div class="card"
+onclick="openPost(${p.id})"
+style="cursor:pointer; position:relative;"
+>
 
     <h2>${p.name}</h2>
 
-    <img src="${p.image}" onerror="this.style.display='none'">
+    <img src="${p.image}">
 
+    <br>
+
+    <!-- 💥 AVATAR DYNAMIQUE -->
     <span id="avatar-${p.id}"></span>
 
     <div class="info">
         💰 ${p.price}<br>
         ❤️ ${p.likes || 0}<br>
-        👀 ${p.views || 0} vues<br>
-        ${userData && isOnline(userData.last_seen) ? "🟢 En ligne" : "⚫ Hors ligne"}
-        <span onclick="event.stopPropagation(); openUserMenu('${p.user_id}')"
-            style="color:#00ccff; cursor:pointer;">
-            👤 ${p.user_id}
+        👀 ${p.views || 0} vues <br>
+        ${userData && isOnline(userData.last_seen)
+    ? "🟢 En ligne"
+    : "⚫ Hors ligne"
+}
+
+        <span
+        onclick="event.stopPropagation(); openUserMenu('${p.user_id}')"
+        style="
+        color:#00ccff;
+        cursor:pointer;
+        ">
+        👤 ${p.user_id}
         </span>
     </div>
 
+    <!-- 🛒 BUY -->
     <button
-        onclick="event.stopPropagation(); buy(${p.id}, event)"
-        style="margin-top:10px;width:100%;padding:10px;border:none;border-radius:15px;background:#00ff99;color:black;font-weight:bold;cursor:pointer;">
-        🛒 BUY
+onclick="event.stopPropagation(); buy(${p.id}, event)"
+style="
+margin-top:10px;
+width:100%;
+padding:10px;
+border:none;
+border-radius:15px;
+background:#00ff99;
+color:black;
+font-weight:bold;
+">
+🛒 BUY
+</button>
+
+    <!-- 💬 CHAT -->
+    <button
+    onclick="event.stopPropagation(); openChat('${p.user_id}')"
+    style="
+    margin-top:10px;
+    padding:10px;
+    border:none;
+    border-radius:15px;
+    background:#00ccff;
+    color:black;
+    cursor:pointer;
+    width:100%;
+    font-weight:bold;
+    ">
+    💬 Chat
     </button>
 
     <button
-        onclick="event.stopPropagation(); openChat('${p.user_id}')"
-        style="margin-top:10px;padding:10px;border:none;border-radius:15px;background:#00ccff;color:black;cursor:pointer;width:100%;font-weight:bold;">
-        💬 Chat
+onclick="event.stopPropagation(); openVideos(${p.id})"
+style="
+margin-top:10px;
+padding:10px;
+border:none;
+border-radius:15px;
+background:#00ccff;
+color:black;
+cursor:pointer;
+width:100%;
+font-weight:bold;
+">
+🎥 Vidéos
+</button>
+
+<button
+class="likeBtn ${isLiked(p.id) ? 'liked' : ''}"
+onclick="event.stopPropagation(); likePost(${p.id}, ${p.likes || 0}, event)">
+❤️
+</button>
+
+<button
+onclick="event.stopPropagation(); openComments(${p.id})"
+style="
+margin-top:10px;
+width:100%;
+padding:10px;
+border:none;
+border-radius:15px;
+background:#2d6bff;
+color:white;
+font-weight:bold;
+">
+💬 Commentaires
+</button>
+
+${
+  p.user_id === user
+  ? `
+    <button
+      onclick="event.stopPropagation(); deletePost(${p.id})"
+      style="
+        background:red;
+        color:white;
+        margin-top:10px;
+        width:100%;
+        border:none;
+        border-radius:15px;
+        padding:10px;
+      ">
+      🗑 Supprimer
     </button>
 
     <button
-        onclick="event.stopPropagation(); openVideos(${p.id})"
-        style="margin-top:10px;padding:10px;border:none;border-radius:15px;background:#5533ff;color:white;cursor:pointer;width:100%;font-weight:bold;">
-        🎥 Vidéos
+      onclick="event.stopPropagation(); toggleFavorite(${p.id}); render();"
+      style="
+        margin-top:10px;
+        width:100%;
+        padding:10px;
+        border:none;
+        border-radius:15px;
+        background:gold;
+        font-weight:bold;
+      ">
+      ${getFavorites().includes(p.id) ? "⭐ Favori" : "☆ Ajouter aux favoris"}
     </button>
-
-    <button
-        class="likeBtn ${isLiked(p.id) ? 'liked' : ''}"
-        onclick="event.stopPropagation(); likePost(${p.id}, ${p.likes || 0}, event)">
-        ❤️
-    </button>
-
-    <button
-        onclick="event.stopPropagation(); openComments(${p.id})"
-        style="margin-top:10px;width:100%;padding:10px;border:none;border-radius:15px;background:#2d6bff;color:white;font-weight:bold;cursor:pointer;">
-        💬 Commentaires
-    </button>
-
-    ${p.user_id === user ? `
-        <button
-            onclick="event.stopPropagation(); deletePost(${p.id})"
-            style="background:red;color:white;margin-top:10px;width:100%;border:none;border-radius:15px;padding:10px;cursor:pointer;">
-            🗑 Supprimer
-        </button>
-
-        <button
-            onclick="event.stopPropagation(); toggleFavorite(${p.id})"
-            style="margin-top:10px;width:100%;padding:10px;border:none;border-radius:15px;background:gold;font-weight:bold;cursor:pointer;color:black;">
-            ${isFavorite(p.id) ? "⭐ Favori" : "☆ Ajouter aux favoris"}
-        </button>
-    ` : ""}
-
+  `
+  : ""
+}
 </div>
-        `;
+`;
 
         feed.appendChild(div);
         addView(p.id);
+
+        // 🔥 charger avatar depuis users (IMPORTANT pour anciens posts)
         loadAvatar(p);
-    }
+
+};
 }
 
-/* ── OPEN POST ── */
-function openPost(id){
-    let p = posts.find(x => x.id === id);
-    if(!p) return;
+    function openPost(id){
 
-    document.getElementById("box").innerHTML = `
-        <h1>${p.name}</h1>
-        <img src="${p.image}" style="width:100%;border-radius:20px;" onerror="this.style.display='none'">
-        <br><br>
-        📝 ${p.desc || ""}
-        <br><br>
-        💰 ${p.price}
-        <br><br>
-        ❤️ ${p.likes || 0}
-        <br><br>
-        👤 ${p.user_id}
-        <br><br>
-        <button onclick="closeModal()"
-            style="width:100%;padding:12px;border:none;border-radius:15px;background:#333;color:white;cursor:pointer;">
-            Fermer
-        </button>
-    `;
-    document.getElementById("modal").style.display = "flex";
+let p = posts.find(x=>x.id===id);
+
+document.getElementById("box").innerHTML = `
+
+<h1>${p.name}</h1>
+
+<img
+src="${p.image}"
+style="
+width:100%;
+border-radius:20px;
+">
+
+<br><br>
+
+📝 ${p.desc}
+
+<br><br>
+
+💰 ${p.price}
+
+<br><br>
+
+❤️ ${p.likes}
+
+<br><br>
+
+👤 ${p.user}
+
+`;
+
+document.getElementById("modal").style.display="flex";
+
 }
 
-/* ── USER MENU ── */
-function openUserMenu(username){
-    document.getElementById("box").innerHTML = `
-        <h2>👤 ${username}</h2>
-        <button onclick="openProfile('${username}')"
-            style="width:100%;padding:15px;margin-top:10px;border:none;border-radius:15px;background:#333;color:white;cursor:pointer;">
-            👤 Voir le profil
-        </button>
-        <button onclick="location.href='dm.html?user=${username}'"
-            style="width:100%;padding:15px;margin-top:10px;border:none;border-radius:15px;background:#2d6bff;color:white;cursor:pointer;">
-            💬 DM
-        </button>
-        <button onclick="closeModal()"
-            style="width:100%;padding:15px;margin-top:10px;border:none;border-radius:15px;background:#222;color:white;cursor:pointer;">
-            Fermer
-        </button>
-    `;
-    document.getElementById("modal").style.display = "flex";
+    function openUserMenu(username){
+
+document.getElementById("box").innerHTML = `
+
+<h2>${username}</h2>
+
+<button
+onclick="subscribe('${username}')"
+style="
+width:100%;
+padding:15px;
+margin-top:10px;
+"
+>
+⭐ S'abonner
+</button>
+
+<button
+onclick="openProfile('${username}')"
+style="
+width:100%;
+padding:15px;
+margin-top:10px;
+"
+>
+👤 Voir le profil
+</button>
+
+<button
+onclick="location.href='dm.html?user=${username}'"
+style="
+width:100%;
+padding:15px;
+margin-top:10px;
+"
+>
+💬 DM
+</button>
+
+`;
+
+document.getElementById("modal").style.display="flex";
+
 }
 
-function openProfile(username){
-    window.location.href = `profile.html?user=${username}`;
+    function openVideos(id){
+
+let post = posts.find(p=>p.id===id);
+
+document.getElementById("box").innerHTML = `
+
+<h1>🎥 Vidéos</h1>
+
+${
+(post.videos || []).map((v,i)=>`
+
+<div
+onclick="playVideo('${v}')"
+style="
+background:#222;
+padding:15px;
+margin:10px 0;
+border-radius:20px;
+cursor:pointer;
+font-size:20px;
+"
+>
+
+▶️ Vidéo ${i+1}
+
+</div>
+
+`).join("")
 }
 
-/* ── VIDEOS ── */
-function openVideos(id){
-    let post = posts.find(p => p.id === id);
-    if(!post) return;
+<button
+onclick="document.getElementById('modal').style.display='none'"
+style="
+width:100%;
+padding:15px;
+border:none;
+border-radius:20px;
+background:#333;
+color:white;
+cursor:pointer;
+"
+>
 
-    let videos = post.videos || [];
+Fermer
 
-    document.getElementById("box").innerHTML = `
-        <h1>🎥 Vidéos</h1>
-        ${videos.length === 0 ? "<p>Aucune vidéo 😢</p>" : ""}
-        ${videos.map((v, i) => `
-            <div onclick="playVideo('${v}')"
-                style="background:#222;padding:15px;margin:10px 0;border-radius:20px;cursor:pointer;font-size:20px;">
-                ▶️ Vidéo ${i + 1}
-            </div>
-        `).join("")}
-        <button onclick="closeModal()"
-            style="width:100%;padding:15px;border:none;border-radius:20px;background:#333;color:white;cursor:pointer;">
-            Fermer
-        </button>
-    `;
-    document.getElementById("modal").style.display = "flex";
+</button>
+
+`;
+
+document.getElementById("modal").style.display = "flex";
+
 }
 
-function playVideo(video){
-    document.getElementById("box").innerHTML = `
-        <h1>🎥 Lecture vidéo</h1>
-        <video src="${video}" controls autoplay
-            style="width:100%;border-radius:20px;max-height:80vh;background:black;"></video>
-        <button onclick="closeModal()"
-            style="width:100%;margin-top:15px;padding:15px;border:none;border-radius:20px;background:#333;color:white;cursor:pointer;">
-            Fermer
-        </button>
-    `;
-}
+    function playVideo(video){
 
-/* ── BUY ── */
+document.getElementById("box").innerHTML = `
+
+<h1>🎥 Lecture vidéo</h1>
+
+<video
+src="${video}"
+controls
+autoplay
+style="
+width:100%;
+border-radius:20px;
+max-height:80vh;
+background:black;
+">
+</video>
+
+<button
+onclick="document.getElementById('modal').style.display='none'"
+style="
+width:100%;
+margin-top:15px;
+padding:15px;
+border:none;
+border-radius:20px;
+background:#333;
+color:white;
+cursor:pointer;
+"
+>
+
+Fermer
+
+</button>
+
+`;
+
+}
+    
 async function buy(id, event){
+
     let btn = event?.currentTarget;
 
-    let { data, error } = await client.from("posts").select("*").eq("id", id).single();
+    let { data, error } = await client
+        .from("posts")
+        .select("*")
+        .eq("id", id)
+        .single();
+
     if(error) return;
 
-    let money = getMoney();
+    let money = Number(localStorage.getItem("argent") || 0);
     let price = Number(data.price);
 
     if(money < price){
@@ -734,208 +1031,449 @@ async function buy(id, event){
         return;
     }
 
-    await client.from("inventaire").insert([{
-        user_id: user,
-        item: data.name,
-        image: data.image,
-        price: data.price
-    }]);
+    await client
+        .from("inventaire")
+        .insert([{
+            user_id: user,
+            item: data.name,
+            image: data.image,
+            price: data.price
+        }]);
 
     money -= price;
     localStorage.setItem("argent", money);
     setMoney(money);
 
+    // ⚡ animation rapide
     if(btn){
         btn.innerText = "✔ ACHETÉ";
         btn.style.background = "#00ff99";
-        setTimeout(() => btn.innerText = "🛒 BUY", 1200);
+        setTimeout(()=>btn.innerText = "🛒 BUY", 1200);
     }
 
-    if(navigator.vibrate) navigator.vibrate([20, 30, 20]);
+    if (navigator.vibrate) navigator.vibrate([20, 30, 20]);
+
     alert("Acheté !");
-}
+        }
 
-/* ── OPEN SELL ── */
+/* CREATE POST */
 function openSell(){
-    document.getElementById("box").innerHTML = `
-        <div style="text-align:center;">
-            <h1 style="margin-top:0;font-size:32px;">🚀 Nouvelle Annonce</h1>
-            <p style="opacity:.8;margin-bottom:20px;">Publie ton objet sur le marché</p>
 
-            <div style="background:#20202b;padding:15px;border-radius:20px;margin-bottom:15px;">
-                <input id="name" placeholder="📦 Nom de l'objet" style="font-size:18px;padding:15px;">
-            </div>
+document.getElementById("box").innerHTML = `
+<div style="
+text-align:center;
+">
 
-            <div style="background:#20202b;padding:15px;border-radius:20px;margin-bottom:15px;">
-                <textarea id="desc" placeholder="📝 Description détaillée..."
-                    style="height:120px;resize:none;font-size:16px;"></textarea>
-            </div>
+<h1 style="
+margin-top:0;
+font-size:32px;
+">
+🚀 Nouvelle Annonce
+</h1>
 
-            <div style="background:#20202b;padding:15px;border-radius:20px;margin-bottom:15px;">
-                <input id="price" type="number" placeholder="💰 Prix" style="font-size:18px;padding:15px;">
-            </div>
+<p style="
+opacity:.8;
+margin-bottom:20px;
+">
+Publie ton objet sur le marché
+</p>
 
-            <div id="dropZone" style="border:3px dashed #00ff99;border-radius:20px;padding:30px;cursor:pointer;margin-bottom:15px;background:rgba(0,255,153,.08);transition:.2s;">
-                <div style="font-size:50px;">🖼️</div>
-                <b>Glisse une image ici</b><br><br>ou clique pour choisir un fichier
-                <input id="fileInput" type="file" accept="image/*" style="display:none;">
-            </div>
+<div style="
+background:#20202b;
+padding:15px;
+border-radius:20px;
+margin-bottom:15px;
+">
 
-            <img id="preview" style="display:none;width:100%;border-radius:20px;margin-bottom:15px;max-height:300px;object-fit:cover;">
+<input
+id="name"
+placeholder="📦 Nom de l'objet"
+style="
+font-size:18px;
+padding:15px;
+box-sizing:border-box;
+">
 
-            <div id="videoZone" style="border:3px dashed #00ccff;border-radius:20px;padding:30px;cursor:pointer;margin-bottom:15px;background:rgba(0,170,255,.08);transition:.2s;">
-                <div style="font-size:50px;">🎥</div>
-                <b>Glisse jusqu'à 3 vidéos ici</b><br><br>ou clique pour choisir des fichiers
-                <input id="videoInput" type="file" accept="video/*" multiple style="display:none;">
-            </div>
+</div>
 
-            <div id="videoPreview"></div>
+<div style="
+background:#20202b;
+padding:15px;
+border-radius:20px;
+margin-bottom:15px;
+">
 
-            <div style="position:sticky;bottom:0;background:#16161d;padding-top:15px;padding-bottom:10px;">
-                <button onclick="create()"
-                    style="width:100%;padding:18px;border:none;border-radius:20px;font-size:20px;font-weight:bold;background:linear-gradient(45deg,#00ff99,#00ccff);cursor:pointer;color:black;margin-top:10px;">
-                    🚀 Publier l'annonce
-                </button>
-                <button onclick="closeModal()"
-                    style="width:100%;padding:12px;border:none;border-radius:20px;margin-top:10px;background:#333;color:white;cursor:pointer;">
-                    Fermer
-                </button>
-            </div>
-        </div>
-    `;
+<textarea
+id="desc"
+placeholder="📝 Description détaillée..."
+style="
+height:120px;
+resize:none;
+font-size:16px;
+box-sizing:border-box;
+"></textarea>
 
-    document.getElementById("modal").style.display = "flex";
+</div>
 
-    const dropZone = document.getElementById("dropZone");
-    const fileInput = document.getElementById("fileInput");
+<div style="
+background:#20202b;
+padding:15px;
+border-radius:20px;
+margin-bottom:15px;
+">
 
-    dropZone.onclick = () => fileInput.click();
-    fileInput.onchange = e => { if(e.target.files[0]) loadImage(e.target.files[0]); };
+<input
+id="price"
+type="number"
+placeholder="💰 Prix"
+style="
+font-size:18px;
+padding:15px;
+box-sizing:border-box;
+">
 
-    dropZone.addEventListener("dragover", e => {
-        e.preventDefault();
-        dropZone.style.background = "rgba(0,255,153,.2)";
-    });
-    dropZone.addEventListener("dragleave", () => {
-        dropZone.style.background = "rgba(0,255,153,.08)";
-    });
-    dropZone.addEventListener("drop", e => {
-        e.preventDefault();
-        dropZone.style.background = "rgba(0,255,153,.08)";
-        if(e.dataTransfer.files[0]) loadImage(e.dataTransfer.files[0]);
-    });
+</div>
 
-    window.selectedImage = "";
+<div
+id="dropZone"
+style="
+border:3px dashed #00ff99;
+border-radius:20px;
+padding:30px;
+cursor:pointer;
+margin-bottom:15px;
+background:rgba(0,255,153,.08);
+transition:.2s;
+">
+
+<div style="font-size:50px;">
+🖼️
+</div>
+
+<b>
+Glisse une image ici
+</b>
+
+<br><br>
+
+ou clique pour choisir un fichier
+
+<input
+id="fileInput"
+type="file"
+accept="image/*"
+style="display:none;"
+>
+
+</div>
+
+<img
+id="preview"
+style="
+display:none;
+width:100%;
+border-radius:20px;
+margin-bottom:15px;
+max-height:300px;
+object-fit:cover;
+">
+
+<div
+id="videoZone"
+style="
+border:3px dashed #00ccff;
+border-radius:20px;
+padding:30px;
+cursor:pointer;
+margin-bottom:15px;
+background:rgba(0,170,255,.08);
+transition:.2s;
+">
+
+<div style="font-size:50px;">
+🎥
+</div>
+
+<b>
+Glisse jusqu'à 3 vidéos ici
+</b>
+
+<br><br>
+
+ou clique pour choisir des fichiers
+
+<input
+id="videoInput"
+type="file"
+accept="video/*"
+multiple
+style="display:none;"
+>
+
+</div>
+
+<div id="videoPreview"></div>
+
+<div
+style="
+position:sticky;
+bottom:0;
+background:#16161d;
+padding-top:15px;
+padding-bottom:10px;
+"
+>
+
+<button
+onclick="create()"
+style="
+width:100%;
+padding:18px;
+border:none;
+border-radius:20px;
+font-size:20px;
+font-weight:bold;
+background:linear-gradient(45deg,#00ff99,#00ccff);
+cursor:pointer;
+color:black;
+margin-top:10px;
+">
+🚀 Publier l'annonce
+</button>
+
+<button
+onclick="document.getElementById('modal').style.display='none'"
+style="
+width:100%;
+padding:12px;
+border:none;
+border-radius:20px;
+margin-top:10px;
+background:#333;
+color:white;
+cursor:pointer;
+">
+Fermer
+</button>
+
+</div>
+`;
+
+document.getElementById("modal").style.display = "flex";
+
+const dropZone = document.getElementById("dropZone");
+const fileInput = document.getElementById("fileInput");
+const preview = document.getElementById("preview");
+
+dropZone.onclick = () => fileInput.click();
+
+fileInput.onchange = e => {
+const file = e.target.files[0];
+if(file) loadImage(file);
+};
+
+dropZone.addEventListener("dragover", e=>{
+e.preventDefault();
+dropZone.style.background="rgba(0,255,153,.2)";
+});
+
+dropZone.addEventListener("dragleave", ()=>{
+dropZone.style.background="rgba(0,255,153,.08)";
+});
+
+dropZone.addEventListener("drop", e=>{
+e.preventDefault();
+dropZone.style.background="rgba(0,255,153,.08)";
+
+const file = e.dataTransfer.files[0];
+if(file) loadImage(file);
+});
+
+window.selectedImage = "";
+window.selectedVideos = [];
+
+const videoInput = document.getElementById("videoInput");
+const videoZone = document.getElementById("videoZone");
+
+videoZone.onclick = ()=>videoInput.click();
+
+videoInput.onchange = e=>{
+
+    const files = [...e.target.files];
+
+    if(files.length > 3){
+        alert("Maximum 3 vidéos");
+        return;
+    }
+
     window.selectedVideos = [];
 
-    const videoInput = document.getElementById("videoInput");
-    const videoZone = document.getElementById("videoZone");
+    let html = "";
 
-    videoZone.onclick = () => videoInput.click();
+    files.forEach(file=>{
 
-    videoInput.onchange = e => {
-        const files = [...e.target.files];
-        if(files.length > 3){ alert("Maximum 3 vidéos"); return; }
-        window.selectedVideos = [];
-        let html = "";
-        files.forEach(file => {
-            const reader = new FileReader();
-            reader.onload = ev => {
-                window.selectedVideos.push(ev.target.result);
-                html += `<video src="${ev.target.result}" controls style="width:100%;margin-top:10px;border-radius:20px;"></video>`;
-                document.getElementById("videoPreview").innerHTML = html;
-            };
-            reader.readAsDataURL(file);
-        });
-    };
+        const reader = new FileReader();
+
+        reader.onload = ev=>{
+
+            window.selectedVideos.push(ev.target.result);
+
+            html += `
+            <video
+            src="${ev.target.result}"
+            controls
+            style="
+            width:100%;
+            margin-top:10px;
+            border-radius:20px;
+            ">
+            </video>
+            `;
+
+            document.getElementById("videoPreview").innerHTML = html;
+
+        };
+
+        reader.readAsDataURL(file);
+
+    });
+
+};
 }
 
 function loadImage(file){
-    const reader = new FileReader();
-    reader.onload = function(e){
-        window.selectedImage = e.target.result;
-        const preview = document.getElementById("preview");
-        preview.src = e.target.result;
-        preview.style.display = "block";
-    };
-    reader.readAsDataURL(file);
-}
 
-/* ── CREATE POST ── */
+const reader = new FileReader();
+
+reader.onload = function(e){
+
+window.selectedImage = e.target.result;
+
+const preview = document.getElementById("preview");
+
+preview.src = e.target.result;
+preview.style.display = "block";
+};
+
+reader.readAsDataURL(file);
+}
 async function create(){
+
     const name = document.getElementById("name").value.trim();
     const desc = document.getElementById("desc").value.trim();
     const price = Number(document.getElementById("price").value);
 
-    if(!name || !price){ alert("Nom et prix obligatoires !"); return; }
+    if(!name || !price){
+        alert("Nom et prix obligatoires !");
+        return;
+    }
 
-    let { error: postError } = await client.from("posts").insert([{
-        name: name,
-        image: window.selectedImage || "",
-        videos: window.selectedVideos || [],
-        price: price,
-        desc: desc,
-        user_id: user,
-        likes: 0,
-        views: 0
-    }]);
+    // Récupérer l'avatar du user (facultatif)
+    let { data: userData, error: userError } = await client
+        .from("users")
+        .select("avatar")
+        .eq("username", user)
+        .single();
 
-    if(postError){ console.error(postError); alert(postError.message); return; }
+    if(userError){
+        console.log(userError);
+    }
+
+    // Insertion du post
+    let { error: postError } = await client
+        .from("posts")
+        .insert([{
+            name: name,
+            image: window.selectedImage || "",
+            videos: window.selectedVideos || [],
+            price: price,
+            desc: desc,
+            user_id: user,
+            likes: 0
+        }]);
+
+    if(postError){
+        console.log(postError);
+        alert(postError.message);
+        return;
+    }
 
     alert("Annonce publiée ! 🚀");
-    closeModal();
+
+    document.getElementById("modal").style.display = "none";
+
+    document.getElementById("name").value = "";
+    document.getElementById("desc").value = "";
+    document.getElementById("price").value = "";
+
     window.selectedImage = "";
     window.selectedVideos = [];
+
     loadPosts();
 }
 
-/* ── INVENTORY ── */
+    client
+  .channel('posts-channel')
+  .on(
+    'postgres_changes',
+    { event: '*', schema: 'public', table: 'posts' },
+    payload => {
+        loadPosts(); // refresh live
+    }
+  )
+  .subscribe(); 
+
 async function openInv(){
-    let { data } = await client.from("inventaire").select("*").eq("user_id", user);
+
+    let { data, error } = await client
+        .from("inventaire")
+        .select("*")
+        .eq("user_id", user);
+
     let items = data || [];
 
     document.getElementById("box").innerHTML = `
         <h2>📦 Inventaire</h2>
+
         ${items.length === 0 ? "<p>Aucun objet 😢</p>" : ""}
+
         ${items.map(i => `
-            <div style="background:#222;padding:10px;margin:10px 0;border-radius:15px;display:flex;align-items:center;gap:10px;">
-                <img src="${i.image}" style="width:40px;height:40px;border-radius:10px;" onerror="this.style.display='none'">
-                <div><b>${i.item}</b><br>💰 ${i.price}</div>
+            <div style="
+                background:#222;
+                padding:10px;
+                margin:10px 0;
+                border-radius:15px;
+                display:flex;
+                align-items:center;
+                gap:10px;
+            ">
+                <img src="${i.image}" style="width:40px;height:40px;border-radius:10px;">
+                <div>
+                    <b>${i.item}</b><br>
+                    💰 ${i.price}
+                </div>
             </div>
         `).join("")}
-        <button onclick="closeModal()"
-            style="width:100%;padding:10px;margin-top:10px;border:none;border-radius:15px;background:#333;color:white;cursor:pointer;">
+
+        <button onclick="document.getElementById('modal').style.display='none'"
+        style="width:100%;padding:10px;margin-top:10px;">
             Fermer
         </button>
     `;
+
     document.getElementById("modal").style.display = "flex";
 }
-
-/* ── MODAL HELPERS ── */
-function closeModal(){
-    document.getElementById("modal").style.display = "none";
-}
-
-function closeModalOutside(event){
-    if(event.target === document.getElementById("modal")){
-        closeModal();
-    }
-}
-
-/* ── REALTIME ── */
-client
-    .channel('posts-channel')
-    .on('postgres_changes', { event: '*', schema: 'public', table: 'posts' }, () => {
-        loadPosts();
-    })
-    .subscribe();
-
-/* ── INIT ── */
+    
 loadPosts();
 loadProfile();
 setInterval(updateLastSeen, 30000);
 
-client.from("users").update({ last_seen: new Date() }).eq("username", user);
+client
+.from("users")
+.update({
+    last_seen: new Date()
+})
+.eq("username", user);
 </script>
 
 </body>
