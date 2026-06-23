@@ -51,6 +51,27 @@ if(!user || user.startsWith("user")){
     window.location.href = "auth.html";
 }
 
+let deferredPrompt;
+
+window.addEventListener("beforeinstallprompt", (e) => {
+    e.preventDefault();
+    deferredPrompt = e;
+
+    // tu peux afficher un bouton install ici
+    console.log("App installable !");
+});
+
+async function installApp(){
+    if(deferredPrompt){
+        deferredPrompt.prompt();
+        const result = await deferredPrompt.userChoice;
+        console.log(result);
+        deferredPrompt = null;
+    } else {
+        alert("Installation non disponible (ouvre le site dans Chrome/Samsung Internet)");
+    }
+}
+
 </script>
 
 <body>
@@ -66,6 +87,9 @@ if(!user || user.startsWith("user")){
 
 <button onclick="location.href='market.html'">🏪 Marché</button>
 <button onclick="location.href='inventaire.html'">📦 Inventaire</button>
+<button onclick="installApp()">
+📲 Installer l’app
+</button>
 
 <script>
 
@@ -77,6 +101,10 @@ function addMoney(){
     argent += 100;
     localStorage.setItem("argent", argent);
     document.getElementById("argent").innerText = argent;
+}
+
+if ("serviceWorker" in navigator) {
+    navigator.serviceWorker.register("sw.js");
 }
 
 </script>
