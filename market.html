@@ -74,6 +74,7 @@ body{
     height:100vh;
     overflow-y:auto;
     padding-top:60px;
+    scroll-snap-type: y mandatory;
 }
 .post{
     min-height:100vh;
@@ -90,6 +91,7 @@ body{
     border-radius:20px;
     padding:15px;
     text-align:center;
+    scroll-snap-align: start;
 }
 
 .card img{
@@ -671,6 +673,15 @@ function toggleFavoritePost(id){
     render();
 }
 
+function vibrateSoft(btn){
+    if (navigator.vibrate) navigator.vibrate(20);
+
+    if (btn) {
+        btn.style.transform = "scale(0.95)";
+        setTimeout(() => btn.style.transform = "", 120);
+    }
+}
+
 async function render(){
 
     let s = document.getElementById("search").value.toLowerCase();
@@ -725,7 +736,7 @@ style="cursor:pointer; position:relative;"
 
     <!-- 🛒 BUY -->
     <button
-onclick="event.stopPropagation(); buy(${p.id}, event)"
+onclick="event.stopPropagation(); vibrateSoft(); buy(${p.id}, event)"
 style="
 margin-top:10px;
 width:100%;
