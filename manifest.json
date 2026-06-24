@@ -2,7 +2,7 @@
   "name": "ImoYoizo",
   "short_name": "ImoYoizo",
   "start_url": ".",
-  "scope": ".",
+  "scope": "/",
   "display": "standalone",
   "background_color": "#0b0b0f",
   "theme_color": "#0b0b0f",
