@@ -414,17 +414,56 @@ function toggleFilters(){
     : "none";
 
 }
-    async function loadPosts(){
+    let limit = 10;
+let offset = 0;
+let loading = false;
+let allLoaded = false;
+
+async function loadPosts(reset = false){
+
+    if(loading) return;
+    loading = true;
+
+    if(reset){
+        offset = 0;
+        allLoaded = false;
+        posts = [];
+        document.getElementById("feed").innerHTML = "";
+    }
+
     let { data, error } = await client
         .from("posts")
         .select("*")
-        .order("id", { ascending: false });
+        .order("id", { ascending: false })
+        .range(offset, offset + limit - 1);
 
-    console.log(data, error);
-
-    posts = data || [];
-    render();
+    if(error){
+        console.log(error);
+        loading = false;
+        return;
     }
+
+    if(data.length === 0){
+        allLoaded = true;
+        loading = false;
+        return;
+    }
+
+    posts = posts.concat(data);
+    offset += limit;
+
+    render();
+    loading = false;
+}
+
+window.addEventListener("scroll", () => {
+    let scrollPos = window.innerHeight + window.scrollY;
+    let bottom = document.body.offsetHeight - 200;
+
+    if(scrollPos >= bottom){
+        loadPosts();
+    }
+});
 
 async function loadAvatar(post){
 
@@ -685,7 +724,9 @@ async function render(){
 
     let s = document.getElementById("search").value.toLowerCase();
     let feed = document.getElementById("feed");
-    feed.innerHTML = "";
+    if(posts.length === 0){
+    feed.innerHTML = "<p style='text-align:center'>Aucun post</p>";
+}
 
 let favs = getFavorites();
 
@@ -841,6 +882,15 @@ ${
 
         feed.appendChild(div);
         addView(p.id);
+
+        if(allLoaded){
+    let end = document.createElement("div");
+    end.style.textAlign = "center";
+    end.style.padding = "20px";
+    end.style.opacity = "0.5";
+    end.innerText = "Fin du feed";
+    feed.appendChild(end);
+}
 
         // 🔥 charger avatar depuis users (IMPORTANT pour anciens posts)
         loadAvatar(p);
