@@ -1509,20 +1509,46 @@ async function openInv(){
                 align-items:center;
                 gap:10px;
             ">
-                <img src="${i.image}" style="width:40px;height:40px;border-radius:10px;">
-                <div style="flex:1;">
-    <b>${i.item}</b><br>
-    💰 ${i.price}
-</div>
 
-<button onclick="giveItem('${i.id}')">
-🎁 Donner
-</button>
+                <img
+                src="${i.image}"
+                style="
+                width:50px;
+                height:50px;
+                border-radius:10px;
+                object-fit:cover;
+                ">
+
+                <div style="flex:1;">
+                    <b>${i.item}</b><br>
+                    💰 ${i.price}
+                </div>
+
+                <button
+                onclick="giveItem('${i.id}')"
+                style="
+                background:#00ff99;
+                border:none;
+                border-radius:12px;
+                padding:10px;
+                cursor:pointer;
+                font-weight:bold;
+                ">
+                🎁 Donner
+                </button>
+
             </div>
         `).join("")}
 
-        <button onclick="document.getElementById('modal').style.display='none'"
-        style="width:100%;padding:10px;margin-top:10px;">
+        <button
+        onclick="document.getElementById('modal').style.display='none'"
+        style="
+        width:100%;
+        padding:12px;
+        margin-top:10px;
+        border:none;
+        border-radius:12px;
+        ">
             Fermer
         </button>
     `;
@@ -1532,51 +1558,84 @@ async function openInv(){
 
 async function giveItem(itemId){
 
-    let friend = prompt("Pseudo de l'ami :");
-
-    if(!friend) return;
-
-    let { data: relations, error } = await client
+    let { data: friends } = await client
     .from("friends")
     .select("*")
-    .eq("status", "accepted");
+    .eq("status","accepted")
+    .or(`user1.eq.${user},user2.eq.${user}`);
 
-let estAmi = (relations || []).some(r =>
-    (r.user1 === user && r.user2 === friend) ||
-    (r.user1 === friend && r.user2 === user)
-);
+    let html = `
+    <h2>🎁 Donner l'objet</h2>
+    `;
 
-if(!estAmi){
-    alert("Cette personne n'est pas ton ami.");
-    return;
-}
+    if(!friends || friends.length === 0){
+        html += "<p>Aucun ami</p>";
+    }else{
 
-    let { data:item } = await client
-        .from("inventaire")
-        .select("*")
-        .eq("id", itemId)
-        .single();
+        friends.forEach(f=>{
 
-    if(!item){
-        alert("Objet introuvable");
-        return;
+            let friend =
+            f.user1 === user
+            ? f.user2
+            : f.user1;
+
+            html += `
+            <button
+            style="
+            width:100%;
+            padding:15px;
+            margin:5px 0;
+            border:none;
+            border-radius:15px;
+            "
+            onclick="sendItem(${itemId}, '${friend}')">
+            👤 ${friend}
+            </button>
+            `;
+        });
     }
 
-    await client
-        .from("inventaire")
-        .insert([{
-            user_id: friend,
-            item: item.item,
-            image: item.image,
-            price: item.price
-        }]);
+    html += `
+    <button onclick="modal.style.display='none'">
+    Fermer
+    </button>
+    `;
+
+    box.innerHTML = html;
+    modal.style.display = "flex";
+}
+
+async function sendItem(itemId, friend){
+
+    let { data:item } = await client
+    .from("inventaire")
+    .select("*")
+    .eq("id", itemId)
+    .single();
+
+    if(!item) return;
 
     await client
-        .from("inventaire")
-        .delete()
-        .eq("id", itemId);
+    .from("inventaire")
+    .insert([{
+        user_id: friend,
+        item: item.item,
+        image: item.image,
+        price: item.price
+    }]);
 
-    alert("🎁 Objet envoyé à " + friend);
+    await client
+    .from("inventaire")
+    .delete()
+    .eq("id", itemId);
+
+    if(navigator.vibrate){
+        navigator.vibrate([40,50,40]);
+    }
+
+    alert(`🎁 Objet envoyé à ${friend}`);
+
+    modal.style.display = "none";
 
     openInv();
 }
