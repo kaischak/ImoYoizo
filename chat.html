@@ -331,12 +331,12 @@ async function load(){
 
         ${m.offer_status === "pending" ? `
         <div style="display:flex;gap:8px;margin-top:5px;">
-            <button onclick="acceptOffer(${m.id})"
+            <button onclick="acceptOffer('${m.id}')"
             style="background:#00ff99;border:none;padding:6px 10px;border-radius:10px;">
                 ✔ Accepter
             </button>
 
-            <button onclick="rejectOffer(${m.id})"
+            <button onclick="rejectOffer('${m.id}')"
             style="background:#ff3b3b;border:none;padding:6px 10px;border-radius:10px;color:white;">
                 ❌ Refuser
             </button>
