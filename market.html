@@ -1510,10 +1510,14 @@ async function openInv(){
                 gap:10px;
             ">
                 <img src="${i.image}" style="width:40px;height:40px;border-radius:10px;">
-                <div>
-                    <b>${i.item}</b><br>
-                    💰 ${i.price}
-                </div>
+                <div style="flex:1;">
+    <b>${i.item}</b><br>
+    💰 ${i.price}
+</div>
+
+<button onclick="giveItem('${i.id}')">
+🎁 Donner
+</button>
             </div>
         `).join("")}
 
@@ -1524,6 +1528,56 @@ async function openInv(){
     `;
 
     document.getElementById("modal").style.display = "flex";
+}
+
+async function giveItem(itemId){
+
+    let friend = prompt("Pseudo de l'ami :");
+
+    if(!friend) return;
+
+    let { data: relation } = await client
+        .from("friends")
+        .select("*")
+        .eq("status","accepted")
+        .or(
+            `and(user1.eq.${user},user2.eq.${friend}),
+             and(user1.eq.${friend},user2.eq.${user})`
+        );
+
+    if(!relation || relation.length === 0){
+        alert("Cette personne n'est pas ton ami.");
+        return;
+    }
+
+    let { data:item } = await client
+        .from("inventaire")
+        .select("*")
+        .eq("id", itemId)
+        .single();
+
+    if(!item){
+        alert("Objet introuvable");
+        return;
+    }
+
+    await client
+        .from("inventaire")
+        .insert([{
+            user_id: friend,
+            item: item.item,
+            image: item.image,
+            price: item.price
+        }]);
+
+    await client
+        .from("inventaire")
+        .delete()
+        .eq("id", itemId);
+
+    alert("🎁 Objet envoyé à " + friend);
+
+    openInv();
 }
 
 const modal = document.getElementById("modal");
