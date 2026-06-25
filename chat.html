@@ -63,6 +63,16 @@ align-self:flex-start;
 border-bottom-left-radius:5px;
 }
 
+.recording{
+animation:pulse 1s infinite;
+}
+
+@keyframes pulse{
+0%{transform:scale(1);}
+50%{transform:scale(1.15);}
+100%{transform:scale(1);}
+}
+
 /* INPUT */
 #inputBar{
 display:flex;
@@ -172,10 +182,14 @@ document.getElementById("with").innerText = "avec " + friend;
 let mediaRecorder;
 let chunks = [];
 
-document.getElementById("recordBtn").onclick = async () => {
+const recordBtn = document.getElementById("recordBtn");
 
-    const stream =
-    await navigator.mediaDevices.getUserMedia({
+recordBtn.onclick = async () => {
+
+    recordBtn.innerText = "🔴 REC";
+    recordBtn.classList.add("recording");
+
+    const stream = await navigator.mediaDevices.getUserMedia({
         audio:true
     });
 
@@ -187,6 +201,9 @@ document.getElementById("recordBtn").onclick = async () => {
     e => chunks.push(e.data);
 
     mediaRecorder.onstop = async () => {
+
+        recordBtn.innerText = "🎤";
+        recordBtn.classList.remove("recording");
 
         const blob =
         new Blob(chunks,{type:"audio/webm"});
@@ -213,7 +230,7 @@ document.getElementById("recordBtn").onclick = async () => {
 
     setTimeout(()=>{
         mediaRecorder.stop();
-    },10000); // max 10 sec
+    },10000);
 };
 
 async function offerPrice(){
@@ -294,14 +311,51 @@ async function load(){
     if(m.voice){
 
     div.innerHTML = `
+<div style="display:flex;flex-direction:column;gap:5px;">
+
     <div style="display:flex;align-items:center;gap:8px;">
         <img src="${avatar}"
         style="width:25px;height:25px;border-radius:50%;">
 
-        <audio controls
-        src="${m.voice}"
-        style="max-width:200px;">
-        </audio>
+        <span style="
+        font-size:12px;
+        opacity:0.7;
+        ">
+        🎙 Message vocal
+        </span>
+    </div>
+
+    <audio
+    controls
+    src="${m.voice}"
+    style="
+    width:220px;
+    height:35px;
+    ">
+    </audio>
+
+</div>
+`;
+display:flex;
+align-items:center;
+gap:10px;
+background:rgba(255,255,255,0.08);
+padding:10px;
+border-radius:15px;
+">
+
+<span style="font-size:20px;">🎤</span>
+
+<audio
+controls
+src="${m.voice}"
+style="
+width:220px;
+height:35px;
+">
+</audio>
+
+</div>
     </div>
     `;
 
