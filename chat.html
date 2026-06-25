@@ -143,6 +143,10 @@ font-size:20px;
 
 <div id="inputBar">
 <input id="input" placeholder="Écris un message...">
+<button onclick="offerPrice()">
+💰 Offre
+</button>
+<button id="recordBtn">🎤</button>
 <button id="sendBtn" onclick="send()">➤</button>
 </div>
 
@@ -164,6 +168,100 @@ location.href="index.html";
 
 /* AFFICHER NOM */
 document.getElementById("with").innerText = "avec " + friend;
+
+let mediaRecorder;
+let chunks = [];
+
+document.getElementById("recordBtn").onclick = async () => {
+
+    const stream =
+    await navigator.mediaDevices.getUserMedia({
+        audio:true
+    });
+
+    mediaRecorder = new MediaRecorder(stream);
+
+    chunks = [];
+
+    mediaRecorder.ondataavailable =
+    e => chunks.push(e.data);
+
+    mediaRecorder.onstop = async () => {
+
+        const blob =
+        new Blob(chunks,{type:"audio/webm"});
+
+        const reader = new FileReader();
+
+        reader.onload = async e => {
+
+            await client
+            .from("messages")
+            .insert([{
+                sender:user,
+                receiver:friend,
+                voice:e.target.result
+            }]);
+
+            load();
+        };
+
+        reader.readAsDataURL(blob);
+    };
+
+    mediaRecorder.start();
+
+    setTimeout(()=>{
+        mediaRecorder.stop();
+    },10000); // max 10 sec
+};
+
+async function offerPrice(){
+
+    let price =
+    prompt("Ton offre ?");
+
+    if(!price) return;
+
+ await client
+.from("messages")
+.insert([{
+    sender: user,
+    receiver: friend,
+    offer_price: Number(price),
+    offer_status: "pending"
+}]);
+
+    load();
+}
+
+async function acceptOffer(id){
+
+    await client
+    .from("messages")
+    .update({
+        offer_status: "accepted"
+    })
+    .eq("id", id);
+
+    alert("✔ Offre acceptée 💰");
+
+    load();
+}
+
+async function rejectOffer(id){
+
+    await client
+    .from("messages")
+    .update({
+        offer_status: "rejected"
+    })
+    .eq("id", id);
+
+    alert("❌ Offre refusée");
+
+    load();
+}
 
 /* LOAD MESSAGES */
 async function load(){
@@ -193,13 +291,73 @@ async function load(){
         let u = users.find(x => x.username === m.sender);
         let avatar = u?.avatar || `https://ui-avatars.com/api/?name=${m.sender}`;
 
-        div.innerHTML = `
-        <div style="display:flex;align-items:center;gap:8px;">
-            <img src="${avatar}"
-            style="width:25px;height:25px;border-radius:50%;">
-            <span>${m.message}</span>
+    if(m.voice){
+
+    div.innerHTML = `
+    <div style="display:flex;align-items:center;gap:8px;">
+        <img src="${avatar}"
+        style="width:25px;height:25px;border-radius:50%;">
+
+        <audio controls
+        src="${m.voice}"
+        style="max-width:200px;">
+        </audio>
+    </div>
+    `;
+
+} else if(m.offer_price){
+
+    let statusText = "";
+
+    if(m.offer_status === "accepted"){
+        statusText = "✔ Acceptée";
+    }
+    else if(m.offer_status === "rejected"){
+        statusText = "❌ Refusée";
+    }
+    else {
+        statusText = "⏳ En attente";
+    }
+
+    div.innerHTML = `
+    <div style="display:flex;flex-direction:column;gap:5px;">
+        <img src="${avatar}"
+        style="width:25px;height:25px;border-radius:50%;">
+
+        💰 Offre :
+        <b style="font-size:18px;">${m.offer_price} 💰</b>
+
+        <small>${statusText}</small>
+
+        ${m.offer_status === "pending" ? `
+        <div style="display:flex;gap:8px;margin-top:5px;">
+            <button onclick="acceptOffer(${m.id})"
+            style="background:#00ff99;border:none;padding:6px 10px;border-radius:10px;">
+                ✔ Accepter
+            </button>
+
+            <button onclick="rejectOffer(${m.id})"
+            style="background:#ff3b3b;border:none;padding:6px 10px;border-radius:10px;color:white;">
+                ❌ Refuser
+            </button>
         </div>
-        `;
+        ` : ""}
+
+    </div>
+    `;
+
+} else {
+
+    div.innerHTML = `
+    <div style="display:flex;align-items:center;gap:8px;">
+        <img src="${avatar}"
+        style="width:25px;height:25px;border-radius:50%;">
+
+        <span>${m.message}</span>
+    </div>
+    `;
+
+}
 
         box.appendChild(div);
     });
