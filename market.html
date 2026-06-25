@@ -1536,19 +1536,20 @@ async function giveItem(itemId){
 
     if(!friend) return;
 
-    let { data: relation } = await client
-        .from("friends")
-        .select("*")
-        .eq("status","accepted")
-        .or(
-            `and(user1.eq.${user},user2.eq.${friend}),
-             and(user1.eq.${friend},user2.eq.${user})`
-        );
+    let { data: relations, error } = await client
+    .from("friends")
+    .select("*")
+    .eq("status", "accepted");
 
-    if(!relation || relation.length === 0){
-        alert("Cette personne n'est pas ton ami.");
-        return;
-    }
+let estAmi = (relations || []).some(r =>
+    (r.user1 === user && r.user2 === friend) ||
+    (r.user1 === friend && r.user2 === user)
+);
+
+if(!estAmi){
+    alert("Cette personne n'est pas ton ami.");
+    return;
+}
 
     let { data:item } = await client
         .from("inventaire")
