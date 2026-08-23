@@ -218,7 +218,6 @@ body{
 .comment-btn { background: #2d6bff; color: white; }
 .fav-btn { background: rgba(255, 215, 0, 0.2); color: gold; border: 1px solid rgba(255,215,0,0.3); }
 
-/* Animation du badge d'achat réussi à côté du bouton */
 .success-badge {
     position: absolute;
     right: -105px;
@@ -333,7 +332,6 @@ input:focus, textarea:focus {
     box-shadow: 0 0 0 2px rgba(0,255,153,0.3);
 }
 
-/* Style du sélecteur de quantité pour l'achat */
 .qty-selector {
     display: flex;
     align-items: center;
@@ -411,7 +409,7 @@ const client = supabase.createClient(supabaseUrl, supabaseKey);
 
 let posts = [];
 let usersCache = {};
-let limit = 5;
+let limit = 20; // Augmenté pour charger plus d'articles d'un coup et éviter le blocage rapide
 let offset = 0;
 let loading = false;
 let allLoaded = false;
@@ -446,7 +444,6 @@ async function loadPosts(reset = false){
         offset = 0;
         allLoaded = false;
         posts = [];
-        document.getElementById("feed").innerHTML = "";
     }
 
     let { data, error } = await client
@@ -469,6 +466,10 @@ async function loadPosts(reset = false){
 
     posts = posts.concat(data);
     offset += limit;
+
+    if(data.length < limit){
+        allLoaded = true;
+    }
 
     render();
     loading = false;
@@ -603,7 +604,6 @@ async function addComment(postId){
     openComments(postId);
 }
 
-// SYSTÈME DE VUES OPTIMISÉ ET SANS RECHARGEMENT
 async function addView(postId){
     let post = posts.find(p => p.id === postId);
     if(!post) return;
@@ -761,7 +761,6 @@ function zoomImage(url){
     `;
 }
 
-// NOUVELLE MODALE D'ACHAT AVEC CHOIX DE LA QUANTITÉ
 function openBuyModal(id){
     let p = posts.find(x => x.id === id);
     if(!p) return;
@@ -820,7 +819,6 @@ async function confirmBuy(id){
         return;
     }
 
-    // Insérer les articles dans l'inventaire en fonction de la quantité choisie
     let insertData = [];
     for(let i = 0; i < qty; i++){
         insertData.push({
@@ -839,7 +837,6 @@ async function confirmBuy(id){
 
     document.getElementById("modal").style.display = "none";
 
-    // Afficher l'animation du badge de succès près du bouton de la carte correspondante
     let badge = document.getElementById(`badge-${id}`);
     if(badge){
         badge.innerText = `✨ x${qty} Acheté !`;
