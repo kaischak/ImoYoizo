@@ -2,99 +2,205 @@
 <html lang="fr">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Amis</title>
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<title>Amis - Market Fluid</title>
 
 <style>
-body{
-    margin:0;
-    font-family:Arial;
-    background:#0b0b0f;
-    color:white;
-    text-align:center;
+* { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
+body {
+    margin: 0;
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+    background: #0b0b0f;
+    color: white;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    min-height: 100vh;
+    padding: 20px 20px 40px 20px;
+    user-select: none;
 }
 
-.box{
-    background:#1c1c24;
-    margin:15px;
-    padding:15px;
-    border-radius:20px;
+h1 {
+    font-size: 24px;
+    margin-bottom: 20px;
 }
 
-input{
-    padding:10px;
-    border:none;
-    border-radius:10px;
-    width:220px;
+.container {
+    width: 100%;
+    max-width: 400px;
 }
 
-button{
-    padding:10px;
-    border:none;
-    border-radius:10px;
-    cursor:pointer;
-    margin:5px;
+.box {
+    background: #16161d;
+    margin-bottom: 15px;
+    padding: 20px;
+    border-radius: 24px;
+    box-shadow: 0 10px 30px rgba(0,0,0,0.5);
+    border: 1px solid rgba(255,255,255,0.05);
+    text-align: center;
 }
+
+.box h2 {
+    font-size: 16px;
+    margin-top: 0;
+    margin-bottom: 15px;
+    opacity: 0.9;
+}
+
+.add-wrapper {
+    display: flex;
+    gap: 8px;
+}
+
+input {
+    flex: 1;
+    padding: 12px 14px;
+    border-radius: 14px;
+    border: none;
+    background: rgba(255,255,255,0.06);
+    color: white;
+    font-size: 14px;
+    outline: none;
+    transition: background 0.2s, box-shadow 0.2s;
+}
+input:focus {
+    background: rgba(255,255,255,0.12);
+    box-shadow: 0 0 0 2px rgba(0,255,153,0.3);
+}
+
+button {
+    padding: 12px 16px;
+    border: none;
+    border-radius: 14px;
+    cursor: pointer;
+    font-weight: bold;
+    font-size: 14px;
+    transition: transform 0.15s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+}
+button:active { transform: scale(0.93); }
+
+.btn-primary {
+    background: linear-gradient(135deg, #00ff99, #00ccff);
+    color: black;
+    box-shadow: 0 4px 15px rgba(0,255,153,0.2);
+}
+
+.btn-success {
+    background: #00ff99;
+    color: black;
+    padding: 8px 12px;
+    font-size: 13px;
+}
+
+.btn-danger {
+    background: rgba(255, 77, 77, 0.15);
+    color: #ff4d4d;
+    padding: 8px 12px;
+    font-size: 13px;
+    border: 1px solid rgba(255, 77, 77, 0.2);
+}
+
+.item-row {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    background: rgba(255,255,255,0.03);
+    padding: 10px 14px;
+    border-radius: 14px;
+    margin-bottom: 8px;
+    border: 1px solid rgba(255,255,255,0.02);
+}
+
+.item-row:last-child {
+    margin-bottom: 0;
+}
+
+.user-link {
+    color: white;
+    text-decoration: none;
+    font-weight: 600;
+    font-size: 14px;
+    transition: color 0.2s;
+}
+.user-link:hover {
+    color: #00ccff;
+}
+
+.actions {
+    display: flex;
+    gap: 6px;
+}
+
+.empty-text {
+    font-size: 13px;
+    opacity: 0.5;
+    margin: 5px 0;
+}
+
+.back-btn {
+    background: transparent;
+    border: none;
+    color: white;
+    opacity: 0.7;
+    margin-top: 10px;
+    font-size: 13px;
+    cursor: pointer;
+    transition: opacity 0.2s;
+}
+.back-btn:hover { opacity: 1; }
 </style>
 </head>
 <body>
 
-<h1>👥 Amis</h1>
+<div class="container">
+    <h1>👥 Amis</h1>
 
-<div class="box">
+    <!-- AJOUTER UN AMI -->
+    <div class="box">
+        <h2>➕ Ajouter un ami</h2>
+        <div class="add-wrapper">
+            <input id="pseudo" placeholder="Entrer un pseudo...">
+            <button class="btn-primary" onclick="addFriend()">Envoyer</button>
+        </div>
+    </div>
 
-<h2>➕ Ajouter un ami</h2>
+    <!-- DEMANDES REÇUES -->
+    <div class="box">
+        <h2>📩 Demandes reçues</h2>
+        <div id="requests">
+            <div class="empty-text">Chargement...</div>
+        </div>
+    </div>
 
-<input id="pseudo" placeholder="Pseudo">
-
-<button onclick="addFriend()">
-Envoyer
-</button>
-
+    <!-- MES AMIS -->
+    <div class="box">
+        <h2>👬 Mes amis</h2>
+        <div id="friends">
+            <div class="empty-text">Chargement...</div>
+        </div>
+    </div>
 </div>
 
-<div class="box">
-
-<h2>📩 Demandes reçues</h2>
-
-<div id="requests">
-Chargement...
-</div>
-
-</div>
-
-<div class="box">
-
-<h2>👬 Mes amis</h2>
-
-<div id="friends">
-Chargement...
-</div>
-
-</div>
+<button class="back-btn" onclick="history.back()">← Retour</button>
 
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 
 <script>
-
-const client = supabase.createClient(
-"https://eezsocswqhqgkvghhygq.supabase.co",
-"eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImVlenNvY3N3cWhxZ2t2Z2hoeWdxIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODEwNjg5MjYsImV4cCI6MjA5NjY0NDkyNn0.TVI962lsUo67i6Ltq8okbOw-_GO-5yc4KDCyc8OkdVQ"
-);
+const supabaseUrl = "https://eezsocswqhqgkvghhygq.supabase.co";
+const supabaseKey = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImVlenNvY3N3cWhxZ2t2Z2hoeWdxIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODEwNjg5MjYsImV4cCI6MjA5NjY0NDkyNn0.TVI962lsUo67i6Ltq8okbOw-_GO-5yc4KDCyc8OkdVQ";
+const client = supabase.createClient(supabaseUrl, supabaseKey);
 
 let user = localStorage.getItem("user");
 
-if(!user){
+if(!user || user.startsWith("user")){
+    localStorage.removeItem("user");
     alert("Connecte-toi !");
-    location.href="auth.html";
+    location.href = "auth.html";
 }
 
 /* ---------------- AJOUTER AMI ---------------- */
-
 async function addFriend(){
-
-    let pseudo =
-    document.getElementById("pseudo").value.trim();
+    let pseudo = document.getElementById("pseudo").value.trim();
 
     if(!pseudo){
         alert("Entre un pseudo");
@@ -102,142 +208,136 @@ async function addFriend(){
     }
 
     if(pseudo === user){
-        alert("Impossible");
+        alert("Impossible de s'ajouter soi-même");
         return;
     }
 
-    let { error } = await client
-    .from("friends")
-    .insert([{
-        user1:user,
-        user2:pseudo,
-        status:"pending"
-    }]);
+    // Vérifier si l'utilisateur existe
+    let { data: targetUser } = await client
+        .from("users")
+        .select("username")
+        .eq("username", pseudo)
+        .maybeSingle();
 
-    console.log(error);
+    if(!targetUser){
+        alert("Cet utilisateur n'existe pas !");
+        return;
+    }
+
+    // Envoyer la demande
+    let { error } = await client
+        .from("friends")
+        .insert([{
+            user1: user,
+            user2: pseudo,
+            status: "pending"
+        }]);
 
     if(error){
-        alert("Erreur");
+        alert("Erreur ou demande déjà existante.");
         return;
     }
 
+    if(navigator.vibrate) navigator.vibrate(20);
     alert("Demande envoyée !");
+    document.getElementById("pseudo").value = "";
 }
 
-/* ---------------- DEMANDES RECUES ---------------- */
-
+/* ---------------- DEMANDES REÇUES ---------------- */
 async function loadRequests(){
-
     let { data, error } = await client
-    .from("friends")
-    .select("*")
-    .eq("user2", user)
-    .eq("status","pending");
+        .from("friends")
+        .select("*")
+        .eq("user2", user)
+        .eq("status", "pending");
 
-    console.log(data,error);
+    let html = "";
 
-    let html="";
-
-    (data || []).forEach(r=>{
-
+    (data || []).forEach(r => {
         html += `
-        <div class="box">
-
-        👤 ${r.user1}
-
-        <br><br>
-
-        <button
-        onclick="acceptFriend('${r.id}')">
-
-        ✔ Accepter
-
-        </button>
-
+        <div class="item-row">
+            <a href="profile.html?user=${encodeURIComponent(r.user1)}" class="user-link">👤 ${r.user1}</a>
+            <div class="actions">
+                <button class="btn-success" onclick="acceptFriend('${r.id}')">✔</button>
+                <button class="btn-danger" onclick="cancelOrRemove('${r.id}')">✕</button>
+            </div>
         </div>
         `;
-
     });
 
-    if(html===""){
-        html="Aucune demande";
+    if(html === ""){
+        html = '<div class="empty-text">Aucune demande reçue</div>';
     }
 
-    document.getElementById("requests").innerHTML =
-    html;
+    document.getElementById("requests").innerHTML = html;
 }
 
 /* ---------------- ACCEPTER ---------------- */
-
 async function acceptFriend(id){
-
-    console.log(id);
-
-    let { data, error } = await client
-    .from("friends")
-    .update({
-        status:"accepted"
-    })
-    .eq("id",id)
-    .select();
-
-    console.log(data,error);
+    let { error } = await client
+        .from("friends")
+        .update({ status: "accepted" })
+        .eq("id", id);
 
     if(error){
         alert("Erreur");
         return;
     }
 
-    alert("Demande acceptée !");
+    if(navigator.vibrate) navigator.vibrate([30, 40]);
+    loadRequests();
+    loadFriends();
+}
 
+/* ---------------- SUPPRIMER / REFUSER ---------------- */
+async function cancelOrRemove(id){
+    let { error } = await client
+        .from("friends")
+        .delete()
+        .eq("id", id);
+
+    if(error){
+        alert("Erreur");
+        return;
+    }
+
+    if(navigator.vibrate) navigator.vibrate(20);
     loadRequests();
     loadFriends();
 }
 
 /* ---------------- LISTE AMIS ---------------- */
-
 async function loadFriends(){
-
     let { data, error } = await client
-    .from("friends")
-    .select("*")
-    .eq("status","accepted")
-    .or(
-        `user1.eq.${user},user2.eq.${user}`
-    );
+        .from("friends")
+        .select("*")
+        .eq("status", "accepted")
+        .or(`user1.eq.${user},user2.eq.${user}`);
 
-    console.log(data,error);
+    let html = "";
 
-    let html="";
-
-    (data || []).forEach(f=>{
-
-        let friend =
-        f.user1===user
-        ? f.user2
-        : f.user1;
+    (data || []).forEach(f => {
+        let friend = f.user1 === user ? f.user2 : f.user1;
 
         html += `
-        <div class="box">
-
-        👤 ${friend}
-
+        <div class="item-row">
+            <a href="profile.html?user=${encodeURIComponent(friend)}" class="user-link">👤 ${friend}</a>
+            <div class="actions">
+                <button class="btn-danger" onclick="cancelOrRemove('${f.id}')">Retirer</button>
+            </div>
         </div>
         `;
-
     });
 
-    if(html===""){
-        html="Aucun ami";
+    if(html === ""){
+        html = '<div class="empty-text">Aucun ami pour le moment</div>';
     }
 
-    document.getElementById("friends").innerHTML =
-    html;
+    document.getElementById("friends").innerHTML = html;
 }
 
 loadRequests();
 loadFriends();
-
 </script>
 
 </body>
