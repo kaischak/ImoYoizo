@@ -1,7 +1,7 @@
 <!DOCTYPE html>
 <html lang="fr">
 <head>
-<meta charset="UTF-8"> 
+<meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
 <title>Profil - Market Fluid</title>
 
@@ -64,7 +64,7 @@ h2 {
     height: 100%;
     border-radius: 50%;
     object-fit: cover;
-    background: #000;
+    background: #252530;
     border: 3px solid #00ccff;
     box-shadow: 0 0 20px rgba(0,204,255,0.3);
     transition: transform 0.2s;
@@ -194,7 +194,8 @@ input[type="text"]:focus, textarea:focus {
     <div id="username-display">Chargement...</div>
 
     <div class="avatar-container" id="avatarContainer">
-        <img id="avatar" src="https://via.placeholder.com/130" alt="Avatar">
+        <!-- Avatar par défaut via SVG intégré (style minimaliste) -->
+        <img id="avatar" src="data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='%23666'><path d='M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm0 3c1.66 0 3 1.34 3 3s-1.34 3-3 3-3-1.34-3-3 1.34-3 3-3zm0 14.2c-2.5 0-4.71-1.28-6-3.22.03-1.99 4-3.08 6-3.08 1.99 0 5.97 1.09 6 3.08-1.29 1.94-3.5 3.22-6 3.22z'/></svg>" alt="Avatar">
         <div class="avatar-overlay" id="avatarOverlay">📷</div>
     </div>
 
@@ -234,12 +235,12 @@ if(!loggedUser || loggedUser.startsWith("user")){
     window.location.href = "auth.html";
 }
 
-// Récupérer le paramètre ?user=xxx dans l'URL (si présent)
 const urlParams = new URLSearchParams(window.location.search);
 let targetUser = urlParams.get("user") || loggedUser;
 let isMyProfile = (targetUser === loggedUser);
 
 let imageData = "";
+const defaultAvatar = "data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='%23666'><path d='M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm0 3c1.66 0 3 1.34 3 3s-1.34 3-3 3-3-1.34-3-3 1.34-3 3-3zm0 14.2c-2.5 0-4.71-1.28-6-3.22.03-1.99 4-3.08 6-3.08 1.99 0 5.97 1.09 6 3.08-1.29 1.94-3.5 3.22-6 3.22z'/></svg>";
 
 async function loadProfile(){
     if(!isMyProfile){
@@ -276,14 +277,28 @@ async function loadProfile(){
             document.getElementById("avatar").src = data.avatar;
             imageData = data.avatar;
         } else {
-            document.getElementById("avatar").src = "https://via.placeholder.com/130";
+            document.getElementById("avatar").src = defaultAvatar;
         }
-        document.getElementById("displayNameInput").value = data.display_name || "";
-        document.getElementById("bioInput").value = data.bio || "";
+
+        let nameInput = document.getElementById("displayNameInput");
+        let bioInput = document.getElementById("bioInput");
+
+        if(isMyProfile){
+            nameInput.value = data.display_name || "";
+            bioInput.value = data.bio || "";
+        } else {
+            nameInput.value = data.display_name || "Cet utilisateur n'a pas de nom d'affichage";
+            bioInput.value = data.bio || "Cet utilisateur n'a pas de bio";
+        }
+    } else {
+        document.getElementById("avatar").src = defaultAvatar;
+        if(!isMyProfile){
+            document.getElementById("displayNameInput").value = "Cet utilisateur n'a pas de nom d'affichage";
+            document.getElementById("bioInput").value = "Cet utilisateur n'a pas de bio";
+        }
     }
 }
 
-// Gestion du changement d'image (seulement si c'est notre profil)
 document.getElementById("file").onchange = e => {
     if(!isMyProfile) return;
     const file = e.target.files[0];
@@ -298,7 +313,6 @@ document.getElementById("file").onchange = e => {
     reader.readAsDataURL(file);
 };
 
-// Sauvegarder les modifications
 async function save(){
     if(!isMyProfile) return;
 
