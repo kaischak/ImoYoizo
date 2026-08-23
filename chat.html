@@ -49,24 +49,19 @@
         <button id="recordBtn">🎤</button>
         <button id="sendBtn" onclick="send()">➤</button>
     </div>
-
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <script>
         const client = supabase.createClient(
             "https://eezsocswqhqgkvghhygq.supabase.co",
             "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzZXNzb2Nzd3FocWdrdmdoeHlncSIsInJlZiI6ImVlenNvY3N3cWhxZ2t2Z2hoeWdxIiwiaWF0IjoxNzgxMDY4OTI2LCJleHAiOjIwOTY2NDQ5MjN9.TVI962lsUo67i6Ltq8okbOw-_GO-5yc4KDCyc8OkdVQ"
         );
-
         let user = localStorage.getItem("user");
         let friend = localStorage.getItem("chatWith");
-
         if(!user || !friend){
             alert("Erreur chat");
             location.href="index.html";
         }
-
         document.getElementById("with").innerText = "avec " + friend;
-
         let mediaRecorder;
         let chunks = [];
         const recordBtn = document.getElementById("recordBtn");
@@ -115,30 +110,24 @@
             let progress = box.querySelector(".voice-progress-bar");
             let currentTime = box.querySelector(".voice-current-time");
             let duration = box.querySelector(".voice-duration");
-
             box.addEventListener("click", () => playVoice(audio, box));
-
             audio.addEventListener("loadedmetadata", () => {
                 if(duration) duration.innerText = formatTime(audio.duration);
             });
-
             audio.addEventListener("timeupdate", () => {
                 if(!audio.duration) return;
                 let percent = (audio.currentTime / audio.duration) * 100;
                 if(progress) progress.style.width = percent + "%";
                 if(currentTime) currentTime.innerText = formatTime(audio.currentTime);
             });
-
             audio.addEventListener("play", () => {
                 box.classList.add("voice-playing");
                 if(button) button.innerText = "❚❚";
             });
-
             audio.addEventListener("pause", () => {
                 box.classList.remove("voice-playing");
                 if(button) button.innerText = "▶";
             });
-
             audio.addEventListener("ended", () => {
                 box.classList.remove("voice-playing");
                 if(button) button.innerText = "▶";
@@ -155,28 +144,22 @@
             try {
                 let usersRes = await client.from("users").select("username, avatar");
                 let users = usersRes.data || [];
-
                 let { data, error } = await client
                     .from("messages")
                     .select("*")
                     .or(`and(sender.eq.${user},receiver.eq.${friend}),and(sender.eq.${friend},receiver.eq.${user})`)
                     .order("created_at", { ascending: true });
-
                 if(error) {
                     console.error("Erreur Supabase messages:", error);
                     return;
                 }
-
                 let box = document.getElementById("messages");
                 box.innerHTML = "";
-
                 (data || []).forEach(m => {
                     let div = document.createElement("div");
                     div.className = "msg " + (m.sender === user ? "me" : "other");
-
                     let u = users.find(x => x.username === m.sender);
                     let avatar = u?.avatar || `https://ui-avatars.com/api/?name=${encodeURIComponent(m.sender)}`;
-
                     if(m.voice){
                         div.innerHTML = `
                             <div class="voice-message">
@@ -228,7 +211,6 @@
                     }
                     box.appendChild(div);
                 });
-
                 box.scrollTop = box.scrollHeight;
             } catch(err) {
                 console.error("Erreur dans load():", err);
@@ -245,9 +227,9 @@
             let input = document.getElementById("input");
             let msg = input.value.trim();
             if(!msg) return;
-            await client.from("messages").insert([{ sender: user, receiver: friend, message: msg }]);
+            let { error } = await client.from("messages").insert([{ sender: user, receiver: friend, message: msg }]);
+            if(error) console.error("Erreur d'envoi :", error);
             input.value = "";
-            // load() sera appelé automatiquement par le Realtime, mais on peut le laisser ou l'enlever
         }
 
         async function offerPrice(){
@@ -277,13 +259,11 @@
                 const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
                 mediaRecorder = new MediaRecorder(stream);
                 chunks = [];
-
                 mediaRecorder.ondataavailable = e => { if(e.data.size > 0) chunks.push(e.data); };
                 mediaRecorder.onstop = async () => {
                     recordBtn.innerText = "🎤";
                     recordBtn.classList.remove("recording");
                     stream.getTracks().forEach(track => track.stop());
-
                     const blob = new Blob(chunks, { type: "audio/webm" });
                     const reader = new FileReader();
                     reader.onload = async e => {
@@ -291,7 +271,6 @@
                     };
                     reader.readAsDataURL(blob);
                 };
-
                 mediaRecorder.start();
                 setTimeout(() => {
                     if(mediaRecorder && mediaRecorder.state === "recording") mediaRecorder.stop();
@@ -304,14 +283,16 @@
             }
         };
 
-        // --- TEMps RÉEL SUPABASE ---
-        // Écoute les insertions et mises à jour sur la table "messages"
+        // --- TEMPS RÉEL SUPABASE V2 CORRIGÉ ---
         client
-            .channel('public:messages')
-            .on('postgres_changes', { event: '*', schema: 'public', table: 'messages' }, payload => {
-                // Dès qu'un message est ajouté ou modifié, on recharge la discussion
-                load();
-            })
+            .channel('room_messages')
+            .on(
+                'postgres_changes',
+                { event: '*', schema: 'public', table: 'messages' },
+                payload => {
+                    load();
+                }
+            )
             .subscribe();
 
         // Chargement initial
