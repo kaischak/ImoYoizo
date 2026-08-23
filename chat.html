@@ -134,11 +134,65 @@
             audio.addEventListener("pause", () => btn.innerText = "▶");
             audio.addEventListener("ended", () => {
                 btn.innerText = "▶";
-                progress.style.width = "0%`";
+                progress.style.width = "0%";
                 currentTime.innerText = "0:00";
                 currentAudio = null;
                 currentVoiceBox = null;
             });
+        }
+
+        function createMessageElement(m) {
+            let div = document.createElement("div");
+            div.className = "msg " + (m.sender === user ? "me" : "other");
+            div.setAttribute("data-id", m.id);
+            let avatar = getAvatar(m.sender);
+
+            if(m.voice){
+                div.innerHTML = `
+                    <div class="voice-message">
+                        <button class="voice-play" type="button">▶</button>
+                        <div class="voice-info">
+                            <div style="font-size:11px; font-weight:bold; opacity:0.8;">🎙 Vocal</div>
+                            <div class="voice-progress"><div class="voice-progress-bar"></div></div>
+                            <div class="voice-bottom">
+                                <span class="voice-current-time">0:00</span>
+                                <span class="voice-duration">0:00</span>
+                            </div>
+                        </div>
+                    </div>
+                `;
+                const audio = document.createElement("audio");
+                audio.src = m.voice;
+                audio.preload = "metadata";
+                div.querySelector(".voice-message").appendChild(audio);
+                setupVoicePlayer(div.querySelector(".voice-message"), audio);
+            }
+            else if(m.offer_price !== null && m.offer_price !== undefined){
+                let statusText = m.offer_status === "accepted" ? "✔ Acceptée" : m.offer_status === "rejected" ? "❌ Refusée" : "⏳ En attente";
+                div.innerHTML = `
+                    <div class="offer-container">
+                        <div style="display:flex; align-items:center; gap:6px;">
+                            <img src="${avatar}" style="width:20px;height:20px;border-radius:50%;">
+                            <span style="font-size:12px; opacity:0.8;">Offre d'argent</span>
+                        </div>
+                        <b class="offer-price">${m.offer_price} 💰</b>
+                        <small class="offer-status-text">${statusText}</small>
+                        <div class="offer-actions" style="${m.offer_status === 'pending' ? 'display:flex;gap:6px;margin-top:4px;' : 'display:none;'}">
+                            <button class="offer-btn" onclick="acceptOffer('${m.id}')" style="background:#00ff99;color:black;">✔ Accepter</button>
+                            <button class="offer-btn" onclick="rejectOffer('${m.id}')" style="background:#ff3b3b;color:white;">❌ Refuser</button>
+                        </div>
+                    </div>
+                `;
+            }
+            else {
+                div.innerHTML = `
+                    <div style="display:flex;align-items:center;gap:8px;">
+                        <img src="${avatar}" style="width:24px;height:24px;border-radius:50%;object-fit:cover;">
+                        <span>${escapeHTML(m.message || "")}</span>
+                    </div>
+                `;
+            }
+            return div;
         }
 
         async function load(){
@@ -154,58 +208,7 @@
             let fragment = document.createDocumentFragment();
 
             (data || []).forEach(m => {
-                let div = document.createElement("div");
-                div.className = "msg " + (m.sender === user ? "me" : "other");
-                let avatar = getAvatar(m.sender);
-
-                if(m.voice){
-                    div.innerHTML = `
-                        <div class="voice-message">
-                            <button class="voice-play" type="button">▶</button>
-                            <div class="voice-info">
-                                <div style="font-size:11px; font-weight:bold; opacity:0.8;">🎙 Vocal</div>
-                                <div class="voice-progress"><div class="voice-progress-bar"></div></div>
-                                <div class="voice-bottom">
-                                    <span class="voice-current-time">0:00</span>
-                                    <span class="voice-duration">0:00</span>
-                                </div>
-                            </div>
-                        </div>
-                    `;
-                    const audio = document.createElement("audio");
-                    audio.src = m.voice;
-                    audio.preload = "metadata";
-                    div.querySelector(".voice-message").appendChild(audio);
-                    setupVoicePlayer(div.querySelector(".voice-message"), audio);
-                }
-                else if(m.offer_price){
-                    let statusText = m.offer_status === "accepted" ? "✔ Acceptée" : m.offer_status === "rejected" ? "❌ Refusée" : "⏳ En attente";
-                    div.innerHTML = `
-                        <div class="offer-container">
-                            <div style="display:flex; align-items:center; gap:6px;">
-                                <img src="${avatar}" style="width:20px;height:20px;border-radius:50%;">
-                                <span style="font-size:12px; opacity:0.8;">Offre d'argent</span>
-                            </div>
-                            <b class="offer-price">${m.offer_price} 💰</b>
-                            <small>${statusText}</small>
-                            ${m.offer_status === "pending" ? `
-                                <div style="display:flex;gap:6px;margin-top:4px;">
-                                    <button class="offer-btn" onclick="acceptOffer('${m.id}')" style="background:#00ff99;color:black;">✔ Accepter</button>
-                                    <button class="offer-btn" onclick="rejectOffer('${m.id}')" style="background:#ff3b3b;color:white;">❌ Refuser</button>
-                                </div>
-                            ` : ""}
-                        </div>
-                    `;
-                }
-                else {
-                    div.innerHTML = `
-                        <div style="display:flex;align-items:center;gap:8px;">
-                            <img src="${avatar}" style="width:24px;height:24px;border-radius:50%;object-fit:cover;">
-                            <span>${escapeHTML(m.message || "")}</span>
-                        </div>
-                    `;
-                }
-                fragment.appendChild(div);
+                fragment.appendChild(createMessageElement(m));
             });
 
             messagesBox.appendChild(fragment);
@@ -244,15 +247,14 @@
             if(e.key === "Enter") send();
         });
 
-        // Gestion ultra propre et instantanée du micro
+        // Gestion propre et instantanée du micro
         let isRecording = false;
         recordBtn.onclick = async () => {
             if (!isRecording) {
                 try {
                     const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
-                    // Utilisation d'un conteneur supporté léger
-                    let mimeType = MediaRecorder.isTypeSupported('audio/webm;codecs=opus') ? 'audio/webm;codecs=opus' : 'audio/mp4';
-                    mediaRecorder = new MediaRecorder(stream, { mimeType });
+                    let mimeType = MediaRecorder.isTypeSupported('audio/webm;codecs=opus') ? 'audio/webm;codecs=opus' : (MediaRecorder.isTypeSupported('audio/mp4') ? 'audio/mp4' : '');
+                    mediaRecorder = new MediaRecorder(stream, mimeType ? { mimeType } : {});
                     audioChunks = [];
 
                     mediaRecorder.ondataavailable = e => {
@@ -261,9 +263,8 @@
 
                     mediaRecorder.onstop = async () => {
                         stream.getTracks().forEach(track => track.stop());
-                        const audioBlob = new Blob(audioChunks, { type: mimeType });
+                        const audioBlob = new Blob(audioChunks, { type: mediaRecorder.mimeType || 'audio/webm' });
                         
-                        // Conversion optimisée et rapide en base64 compressé
                         const reader = new FileReader();
                         reader.readAsDataURL(audioBlob);
                         reader.onloadend = async () => {
@@ -294,11 +295,29 @@
             }
         };
 
-        // Temps réel Supabase ultra réactif
+        // Temps réel Supabase instantané sans rechargement complet de page
         client
             .channel('chat_room_' + [user, friend].sort().join('_'))
-            .on('postgres_changes', { event: '*', schema: 'public', table: 'messages' }, () => {
-                load();
+            .on('postgres_changes', { event: 'INSERT', schema: 'public', table: 'messages' }, payload => {
+                let m = payload.new;
+                // Vérifier si le message concerne bien la discussion actuelle
+                if ((m.sender === user && m.receiver === friend) || (m.sender === friend && m.receiver === user)) {
+                    // Éviter les doublons si on est l'expéditeur et qu'on l'a déjà affiché (optionnel, mais ici l'insertion déclenche l'écoute)
+                    messagesBox.appendChild(createMessageElement(m));
+                    messagesBox.scrollTop = messagesBox.scrollHeight;
+                }
+            })
+            .on('postgres_changes', { event: 'UPDATE', schema: 'public', table: 'messages' }, payload => {
+                let m = payload.new;
+                let existingEl = messagesBox.querySelector(`[data-id="${m.id}"]`);
+                if (existingEl) {
+                    // Mettre à jour l'affichage de l'offre si son statut change
+                    let statusText = m.offer_status === "accepted" ? "✔ Acceptée" : m.offer_status === "rejected" ? "❌ Refusée" : "⏳ En attente";
+                    let statusEl = existingEl.querySelector(".offer-status-text");
+                    let actionsEl = existingEl.querySelector(".offer-actions");
+                    if (statusEl) statusEl.innerText = statusText;
+                    if (actionsEl && m.offer_status !== "pending") actionsEl.style.display = "none";
+                }
             })
             .subscribe();
 
