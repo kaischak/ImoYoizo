@@ -405,14 +405,29 @@ input:focus, textarea:focus {
 </div>
 
 <div id="filters">
-    <div style="display:grid; grid-template-columns:1fr 1fr; gap:8px; margin-bottom:8px;">
-        <input id="minPrice" type="number" placeholder="💰 Min" oninput="render()">
-        <input id="maxPrice" type="number" placeholder="💰 Max" oninput="render()">
+    <div class="filter-row">
+        <div class="filter-input-box">
+            <span>💰</span>
+            <input id="minPrice" type="number" placeholder="Min" oninput="render()">
+        </div>
+        <div class="filter-input-box">
+            <span>💰</span>
+            <input id="maxPrice" type="number" placeholder="Max" oninput="render()">
+        </div>
     </div>
-    <div style="display:flex; gap:15px; font-size:13px; opacity:0.9;">
-        <label><input id="videoOnly" type="checkbox" onchange="render()"> 🎥 Vidéos</label>
-        <label><input id="popularOnly" type="checkbox" onchange="render()"> 🔥 Populaires</label>
+    <div class="filter-chips">
+        <div class="chip" id="chipVideo" onclick="toggleChip('videoOnly')">
+            🎥 Vidéos
+        </div>
+        <div class="chip" id="chipPopular" onclick="toggleChip('popularOnly')">
+            🔥 Populaires
+        </div>
     </div>
+</div>
+
+<div style="display:none;">
+    <input id="videoOnly" type="checkbox" onchange="render()">
+    <input id="popularOnly" type="checkbox" onchange="render()">
 </div>
 
 <div id="feed"></div>
@@ -462,6 +477,25 @@ async function loadProfile(){
 function toggleFilters(){
     let filters = document.getElementById("filters");
     filters.style.display = filters.style.display === "none" ? "block" : "none";
+}
+
+function toggleChip(type) {
+    let checkboxId = type === 'videoOnly' ? 'videoOnly' : 'popularOnly';
+    let chipId = type === 'videoOnly' ? 'chipVideo' : 'chipPopular';
+    
+    let checkbox = document.getElementById(checkboxId);
+    let chip = document.getElementById(chipId);
+    
+    checkbox.checked = !checkbox.checked;
+    
+    if(checkbox.checked) {
+        chip.classList.add('active');
+    } else {
+        chip.classList.remove('active');
+    }
+    
+    if (navigator.vibrate) navigator.vibrate(20);
+    render();
 }
 
 /* Option bonus : Centre de notifications rapide */
