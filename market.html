@@ -8,6 +8,7 @@
 <title>Market FIXED</title>
 
 <style>
+* { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
 body{
     margin:0;
     font-family:Arial;
@@ -28,7 +29,6 @@ body{
     background:rgba(0,0,0,0.6);
     backdrop-filter:blur(10px);
     z-index:10;
-    box-sizing:border-box;
     gap:10px;
 }
 
@@ -48,7 +48,6 @@ body{
     border-radius:10px;
     border:none;
     outline:none;
-    box-sizing:border-box;
 }
 
 /* RIGHT */
@@ -68,18 +67,14 @@ body{
     cursor:pointer;
 }
 
-.topbar-right button:not(#addBtn){
-    background: transparent;
-    border: none;
-    font-size: 18px;
-    cursor: pointer;
-}
-
 /* FEED */
 #feed{
     height:100vh;
     overflow-y:auto;
     padding-top:60px;
+    scroll-behavior: smooth;
+    will-change: transform;
+    transform: translateZ(0);
 }
 .post{
     min-height:100vh;
@@ -110,6 +105,27 @@ body{
     margin-top:10px;
 }
 
+/* ACTIONS */
+.actions{
+    position:absolute;
+    right:15px;
+    bottom:120px;
+    display:flex;
+    flex-direction:column;
+    gap:10px;
+}
+
+.actions button{
+    width:55px;
+    height:55px;
+    border-radius:50%;
+    border:none;
+}
+
+.likeBtn{background:#ff2d55;color:white;}
+.commentBtn{background:#2d6bff;color:white;}
+.buyBtn{background:#00ff99;}
+
 .modal{
     position:fixed;
     inset:0;
@@ -130,7 +146,6 @@ body{
     border-radius:20px;
     max-height:90vh;
     overflow-y:auto;
-    box-sizing:border-box;
 }
 
 .likeBtn {
@@ -171,13 +186,69 @@ body{
     100% { transform: translate(-50%, -120%) scale(1.6); opacity:0; }
 }
 
+.chat-btn{
+    width:100%;
+    margin-top:10px;
+    padding:12px;
+    border:none;
+    border-radius:16px;
+    cursor:pointer;
+    font-size:15px;
+    font-weight:bold;
+    color:white;
+    background: rgba(255,255,255,0.08);
+    border: 1px solid rgba(255,255,255,0.12);
+    backdrop-filter: blur(10px);
+    transition: 0.2s ease;
+}
+
+#consoleBtn{
+    position:fixed;
+    bottom:15px;
+    left:15px;
+    z-index:9999;
+    padding:10px 14px;
+    border:none;
+    border-radius:12px;
+    background:#00ccff;
+    color:black;
+    font-weight:bold;
+}
+
+#devConsole{
+    position:fixed;
+    bottom:60px;
+    left:15px;
+    width:260px;
+    height:180px;
+    background:#0b0b0f;
+    border:1px solid #333;
+    border-radius:12px;
+    display:none;
+    z-index:9999;
+    overflow:auto;
+    padding:10px;
+    font-family:monospace;
+    font-size:12px;
+    color:#00ff99;
+}
+
+.chat-btn:hover{
+    background: rgba(0, 255, 153, 0.15);
+    border: 1px solid rgba(0, 255, 153, 0.4);
+    transform: translateY(-2px);
+}
+
+.chat-btn:active{
+    transform: scale(0.98);
+}
+    
 input, textarea{
     width:100%;
     margin:5px 0;
     padding:10px;
     border-radius:10px;
     border:none;
-    box-sizing: border-box;
 }
 </style>
 </head>
@@ -197,9 +268,12 @@ input, textarea{
         <button onclick="openInv()">📦</button>
         <button onclick="location.href='friends.html'">👥</button>
         <button onclick="location.href='profile.html'">👤</button>
-        <button onclick="toggleFilters()" title="Filtres">🔍</button>
+        <button onclick="toggleFilters()" title="Recherche">🔍</button>
+        <button onclick="event.stopPropagation(); toggleFavoritePost()">⭐</button>
     </div>
 </div>
+
+<div id="devConsole"><div id="consoleContent"></div></div>
 
 <div id="filters" style="display:none; padding:15px; background:#16161d; margin-top:60px;">
     <input id="minPrice" type="number" placeholder="💰 Prix minimum">
@@ -229,14 +303,22 @@ const supabaseKey = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZS
 const client = supabase.createClient(supabaseUrl, supabaseKey);
 
 let posts = [];
+localStorage.setItem("user", user);
+let showFavorites = false;
 let usersCache = {};
-let limit = 10;
-let offset = 0;
-let loading = false;
-let allLoaded = false;
 
 async function updateLastSeen(){
     await client.from("users").update({ last_seen: new Date() }).eq("username", user);
+}
+
+function toggleFavorite(id){
+    let favs = getFavorites();
+    if(favs.includes(id)){
+        favs = favs.filter(x => x !== id);
+    } else {
+        favs.push(id);
+    }
+    localStorage.setItem("favorites", JSON.stringify(favs));
 }
 
 function getMoney(){
@@ -256,6 +338,11 @@ function toggleFilters(){
     let filters = document.getElementById("filters");
     filters.style.display = filters.style.display === "none" ? "block" : "none";
 }
+
+let limit = 10;
+let offset = 0;
+let loading = false;
+let allLoaded = false;
 
 async function loadPosts(reset = false){
     if(loading) return;
@@ -329,6 +416,7 @@ async function deletePost(id){
 }
 
 function openChat(username){
+    let user = localStorage.getItem("user");
     if(!user){
         alert("Tu dois être connecté");
         return;
@@ -432,18 +520,22 @@ async function addView(postId){
     seen.push(postId);
     localStorage.setItem("seenPosts", JSON.stringify(seen));
 
-    await client.from("posts").update({ views: client.rpc ? client.rpc('increment', {x: 1}) : (posts.find(p=>p.id===postId)?.views || 0) + 1 }).eq("id", postId);
+    await client.from("posts").update({ views: client.sql ? client.sql`views + 1` : ((posts.find(p=>p.id===postId)?.views || 0) + 1) }).eq("id", postId);
 }
 
 function getFavorites(){
     return JSON.parse(localStorage.getItem("favorites") || "[]");
 }
 
-function toggleFavorite(id){
+function isFavorite(id){
+    return getFavorites().includes(id);
+}
+
+function toggleFavoritePost(id){
     let favs = getFavorites();
     if(favs.includes(id)){
         favs = favs.filter(x => x !== id);
-    }else{
+    } else {
         favs.push(id);
     }
     localStorage.setItem("favorites", JSON.stringify(favs));
@@ -471,6 +563,9 @@ async function render(){
         feed.innerHTML = "<p style='text-align:center'>Aucun post</p>";
         return;
     }
+
+    // 🔥 Optimisation : Utilisation d'un DocumentFragment pour fluidifier le rendu des posts en masse
+    let fragment = document.createDocumentFragment();
 
     for (let p of filteredPosts) {
         let userData = await getUser(p.user_id);
@@ -500,15 +595,17 @@ async function render(){
                 <button class="likeBtn ${isLiked(p.id) ? 'liked' : ''}" onclick="event.stopPropagation(); likePost(${p.id}, ${p.likes || 0}, event)" style="margin:10px auto 0 auto;">❤️</button>
                 
                 <button onclick="event.stopPropagation(); openComments(${p.id})" style="margin-top:10px; width:100%; padding:10px; border:none; border-radius:15px; background:#2d6bff; color:white; font-weight:bold; cursor:pointer;">💬 Commentaires</button>
-                <button onclick="event.stopPropagation(); toggleFavorite(${p.id});" style="margin-top:10px; width:100%; padding:10px; border:none; border-radius:15px; background:gold; font-weight:bold; cursor:pointer;">${getFavorites().includes(p.id) ? "⭐ Favori" : "☆ Ajouter aux favoris"}</button>
+                <button onclick="event.stopPropagation(); toggleFavorite(${p.id}); render();" style="margin-top:10px; width:100%; padding:10px; border:none; border-radius:15px; background:gold; font-weight:bold; cursor:pointer;">${getFavorites().includes(p.id) ? "⭐ Favori" : "☆ Ajouter aux favoris"}</button>
 
                 ${p.user_id === user ? `<button onclick="event.stopPropagation(); deletePost(${p.id})" style="background:red; color:white; margin-top:10px; width:100%; border:none; border-radius:15px; padding:10px; cursor:pointer;">🗑 Supprimer</button>` : ""}
             </div>
         `;
-        feed.appendChild(div);
+        fragment.appendChild(div);
         addView(p.id);
         loadAvatar(p);
     }
+
+    feed.appendChild(fragment);
 
     if(allLoaded){
         let end = document.createElement("div");
