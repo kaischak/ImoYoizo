@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-<title>Mon Profil - Market Fluid</title>
+<title>Profil - Market Fluid</title>
 
 <style>
 * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
@@ -15,9 +15,8 @@ body {
     display: flex;
     flex-direction: column;
     align-items: center;
-    justify-content: center;
     min-height: 100vh;
-    padding: 20px;
+    padding: 20px 20px 40px 20px;
     user-select: none;
 }
 
@@ -31,6 +30,7 @@ body {
     border: 1px solid rgba(255,255,255,0.05);
     text-align: center;
     animation: fadeInCard 0.4s ease;
+    margin-top: 10px;
 }
 
 @keyframes fadeInCard {
@@ -41,14 +41,14 @@ body {
 h2 {
     margin-top: 0;
     font-size: 22px;
-    margin-bottom: 6px;
+    margin-bottom: 4px;
 }
 
 #username-display {
     font-size: 14px;
     color: #00ccff;
     font-weight: 600;
-    margin-bottom: 24px;
+    margin-bottom: 20px;
 }
 
 .avatar-container {
@@ -70,7 +70,7 @@ h2 {
     transition: transform 0.2s;
 }
 
-.avatar-container:active #avatar {
+.avatar-container.editable:active #avatar {
     transform: scale(0.95);
 }
 
@@ -87,12 +87,41 @@ h2 {
     transition: opacity 0.2s;
 }
 
-.avatar-container:hover .avatar-overlay {
+.avatar-container.editable:hover .avatar-overlay {
     opacity: 1;
 }
 
 input[type="file"] {
     display: none;
+}
+
+.input-group {
+    text-align: left;
+    margin-bottom: 15px;
+}
+
+.input-group label {
+    font-size: 12px;
+    opacity: 0.7;
+    margin-left: 4px;
+    display: block;
+    margin-bottom: 4px;
+}
+
+input[type="text"], textarea {
+    width: 100%;
+    padding: 12px;
+    border-radius: 14px;
+    border: none;
+    background: rgba(255,255,255,0.06);
+    color: white;
+    font-size: 14px;
+    outline: none;
+    transition: background 0.2s, box-shadow 0.2s;
+}
+input[type="text"]:focus, textarea:focus {
+    background: rgba(255,255,255,0.12);
+    box-shadow: 0 0 0 2px rgba(0,255,153,0.3);
 }
 
 .file-btn {
@@ -122,8 +151,27 @@ input[type="file"] {
     cursor: pointer;
     transition: transform 0.15s cubic-bezier(0.175, 0.885, 0.32, 1.275);
     box-shadow: 0 4px 15px rgba(0,255,153,0.2);
+    margin-top: 5px;
 }
 .save-btn:active { transform: scale(0.95); }
+
+.action-buttons {
+    display: flex;
+    gap: 8px;
+    margin-top: 5px;
+}
+
+.msg-btn {
+    flex: 1;
+    padding: 14px;
+    border: none;
+    border-radius: 14px;
+    font-weight: bold;
+    font-size: 15px;
+    background: #00ccff;
+    color: black;
+    cursor: pointer;
+}
 
 .back-btn {
     background: transparent;
@@ -142,18 +190,32 @@ input[type="file"] {
 <body>
 
 <div class="profile-card">
-    <h2>👤 Mon Profil</h2>
+    <h2 id="page-title">👤 Mon Profil</h2>
     <div id="username-display">Chargement...</div>
 
-    <div class="avatar-container" onclick="document.getElementById('file').click()">
+    <div class="avatar-container" id="avatarContainer">
         <img id="avatar" src="https://via.placeholder.com/130" alt="Avatar">
-        <div class="avatar-overlay">📷</div>
+        <div class="avatar-overlay" id="avatarOverlay">📷</div>
     </div>
 
     <input type="file" id="file" accept="image/*">
-    <label for="file" class="file-btn">🖼️ Changer d'avatar</label>
+    <div id="fileBtnWrapper">
+        <label for="file" class="file-btn">🖼️ Changer d'avatar</label>
+    </div>
 
-    <button class="save-btn" onclick="save()">💾 Sauvegarder</button>
+    <div class="input-group">
+        <label>Nom d'affichage</label>
+        <input type="text" id="displayNameInput" placeholder="Ex: Jean Dupont">
+    </div>
+
+    <div class="input-group">
+        <label>Bio / Description</label>
+        <textarea id="bioInput" placeholder="Quelques mots sur toi..." style="height:70px; resize:none;"></textarea>
+    </div>
+
+    <div id="actionArea">
+        <button class="save-btn" onclick="save()">💾 Sauvegarder</button>
+    </div>
 </div>
 
 <button class="back-btn" onclick="history.back()">← Retour</button>
@@ -165,23 +227,43 @@ const supabaseUrl = "https://eezsocswqhqgkvghhygq.supabase.co";
 const supabaseKey = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImVlenNvY3N3cWhxZ2t2Z2hoeWdxIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODEwNjg5MjYsImV4cCI6MjA5NjY0NDkyNn0.TVI962lsUo67i6Ltq8okbOw-_GO-5yc4KDCyc8OkdVQ";
 const client = supabase.createClient(supabaseUrl, supabaseKey);
 
-let user = localStorage.getItem("user");
+let loggedUser = localStorage.getItem("user");
 
-if(!user || user.startsWith("user")){
+if(!loggedUser || loggedUser.startsWith("user")){
     localStorage.removeItem("user");
     window.location.href = "auth.html";
 }
 
+// Récupérer le paramètre ?user=xxx dans l'URL (si présent)
+const urlParams = new URLSearchParams(window.location.search);
+let targetUser = urlParams.get("user") || loggedUser;
+let isMyProfile = (targetUser === loggedUser);
+
 let imageData = "";
 
-/* Charger les informations du profil */
 async function loadProfile(){
-    document.getElementById("username-display").innerText = "@" + user;
+    if(!isMyProfile){
+        document.getElementById("page-title").innerText = "👤 Profil de l'utilisateur";
+        document.getElementById("fileBtnWrapper").style.display = "none";
+        document.getElementById("avatarContainer").classList.remove("editable");
+        document.getElementById("displayNameInput").disabled = true;
+        document.getElementById("bioInput").disabled = true;
+        
+        document.getElementById("actionArea").innerHTML = `
+            <div class="action-buttons">
+                <button class="msg-btn" onclick="openChat('${targetUser}')">💬 Message</button>
+            </div>
+        `;
+    } else {
+        document.getElementById("avatarContainer").classList.add("editable");
+    }
+
+    document.getElementById("username-display").innerText = "@" + targetUser;
 
     let { data, error } = await client
         .from("users")
-        .select("avatar")
-        .eq("username", user)
+        .select("*")
+        .eq("username", targetUser)
         .maybeSingle();
 
     if(error){
@@ -189,16 +271,21 @@ async function loadProfile(){
         return;
     }
 
-    if(data?.avatar){
-        document.getElementById("avatar").src = data.avatar;
-        imageData = data.avatar;
-    } else {
-        document.getElementById("avatar").src = "https://via.placeholder.com/130";
+    if(data){
+        if(data.avatar){
+            document.getElementById("avatar").src = data.avatar;
+            imageData = data.avatar;
+        } else {
+            document.getElementById("avatar").src = "https://via.placeholder.com/130";
+        }
+        document.getElementById("displayNameInput").value = data.display_name || "";
+        document.getElementById("bioInput").value = data.bio || "";
     }
 }
 
-/* Gestion du changement d'image */
+// Gestion du changement d'image (seulement si c'est notre profil)
 document.getElementById("file").onchange = e => {
+    if(!isMyProfile) return;
     const file = e.target.files[0];
     if(!file) return;
 
@@ -211,16 +298,25 @@ document.getElementById("file").onchange = e => {
     reader.readAsDataURL(file);
 };
 
-/* Sauvegarder le profil dans Supabase */
+// Sauvegarder les modifications
 async function save(){
+    if(!isMyProfile) return;
+
+    let displayName = document.getElementById("displayNameInput").value.trim();
+    let bio = document.getElementById("bioInput").value.trim();
+
     let btn = document.querySelector(".save-btn");
     btn.innerText = "Sauvegarde...";
     btn.style.opacity = "0.7";
 
     let { error } = await client
         .from("users")
-        .update({ avatar: imageData })
-        .eq("username", user);
+        .update({ 
+            avatar: imageData,
+            display_name: displayName,
+            bio: bio
+        })
+        .eq("username", loggedUser);
 
     btn.innerText = "💾 Sauvegarder";
     btn.style.opacity = "1";
@@ -232,6 +328,11 @@ async function save(){
 
     if(navigator.vibrate) navigator.vibrate([30, 40, 30]);
     alert("Profil mis à jour avec succès !");
+}
+
+function openChat(username){
+    localStorage.setItem("chatWith", username);
+    window.location.href = "chat.html";
 }
 
 loadProfile();
