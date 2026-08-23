@@ -5,36 +5,32 @@
     <meta charset="UTF-8">
     <title>Chat</title>
     <style>
-        body{margin:0;font-family:Arial,sans-serif;background:#0b0b0f;color:white;display:flex;flex-direction:column;height:100vh;}
-        #header{padding:15px;background:#16161d;font-weight:bold;display:flex;justify-content:space-between;align-items:center;border-bottom:1px solid rgba(255,255,255,0.05);}
-        #with{opacity:0.7;font-size:14px;}
-        #messages{flex:1;overflow-y:auto;padding:15px;display:flex;flex-direction:column;gap:10px;}
-        .msg{max-width:75%;padding:10px 14px;border-radius:18px;word-wrap:break-word;font-size:15px;}
-        .me{background:#00ff99;color:black;align-self:flex-end;border-bottom-right-radius:5px;}
-        .other{background:#1c1c2a;align-self:flex-start;border-bottom-left-radius:5px;}
-        .recording{animation:pulse 1s infinite;}
-        @keyframes pulse{0%{transform:scale(1);}50%{transform:scale(1.15);}100%{transform:scale(1);}}
-        #inputBar{display:flex;padding:10px;background:#16161d;gap:10px;border-top:1px solid rgba(255,255,255,0.05);}
-        #input{flex:1;padding:12px;border:none;border-radius:12px;background:#1c1c2a;color:white;outline:none;}
-        #sendBtn{width:50px;border:none;border-radius:12px;background:#00ccff;color:black;font-size:18px;cursor:pointer;}
-        #recordBtn, #inputBar button{border:none;border-radius:12px;cursor:pointer;}
-        #inputBar > button:nth-child(2){background:#ffd43b;color:black;padding:0 12px;font-size:16px;}
-        #recordBtn{width:50px;background:#292936;color:white;font-size:20px;}
-        .voice-message{width:250px;max-width:100%;padding:10px 12px;border-radius:16px;cursor:pointer;user-select:none;}
-        .me .voice-message{background:rgba(0,0,0,.08);}
-        .other .voice-message{background:rgba(255,255,255,.06);}
-        .voice-top{display:flex;align-items:center;gap:9px;}
-        .voice-avatar{width:32px;height:32px;border-radius:50%;object-fit:cover;flex-shrink:0;}
-        .voice-play{width:38px;height:38px;border:none;border-radius:50%;display:flex;align-items:center;justify-content:center;background:#00ccff;color:#000;font-size:15px;cursor:pointer;flex-shrink:0;}
-        .me .voice-play{background:#00ff99;}
-        .voice-info{flex:1;min-width:0;}
-        .voice-title{font-size:12px;font-weight:bold;opacity:.8;margin-bottom:5px;}
-        .voice-progress{width:100%;height:5px;background:rgba(255,255,255,.18);border-radius:10px;overflow:hidden;}
-        .voice-progress-bar{width:0%;height:100%;background:currentColor;border-radius:10px;}
-        .voice-bottom{display:flex;justify-content:space-between;margin-top:5px;font-size:10px;opacity:.6;}
-        .voice-message audio{display:none;}
-        .offer-container{display:flex;flex-direction:column;gap:5px;}
-        .offer-price{font-size:18px;}
+        * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
+        body { margin: 0; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif; background: #0b0b0f; color: white; display: flex; flex-direction: column; height: 100vh; overflow: hidden; }
+        #header { padding: 15px; background: #16161d; font-weight: bold; display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid rgba(255,255,255,0.05); }
+        #with { opacity: 0.7; font-size: 14px; }
+        #messages { flex: 1; overflow-y: auto; padding: 15px; display: flex; flex-direction: column; gap: 10px; scroll-behavior: smooth; }
+        .msg { max-width: 75%; padding: 10px 14px; border-radius: 18px; word-wrap: break-word; font-size: 15px; animation: fadeIn 0.2s ease-out; }
+        @keyframes fadeIn { from { opacity: 0; transform: translateY(4px); } to { opacity: 1; transform: translateY(0); } }
+        .me { background: #00ff99; color: black; align-self: flex-end; border-bottom-right-radius: 5px; }
+        .other { background: #1c1c2a; align-self: flex-start; border-bottom-left-radius: 5px; }
+        .recording { animation: pulse 1s infinite; background: #ff3b3b !important; color: white !important; }
+        @keyframes pulse { 0% { transform: scale(1); } 50% { transform: scale(1.08); } 100% { transform: scale(1); } }
+        #inputBar { display: flex; padding: 10px; background: #16161d; gap: 10px; border-top: 1px solid rgba(255,255,255,0.05); align-items: center; }
+        #input { flex: 1; padding: 12px; border: none; border-radius: 12px; background: #1c1c2a; color: white; outline: none; font-size: 15px; }
+        #sendBtn { width: 50px; height: 45px; border: none; border-radius: 12px; background: #00ccff; color: black; font-size: 18px; cursor: pointer; display: flex; align-items: center; justify-content: center; transition: opacity 0.2s; }
+        #sendBtn:active, button:active { opacity: 0.7; }
+        #recordBtn { width: 50px; height: 45px; border: none; border-radius: 12px; background: #292936; color: white; font-size: 20px; cursor: pointer; display: flex; align-items: center; justify-content: center; }
+        .offer-btn { border: none; padding: 6px 12px; border-radius: 10px; font-weight: bold; cursor: pointer; font-size: 13px; }
+        .voice-message { width: 230px; max-width: 100%; display: flex; align-items: center; gap: 10px; user-select: none; }
+        .voice-play { width: 36px; height: 36px; border: none; border-radius: 50%; display: flex; align-items: center; justify-content: center; background: #00ccff; color: #000; font-size: 14px; cursor: pointer; flex-shrink: 0; }
+        .me .voice-play { background: #000; color: #00ff99; }
+        .voice-info { flex: 1; min-width: 0; display: flex; flex-direction: column; gap: 4px; }
+        .voice-progress { width: 100%; height: 4px; background: rgba(255,255,255,0.2); border-radius: 10px; overflow: hidden; }
+        .voice-progress-bar { width: 0%; height: 100%; background: currentColor; border-radius: 10px; transition: width 0.1s linear; }
+        .voice-bottom { display: flex; justify-content: space-between; font-size: 10px; opacity: 0.7; }
+        .offer-container { display: flex; flex-direction: column; gap: 6px; }
+        .offer-price { font-size: 18px; font-weight: bold; }
     </style>
 </head>
 <body>
@@ -44,11 +40,12 @@
     </div>
     <div id="messages"></div>
     <div id="inputBar">
-        <input id="input" placeholder="Écris un message...">
-        <button onclick="offerPrice()">💰 Offre</button>
-        <button id="recordBtn">🎤</button>
+        <input id="input" placeholder="Écris un message..." autocomplete="off">
+        <button class="offer-btn" onclick="offerPrice()" style="background:#ffd43b; color:black; height:45px;">💰 Offre</button>
+        <button id="recordBtn" title="Maintenir ou cliquer pour enregistrer">🎤</button>
         <button id="sendBtn" onclick="send()">➤</button>
     </div>
+
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <script>
         const supabaseUrl = "https://eezsocswqhqgkvghhygq.supabase.co";
@@ -62,11 +59,27 @@
             location.href="index.html";
         }
         document.getElementById("with").innerText = "avec " + friend;
-        let mediaRecorder;
-        let chunks = [];
-        const recordBtn = document.getElementById("recordBtn");
+
+        let usersCache = {};
+        let mediaRecorder = null;
+        let audioChunks = [];
         let currentAudio = null;
         let currentVoiceBox = null;
+        const recordBtn = document.getElementById("recordBtn");
+        const messagesBox = document.getElementById("messages");
+
+        async function preloadUsers() {
+            let { data } = await client.from("users").select("username, avatar");
+            if (data) {
+                data.forEach(u => {
+                    usersCache[u.username] = u.avatar || `https://ui-avatars.com/api/?name=${encodeURIComponent(u.username)}`;
+                });
+            }
+        }
+
+        function getAvatar(username) {
+            return usersCache[username] || `https://ui-avatars.com/api/?name=${encodeURIComponent(username)}`;
+        }
 
         function formatTime(seconds){
             if(!isFinite(seconds)) return "0:00";
@@ -76,263 +89,224 @@
         }
 
         function stopCurrentVoice(){
-            if(!currentAudio) return;
-            currentAudio.pause();
-            currentAudio.currentTime = 0;
+            if(currentAudio){
+                currentAudio.pause();
+                currentAudio.currentTime = 0;
+                currentAudio = null;
+            }
             if(currentVoiceBox){
-                currentVoiceBox.classList.remove("voice-playing");
-                let button = currentVoiceBox.querySelector(".voice-play");
-                if(button) button.innerText = "▶";
-                let progress = currentVoiceBox.querySelector(".voice-progress-bar");
-                if(progress) progress.style.width = "0%";
+                let btn = currentVoiceBox.querySelector(".voice-play");
+                let bar = currentVoiceBox.querySelector(".voice-progress-bar");
+                if(btn) btn.innerText = "▶";
+                if(bar) bar.style.width = "0%";
+                currentVoiceBox = null;
             }
-            currentAudio = null;
-            currentVoiceBox = null;
-        }
-
-        function playVoice(audio, box){
-            if(currentAudio === audio){
-                if(audio.paused){
-                    audio.play().catch(e => console.log(e));
-                } else {
-                    audio.pause();
-                }
-                return;
-            }
-            stopCurrentVoice();
-            currentAudio = audio;
-            currentVoiceBox = box;
-            audio.play().catch(e => console.log(e));
         }
 
         function setupVoicePlayer(box, audio){
-            let button = box.querySelector(".voice-play");
+            let btn = box.querySelector(".voice-play");
             let progress = box.querySelector(".voice-progress-bar");
             let currentTime = box.querySelector(".voice-current-time");
             let duration = box.querySelector(".voice-duration");
-            box.addEventListener("click", () => playVoice(audio, box));
+
+            box.addEventListener("click", () => {
+                if(currentAudio === audio){
+                    if(audio.paused) audio.play();
+                    else audio.pause();
+                    return;
+                }
+                stopCurrentVoice();
+                currentAudio = audio;
+                currentVoiceBox = box;
+                audio.play().catch(e => console.log(e));
+            });
+
             audio.addEventListener("loadedmetadata", () => {
                 if(duration) duration.innerText = formatTime(audio.duration);
             });
             audio.addEventListener("timeupdate", () => {
-                if(!audio.duration) return;
-                let percent = (audio.currentTime / audio.duration) * 100;
-                if(progress) progress.style.width = percent + "%";
-                if(currentTime) currentTime.innerText = formatTime(audio.currentTime);
-            });
-            audio.addEventListener("play", () => {
-                box.classList.add("voice-playing");
-                if(button) button.innerText = "❚❚";
-            });
-            audio.addEventListener("pause", () => {
-                box.classList.remove("voice-playing");
-                if(button) button.innerText = "▶";
-            });
-            audio.addEventListener("ended", () => {
-                box.classList.remove("voice-playing");
-                if(button) button.innerText = "▶";
-                if(progress) progress.style.width = "0%";
-                if(currentTime) currentTime.innerText = "0:00";
-                if(currentAudio === audio){
-                    currentAudio = null;
-                    currentVoiceBox = null;
+                if(audio.duration) {
+                    progress.style.width = ((audio.currentTime / audio.duration) * 100) + "%";
+                    currentTime.innerText = formatTime(audio.currentTime);
                 }
+            });
+            audio.addEventListener("play", () => btn.innerText = "⏸");
+            audio.addEventListener("pause", () => btn.innerText = "▶");
+            audio.addEventListener("ended", () => {
+                btn.innerText = "▶";
+                progress.style.width = "0%`";
+                currentTime.innerText = "0:00";
+                currentAudio = null;
+                currentVoiceBox = null;
             });
         }
 
         async function load(){
-            try {
-                let usersRes = await client.from("users").select("username, avatar");
-                let users = usersRes.data || [];
-                let { data, error } = await client
-                    .from("messages")
-                    .select("*")
-                    .or(`and(sender.eq.${user},receiver.eq.${friend}),and(sender.eq.${friend},receiver.eq.${user})`)
-                    .order("created_at", { ascending: true });
-                if(error) {
-                    console.error("Erreur Supabase messages:", error);
-                    return;
-                }
-                let box = document.getElementById("messages");
-                box.innerHTML = "";
-                (data || []).forEach(m => {
-                    let div = document.createElement("div");
-                    div.className = "msg " + (m.sender === user ? "me" : "other");
-                    let u = users.find(x => x.username === m.sender);
-                    let avatar = u?.avatar || `https://ui-avatars.com/api/?name=${encodeURIComponent(m.sender)}`;
-                    if(m.voice){
-                        div.innerHTML = `
-                            <div class="voice-message">
-                                <div class="voice-top">
-                                    <img src="${avatar}" class="voice-avatar">
-                                    <button class="voice-play" type="button">▶</button>
-                                    <div class="voice-info">
-                                        <div class="voice-title">🎙 Message vocal</div>
-                                        <div class="voice-progress"><div class="voice-progress-bar"></div></div>
-                                        <div class="voice-bottom">
-                                            <span class="voice-current-time">0:00</span>
-                                            <span class="voice-duration">0:00</span>
-                                        </div>
-                                    </div>
+            let { data, error } = await client
+                .from("messages")
+                .select("*")
+                .or(`and(sender.eq.${user},receiver.eq.${friend}),and(sender.eq.${friend},receiver.eq.${user})`)
+                .order("created_at", { ascending: true });
+
+            if(error) return;
+
+            messagesBox.innerHTML = "";
+            let fragment = document.createDocumentFragment();
+
+            (data || []).forEach(m => {
+                let div = document.createElement("div");
+                div.className = "msg " + (m.sender === user ? "me" : "other");
+                let avatar = getAvatar(m.sender);
+
+                if(m.voice){
+                    div.innerHTML = `
+                        <div class="voice-message">
+                            <button class="voice-play" type="button">▶</button>
+                            <div class="voice-info">
+                                <div style="font-size:11px; font-weight:bold; opacity:0.8;">🎙 Vocal</div>
+                                <div class="voice-progress"><div class="voice-progress-bar"></div></div>
+                                <div class="voice-bottom">
+                                    <span class="voice-current-time">0:00</span>
+                                    <span class="voice-duration">0:00</span>
                                 </div>
                             </div>
-                        `;
-                        const voiceBox = div.querySelector(".voice-message");
-                        const audio = document.createElement("audio");
-                        audio.src = m.voice;
-                        audio.preload = "metadata";
-                        voiceBox.appendChild(audio);
-                        setupVoicePlayer(voiceBox, audio);
-                    }
-                    else if(m.offer_price){
-                        let statusText = m.offer_status === "accepted" ? "✔ Acceptée" : m.offer_status === "rejected" ? "❌ Refusée" : "⏳ En attente";
-                        div.innerHTML = `
-                            <div class="offer-container">
-                                <img src="${avatar}" style="width:25px;height:25px;border-radius:50%;">
-                                <span>💰 Offre :</span>
-                                <b class="offer-price">${m.offer_price} 💰</b>
-                                <small>${statusText}</small>
-                                ${m.offer_status === "pending" ? `
-                                    <div style="display:flex;gap:8px;margin-top:5px;">
-                                        <button onclick="acceptOffer('${m.id}')" style="background:#00ff99;border:none;padding:6px 10px;border-radius:10px;cursor:pointer;">✔ Accepter</button>
-                                        <button onclick="rejectOffer('${m.id}')" style="background:#ff3b3b;border:none;padding:6px 10px;border-radius:10px;color:white;cursor:pointer;">❌ Refuser</button>
-                                    </div>
-                                ` : ""}
+                        </div>
+                    `;
+                    const audio = document.createElement("audio");
+                    audio.src = m.voice;
+                    audio.preload = "metadata";
+                    div.querySelector(".voice-message").appendChild(audio);
+                    setupVoicePlayer(div.querySelector(".voice-message"), audio);
+                }
+                else if(m.offer_price){
+                    let statusText = m.offer_status === "accepted" ? "✔ Acceptée" : m.offer_status === "rejected" ? "❌ Refusée" : "⏳ En attente";
+                    div.innerHTML = `
+                        <div class="offer-container">
+                            <div style="display:flex; align-items:center; gap:6px;">
+                                <img src="${avatar}" style="width:20px;height:20px;border-radius:50%;">
+                                <span style="font-size:12px; opacity:0.8;">Offre d'argent</span>
                             </div>
-                        `;
-                    }
-                    else {
-                        div.innerHTML = `
-                            <div style="display:flex;align-items:center;gap:8px;">
-                                <img src="${avatar}" style="width:25px;height:25px;border-radius:50%;">
-                                <span>${escapeHTML(m.message || "")}</span>
-                            </div>
-                        `;
-                    }
-                    box.appendChild(div);
-                });
-                box.scrollTop = box.scrollHeight;
-            } catch(err) {
-                console.error("Erreur dans load():", err);
-            }
+                            <b class="offer-price">${m.offer_price} 💰</b>
+                            <small>${statusText}</small>
+                            ${m.offer_status === "pending" ? `
+                                <div style="display:flex;gap:6px;margin-top:4px;">
+                                    <button class="offer-btn" onclick="acceptOffer('${m.id}')" style="background:#00ff99;color:black;">✔ Accepter</button>
+                                    <button class="offer-btn" onclick="rejectOffer('${m.id}')" style="background:#ff3b3b;color:white;">❌ Refuser</button>
+                                </div>
+                            ` : ""}
+                        </div>
+                    `;
+                }
+                else {
+                    div.innerHTML = `
+                        <div style="display:flex;align-items:center;gap:8px;">
+                            <img src="${avatar}" style="width:24px;height:24px;border-radius:50%;object-fit:cover;">
+                            <span>${escapeHTML(m.message || "")}</span>
+                        </div>
+                    `;
+                }
+                fragment.appendChild(div);
+            });
+
+            messagesBox.appendChild(fragment);
+            messagesBox.scrollTop = messagesBox.scrollHeight;
         }
 
         function escapeHTML(text){
-            let div = document.createElement("div");
-            div.textContent = text;
-            return div.innerHTML;
+            let d = document.createElement("div");
+            d.textContent = text;
+            return d.innerHTML;
         }
 
         async function send(){
             let input = document.getElementById("input");
             let msg = input.value.trim();
             if(!msg) return;
-            let { error } = await client.from("messages").insert([{ sender: user, receiver: friend, message: msg }]);
-            if(error) console.error("Erreur d'envoi :", error);
             input.value = "";
+            await client.from("messages").insert([{ sender: user, receiver: friend, message: msg }]);
         }
 
         async function offerPrice(){
-            let price = prompt("Ton offre ?");
-            if(!price) return;
+            let price = prompt("Montant de l'offre ?");
+            if(!price || isNaN(price)) return;
             await client.from("messages").insert([{ sender: user, receiver: friend, offer_price: Number(price), offer_status: "pending" }]);
         }
 
         async function acceptOffer(id){
             await client.from("messages").update({ offer_status: "accepted" }).eq("id", id);
-            alert("✔ Offre acceptée 💰");
         }
 
         async function rejectOffer(id){
             await client.from("messages").update({ offer_status: "rejected" }).eq("id", id);
-            alert("❌ Refusée");
         }
 
         document.getElementById("input").addEventListener("keydown", e => {
             if(e.key === "Enter") send();
         });
 
+        // Gestion ultra propre et instantanée du micro
+        let isRecording = false;
         recordBtn.onclick = async () => {
-            try {
-                recordBtn.innerText = "🔴 REC";
-                recordBtn.classList.add("recording");
-                
-                // Demande du micro optimisée
-                const stream = await navigator.mediaDevices.getUserMedia({ 
-                    audio: { 
-                        echoCancellation: true, 
-                        noiseSuppression: true,
-                        sampleRate: 44100 
-                    } 
-                });
+            if (!isRecording) {
+                try {
+                    const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+                    // Utilisation d'un conteneur supporté léger
+                    let mimeType = MediaRecorder.isTypeSupported('audio/webm;codecs=opus') ? 'audio/webm;codecs=opus' : 'audio/mp4';
+                    mediaRecorder = new MediaRecorder(stream, { mimeType });
+                    audioChunks = [];
 
-                // On force un codec léger (opus) et un débit réduit pour que ça pèse presque rien
-                let options = { mimeType: 'audio/webm;codecs=opus' };
-                if (!MediaRecorder.isTypeSupported(options.mimeType)) {
-                    options = { mimeType: 'audio/ogg;codecs=opus' };
-                    if (!MediaRecorder.isTypeSupported(options.mimeType)) {
-                        options = {}; // Utiliser le défaut du navigateur si aucun n'est supporté
-                    }
-                }
-
-                mediaRecorder = new MediaRecorder(stream, options);
-                chunks = [];
-
-                mediaRecorder.ondataavailable = e => { 
-                    if(e.data.size > 0) chunks.push(e.data); 
-                };
-
-                mediaRecorder.onstop = async () => {
-                    recordBtn.innerText = "🎤";
-                    recordBtn.classList.remove("recording");
-                    stream.getTracks().forEach(track => track.stop());
-
-                    // Création du blob avec un type explicite
-                    const blob = new Blob(chunks, { type: options.mimeType || 'audio/webm' });
-                    
-                    const reader = new FileReader();
-                    reader.onload = async e => {
-                        // Envoi instantané grâce au fichier allégé
-                        let { error } = await client.from("messages").insert([{ 
-                            sender: user, 
-                            receiver: friend, 
-                            voice: e.target.result 
-                        }]);
-                        if(error) console.error("Erreur d'envoi vocal :", error);
+                    mediaRecorder.ondataavailable = e => {
+                        if (e.data && e.data.size > 0) audioChunks.push(e.data);
                     };
-                    reader.readAsDataURL(blob);
-                };
 
-                // Démarrage immédiat (timeslice à 250ms pour fluidifier)
-                mediaRecorder.start(250);
+                    mediaRecorder.onstop = async () => {
+                        stream.getTracks().forEach(track => track.stop());
+                        const audioBlob = new Blob(audioChunks, { type: mimeType });
+                        
+                        // Conversion optimisée et rapide en base64 compressé
+                        const reader = new FileReader();
+                        reader.readAsDataURL(audioBlob);
+                        reader.onloadend = async () => {
+                            await client.from("messages").insert([{ 
+                                sender: user, 
+                                receiver: friend, 
+                                voice: reader.result 
+                            }]);
+                        };
+                    };
 
-                // Sécurité : stop automatique après 10 secondes max
-                setTimeout(() => {
-                    if(mediaRecorder && mediaRecorder.state === "recording") {
-                        mediaRecorder.stop();
-                    }
-                }, 10000);
+                    mediaRecorder.start();
+                    isRecording = true;
+                    recordBtn.innerText = "⏹";
+                    recordBtn.classList.add("recording");
 
-            } catch(error) {
-                console.error(error);
+                } catch (err) {
+                    alert("Erreur d'accès au micro.");
+                    console.error(err);
+                }
+            } else {
+                if (mediaRecorder && mediaRecorder.state === "recording") {
+                    mediaRecorder.stop();
+                }
+                isRecording = false;
                 recordBtn.innerText = "🎤";
                 recordBtn.classList.remove("recording");
-                alert("Impossible d'utiliser le micro.");
             }
         };
 
+        // Temps réel Supabase ultra réactif
         client
-            .channel('room_messages')
-            .on(
-                'postgres_changes',
-                { event: '*', schema: 'public', table: 'messages' },
-                payload => {
-                    load();
-                }
-            )
+            .channel('chat_room_' + [user, friend].sort().join('_'))
+            .on('postgres_changes', { event: '*', schema: 'public', table: 'messages' }, () => {
+                load();
+            })
             .subscribe();
 
-        load();
+        // Initialisation
+        (async () => {
+            await preloadUsers();
+            await load();
+        })();
     </script>
 </body>
 </html>
