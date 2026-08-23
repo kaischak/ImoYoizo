@@ -461,22 +461,32 @@ async function updateLastSeen(){
     await client.from("users").update({ last_seen: new Date() }).eq("username", user);
 }
 
-    async function openInv() {
+   async function openInv() {
+    // Afficher tout de suite le modal avec un loader pour éviter l'effet "gel"
+    document.getElementById("box").innerHTML = `
+        <h3 style="margin-top:0;">📦 Mon Inventaire</h3>
+        <div style="text-align:center; padding: 40px; opacity: 0.6;">Chargement de l'inventaire...</div>
+        <button onclick="document.getElementById('modal').style.display='none'" style="width:100%; margin-top:15px; padding:12px; border:none; border-radius:12px; background:rgba(255,255,255,0.1); color:white; cursor:pointer; font-weight:bold;">Fermer</button>
+    `;
+    document.getElementById("modal").style.display = "flex";
+
+    // Requête rapide filtrée et triée
     let { data, error } = await client
         .from("inventaire")
-        .select("*")
+        .select("id, item, price, image")
         .eq("user_id", user)
         .order("id", { ascending: false });
 
     let items = data || [];
 
+    // Met à jour le contenu une fois les données reçues
     document.getElementById("box").innerHTML = `
-        <h3 style="margin-top:0;">📦 Mon Inventaire</h3>
+        <h3 style="margin-top:0;">📦 Mon Inventaire (${items.length})</h3>
         <div style="max-height: 50vh; overflow-y: auto; display: grid; grid-template-columns: 1fr 1fr; gap: 10px;">
             ${items.length === 0 ? "<p style='opacity:0.6; text-align:center; grid-column: span 2;'>Ton inventaire est vide</p>" : ""}
             ${items.map(item => `
                 <div style="background:rgba(255,255,255,0.04); padding:10px; border-radius:12px; text-align:center;">
-                    <img src="${item.image}" style="width:100%; height:90px; object-fit:cover; border-radius:8px; margin-bottom:6px;">
+                    <img src="${item.image}" loading="lazy" style="width:100%; height:90px; object-fit:cover; border-radius:8px; margin-bottom:6px;">
                     <b style="font-size:13px; display:block; white-space:nowrap; overflow:hidden; text-overflow:ellipsis;">${item.item}</b>
                     <span style="font-size:11px; color:#00ff99;">💰 ${item.price}</span>
                 </div>
@@ -484,7 +494,6 @@ async function updateLastSeen(){
         </div>
         <button onclick="document.getElementById('modal').style.display='none'" style="width:100%; margin-top:15px; padding:12px; border:none; border-radius:12px; background:rgba(255,255,255,0.1); color:white; cursor:pointer; font-weight:bold;">Fermer</button>
     `;
-    document.getElementById("modal").style.display = "flex";
 }
 
 function getMoney(){
