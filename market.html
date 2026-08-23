@@ -27,12 +27,13 @@ body{
     display:flex;
     justify-content:space-between;
     align-items:center;
-    padding:0 15px;
-    background:rgba(11, 11, 15, 0.75);
+    padding:0 12px;
+    background:rgba(11, 11, 15, 0.85);
     backdrop-filter:blur(20px);
     -webkit-backdrop-filter:blur(20px);
     z-index:100;
     border-bottom: 1px solid rgba(255,255,255,0.08);
+    gap: 8px;
 }
 
 #miniProfile{
@@ -41,35 +42,52 @@ body{
     justify-content:center;
     font-size:11px;
     font-weight: 600;
+    min-width: 0;
+    flex-shrink: 1;
 }
-#pname { color: #fff; }
+#pname { color: #fff; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
 #money { color: #00ff99; font-weight: bold; }
 
-#search{
-    width:35%;
-    padding:8px 12px;
-    border-radius:20px;
-    border:none;
-    background:rgba(255,255,255,0.1);
-    color:white;
-    outline:none;
-    font-size: 13px;
-    transition: background 0.2s, transform 0.2s;
+.search-wrapper {
+    position: relative;
+    flex: 1;
+    max-width: 180px;
 }
-#search:focus { background:rgba(255,255,255,0.18); transform: scale(1.02); }
+#search{
+    width: 100%;
+    padding: 7px 10px 7px 30px;
+    border-radius: 20px;
+    border: none;
+    background: rgba(255,255,255,0.08);
+    color: white;
+    outline: none;
+    font-size: 12px;
+    transition: background 0.2s, max-width 0.2s;
+}
+#search:focus { background: rgba(255,255,255,0.15); }
+.search-icon {
+    position: absolute;
+    left: 10px;
+    top: 50%;
+    transform: translateY(-50%);
+    font-size: 11px;
+    opacity: 0.5;
+    pointer-events: none;
+}
 
 .topbar-right{
     display:flex;
-    gap:10px;
+    gap:6px;
     align-items: center;
+    flex-shrink: 0;
 }
 #addBtn{
-    width:36px;
-    height:36px;
+    width:32px;
+    height:32px;
     border-radius:50%;
     border:none;
     background:linear-gradient(135deg, #00ff99, #00ccff);
-    font-size:18px;
+    font-size:16px;
     cursor:pointer;
     display: flex;
     align-items: center;
@@ -81,14 +99,19 @@ body{
 #addBtn:active { transform: scale(0.85) rotate(90deg); }
 
 .topbar-right button:not(#addBtn){
-    background: transparent;
-    border: none;
-    font-size: 18px;
+    background: rgba(255,255,255,0.05);
+    border: 1px solid rgba(255,255,255,0.05);
+    border-radius: 50%;
+    width: 32px;
+    height: 32px;
+    font-size: 14px;
     cursor: pointer;
-    padding: 5px;
-    transition: transform 0.2s;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: transform 0.2s, background 0.2s;
 }
-.topbar-right button:not(#addBtn):active { transform: scale(0.8); }
+.topbar-right button:not(#addBtn):active { transform: scale(0.85); background: rgba(255,255,255,0.15); }
 
 #filters{
     position: fixed;
@@ -365,14 +388,19 @@ input:focus, textarea:focus {
         <div id="money"></div>
     </div>
 
-    <input id="search" placeholder="Rechercher..." oninput="render()">
+    <!-- Barre de recherche optimisée mobile -->
+    <div class="search-wrapper">
+        <span class="search-icon">🔍</span>
+        <input id="search" placeholder="Rechercher..." oninput="render()">
+    </div>
 
     <div class="topbar-right">
-        <button id="addBtn" onclick="openSell()">+</button>
+        <button id="addBtn" onclick="openSell()" title="Publier">+</button>
+        <button onclick="openNotifications()" title="Notifications">🔔</button>
         <button onclick="openInv()" title="Inventaire">📦</button>
         <button onclick="location.href='friends.html'" title="Amis">👥</button>
         <button onclick="location.href='profile.html'" title="Profil">👤</button>
-        <button onclick="toggleFilters()" title="Filtres">🔍</button>
+        <button onclick="toggleFilters()" title="Filtres avancés">⚙️</button>
     </div>
 </div>
 
@@ -409,7 +437,7 @@ const client = supabase.createClient(supabaseUrl, supabaseKey);
 
 let posts = [];
 let usersCache = {};
-let limit = 20; // Augmenté pour charger plus d'articles d'un coup et éviter le blocage rapide
+let limit = 20;
 let offset = 0;
 let loading = false;
 let allLoaded = false;
@@ -434,6 +462,21 @@ async function loadProfile(){
 function toggleFilters(){
     let filters = document.getElementById("filters");
     filters.style.display = filters.style.display === "none" ? "block" : "none";
+}
+
+/* Option bonus : Centre de notifications rapide */
+function openNotifications(){
+    document.getElementById("box").innerHTML = `
+        <h3 style="margin-top:0;">🔔 Notifications & Activité</h3>
+        <div style="background:rgba(255,255,255,0.04); padding:12px; margin:8px 0; border-radius:12px; font-size:13px;">
+            ✨ Bienvenue sur Market Fluid ! Tout est fluide et à portée de main.
+        </div>
+        <div style="background:rgba(255,255,255,0.04); padding:12px; margin:8px 0; border-radius:12px; font-size:13px;">
+            💡 Astuce : Utilise le bouton ⚙️ pour filtrer par prix ou par vidéos.
+        </div>
+        <button onclick="document.getElementById('modal').style.display='none'" style="width:100%; margin-top:15px; padding:12px; border:none; border-radius:12px; background:rgba(255,255,255,0.1); color:white; cursor:pointer; font-weight:bold;">Fermer</button>
+    `;
+    document.getElementById("modal").style.display = "flex";
 }
 
 async function loadPosts(reset = false){
@@ -591,7 +634,7 @@ async function openComments(postId){
             `).join("")}
         </div>
         <textarea id="commentText" placeholder="Écris un commentaire..." style="height:70px; resize:none;"></textarea>
-        <button onclick="addComment(${postId})" style="width:100%; padding:12px; margin-top:8px; background:#00ccff; border:none; border-radius:12px; font-weight:bold; cursor:pointer; color:black; transition: transform 0.1s;">Envoyer</button>
+        <button onclick="addComment(${postId})" style="width:100%; padding:12px; margin-top:8px; background:#00ccff; border:none; border-radius:12px; font-weight:bold; cursor:pointer; color:black;">Envoyer</button>
         <button onclick="document.getElementById('modal').style.display='none'" style="width:100%; margin-top:6px; padding:10px; border:none; border-radius:12px; background:transparent; opacity:0.7; cursor:pointer; color:white;">Fermer</button>
     `;
     document.getElementById("modal").style.display = "flex";
@@ -647,18 +690,12 @@ function toggleFavorite(id, event){
     let btn = event.currentTarget;
     if(btn) {
         btn.innerText = !isFav ? "⭐ Favori" : "☆ Favori";
-        btn.style.transform = "scale(1.15)";
-        setTimeout(() => btn.style.transform = "scale(1)", 200);
     }
     if (navigator.vibrate) navigator.vibrate(20);
 }
 
 function vibrateSoft(btn){
     if (navigator.vibrate) navigator.vibrate(15);
-    if (btn) {
-        btn.style.transform = "scale(0.94)";
-        setTimeout(() => btn.style.transform = "", 120);
-    }
 }
 
 async function render(){
@@ -704,7 +741,6 @@ async function render(){
                     <div style="display:flex; align-items:center; gap:6px; cursor:pointer;" onclick="openUserMenu('${p.user_id}')">
                         <span id="avatar-${p.id}">👤</span>
                         <span style="color:#00ccff; font-weight:600;">@${p.user_id}</span>
-                        <span id="status-${p.user_id}"></span>
                     </div>
                     <div>💰 <b>${p.price}</b></div>
                 </div>
@@ -743,13 +779,13 @@ function openPost(id){
     if(!p) return;
     document.getElementById("box").innerHTML = `
         <h2 style="margin-top:0;">${p.name}</h2>
-        <img src="${p.image}" style="width:100%; height:260px; object-fit:cover; border-radius:16px; margin-bottom:10px; cursor:pointer;" onclick="zoomImage('${p.image}')" title="Plein écran">
+        <img src="${p.image}" style="width:100%; height:260px; object-fit:cover; border-radius:16px; margin-bottom:10px; cursor:pointer;" onclick="zoomImage('${p.image}')">
         <p style="opacity:0.9; font-size:14px; line-height:1.4;">📝 ${p.desc || "Aucune description fournie."}</p>
         <div style="display:flex; justify-content:space-between; align-items:center; margin-top:15px;">
             <span style="font-weight:bold; color:#00ff99; font-size:16px;">💰 ${p.price} l'unité</span>
-            <button onclick="openBuyModal(${p.id});" style="padding:10px 20px; background:#00ff99; color:black; border:none; border-radius:12px; font-weight:bold; cursor:pointer;">Acheter maintenant</button>
+            <button onclick="openBuyModal(${p.id});" style="padding:10px 20px; background:#00ff99; color:black; border:none; border-radius:12px; font-weight:bold; cursor:pointer;">Acheter</button>
         </div>
-        <button onclick="document.getElementById('modal').style.display='none'" style="width:100%; margin-top:12px; padding:12px; border:none; border-radius:14px; background:rgba(255,255,255,0.08); color:white; cursor:pointer; font-weight:bold;">Fermer</button>
+        <button onclick="document.getElementById('modal').style.display='none'" style="width:100%; margin-top:12px; padding:12px; border:none; border-radius:14px; background:rgba(255,255,255,0.08); color:white; cursor:pointer;">Fermer</button>
     `;
     document.getElementById("modal").style.display="flex";
 }
@@ -773,11 +809,11 @@ function openBuyModal(id){
             <img src="${p.image}" style="width:65px; height:65px; object-fit:cover; border-radius:10px;">
             <div>
                 <b style="font-size:15px;">${p.name}</b><br>
-                <span style="font-size:13px; color:#00ff99;">💰 Prix unitaire : ${p.price}</span>
+                <span style="font-size:13px; color:#00ff99;">💰 Prix : ${p.price}</span>
             </div>
         </div>
         
-        <p style="font-size:13px; opacity:0.8; margin-bottom:4px;">Choisissez la quantité :</p>
+        <p style="font-size:13px; opacity:0.8; margin-bottom:4px;">Quantité :</p>
         <div class="qty-selector">
             <button class="qty-btn" onclick="updateQty(-1, ${p.price})">-</button>
             <span id="buyQtyDisplay" style="font-size:18px; font-weight:bold;">1</span>
@@ -785,11 +821,11 @@ function openBuyModal(id){
         </div>
 
         <div style="display:flex; justify-content:space-between; align-items:center; margin:15px 0; background:rgba(0,255,153,0.08); padding:12px; border-radius:12px;">
-            <span style="font-size:14px;">Total à payer :</span>
+            <span style="font-size:14px;">Total :</span>
             <span id="totalPriceDisplay" style="font-size:18px; font-weight:bold; color:#00ff99;">💰 ${p.price}</span>
         </div>
 
-        <button onclick="confirmBuy(${p.id})" style="width:100%; padding:14px; border:none; border-radius:14px; font-weight:bold; background:#00ff99; color:black; cursor:pointer; font-size:15px; transition: transform 0.1s;">Confirmer l'achat</button>
+        <button onclick="confirmBuy(${p.id})" style="width:100%; padding:14px; border:none; border-radius:14px; font-weight:bold; background:#00ff99; color:black; cursor:pointer; font-size:15px;">Confirmer</button>
         <button onclick="document.getElementById('modal').style.display='none'" style="width:100%; margin-top:8px; padding:10px; border:none; border-radius:12px; background:transparent; opacity:0.7; color:white; cursor:pointer;">Annuler</button>
     `;
     document.getElementById("modal").style.display = "flex";
@@ -864,7 +900,7 @@ function openVideos(id){
     document.getElementById("box").innerHTML = `
         <h3 style="margin-top:0;">🎥 Vidéos de l'annonce</h3>
         ${(post.videos || []).map((v,i)=>`
-            <div onclick="playVideo('${v}')" style="background:rgba(255,255,255,0.05); padding:14px; margin:8px 0; border-radius:12px; cursor:pointer; font-weight:bold; display:flex; justify-content:space-between; align-items:center; transition: background 0.2s;">
+            <div onclick="playVideo('${v}')" style="background:rgba(255,255,255,0.05); padding:14px; margin:8px 0; border-radius:12px; cursor:pointer; font-weight:bold;">
                 <span>▶️ Regarder la vidéo ${i+1}</span>
             </div>
         `).join("")}
@@ -918,24 +954,10 @@ function openSell(){
         }
     };
 
-    window.selectedImage = "";
-    window.selectedVideos = [];
-
     document.getElementById("videoZone").onclick = () => document.getElementById("videoInput").click();
     document.getElementById("videoInput").onchange = e => {
-        let files = [...e.target.files];
-        if(files.length > 3){ alert("Maximum 3 vidéos"); return; }
-        window.selectedVideos = [];
-        let html = "";
-        files.forEach(file => {
-            let reader = new FileReader();
-            reader.onload = ev => {
-                window.selectedVideos.push(ev.target.result);
-                html += `<div style="font-size:11px; opacity:0.8; margin-top:2px;">📹 Vidéo ajoutée</div>`;
-                document.getElementById("videoPreview").innerHTML = html;
-            };
-            reader.readAsDataURL(file);
-        });
+        window.selectedVideos = Array.from(e.target.files).slice(0, 3);
+        document.getElementById("videoPreview").innerHTML = `<p style="font-size:12px; color:#00ccff; text-align:center;">🎥 ${window.selectedVideos.length} vidéo(s) sélectionnée(s)</p>`;
     };
 }
 
@@ -944,83 +966,43 @@ async function create(){
     let desc = document.getElementById("desc").value.trim();
     let price = Number(document.getElementById("price").value);
 
-    if(!name || !price){ alert("Nom et prix obligatoires !"); return; }
+    if(!name || !price || !window.selectedImage){
+        alert("Remplis tous les champs obligatoires et mets une image !");
+        return;
+    }
+
+    let videoUrls = [];
+    if(window.selectedVideos){
+        for(let v of window.selectedVideos){
+            videoUrls.push(URL.createObjectURL(v));
+        }
+    }
 
     let { error } = await client.from("posts").insert([{
-        name: name,
-        image: window.selectedImage || "",
-        videos: window.selectedVideos || [],
-        price: price,
-        desc: desc,
         user_id: user,
+        name: name,
+        desc: desc,
+        price: price,
+        image: window.selectedImage,
+        videos: videoUrls,
         likes: 0,
         views: 0
     }]);
 
-    if(error){ alert(error.message); return; }
+    if(error){
+        alert("Erreur lors de la publication");
+        return;
+    }
 
+    window.selectedImage = null;
+    window.selectedVideos = null;
     document.getElementById("modal").style.display = "none";
     loadPosts(true);
 }
 
-async function openInv(){
-    let { data } = await client.from("inventaire").select("*").eq("user_id", user);
-    let items = data || [];
-
-    document.getElementById("box").innerHTML = `
-        <h3 style="margin-top:0;">📦 Mon Inventaire</h3>
-        <div style="max-height:50vh; overflow-y:auto;">
-            ${items.length === 0 ? "<p style='opacity:0.6; text-align:center;'>Aucun objet</p>" : ""}
-            ${items.map(i => `
-                <div style="background:rgba(255,255,255,0.04); padding:10px; margin:8px 0; border-radius:12px; display:flex; align-items:center; gap:10px;">
-                    <img src="${i.image}" style="width:45px; height:45px; border-radius:8px; object-fit:cover;">
-                    <div style="flex:1;"><b>${i.item}</b><br><span style="font-size:12px; color:#00ff99;">💰 ${i.price}</span></div>
-                    <button onclick="giveItem('${i.id}')" style="background:#00ff99; border:none; border-radius:10px; padding:8px 12px; font-weight:bold; cursor:pointer; color:black;">🎁</button>
-                </div>
-            `).join("")}
-        </div>
-        <button onclick="document.getElementById('modal').style.display='none'" style="width:100%; padding:12px; margin-top:10px; border:none; border-radius:12px; background:rgba(255,255,255,0.1); color:white; cursor:pointer;">Fermer</button>
-    `;
-    document.getElementById("modal").style.display = "flex";
-}
-
-async function giveItem(itemId){
-    let { data: friends } = await client.from("friends").select("*").eq("status","accepted").or(`user1.eq.${user},user2.eq.${user}`);
-    let html = `<h3 style="margin-top:0;">🎁 Choisir un ami</h3>`;
-    if(!friends || friends.length === 0){
-        html += "<p style='opacity:0.6; text-align:center;'>Aucun ami disponible</p>";
-    } else {
-        friends.forEach(f => {
-            let friend = f.user1 === user ? f.user2 : f.user1;
-            html += `<button style="width:100%; padding:12px; margin:6px 0; border:none; border-radius:10px; background:rgba(255,255,255,0.08); color:white; font-weight:bold; cursor:pointer;" onclick="sendItem(${itemId}, '${friend}')">@${friend}</button>`;
-        });
-    }
-    html += `<button onclick="document.getElementById('modal').style.display='none'" style="width:100%; margin-top:10px; padding:10px; border-radius:10px; background:transparent; color:white; opacity:0.7; cursor:pointer;">Fermer</button>`;
-    document.getElementById("box").innerHTML = html;
-}
-
-async function sendItem(itemId, friend){
-    let { data:item } = await client.from("inventaire").select("*").eq("id", itemId).single();
-    if(!item) return;
-
-    await client.from("inventaire").insert([{ user_id: friend, item: item.item, image: item.image, price: item.price }]);
-    await client.from("inventaire").delete().eq("id", itemId);
-
-    if(navigator.vibrate) navigator.vibrate([40,50,40]);
-    document.getElementById("modal").style.display = "none";
-    openInv();
-}
-
-const modal = document.getElementById("modal");
-const box = document.getElementById("box");
-
-modal.addEventListener("click", () => { modal.style.display = "none"; });
-box.addEventListener("click", (e) => { e.stopPropagation(); });
-
-loadPosts(true);
 loadProfile();
-setInterval(updateLastSeen, 30000);
 updateLastSeen();
+loadPosts(true);
 </script>
 
 </body>
