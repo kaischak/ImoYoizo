@@ -318,7 +318,7 @@ const client = supabase.createClient(supabaseUrl, supabaseKey);
 
 let posts = [];
 let usersCache = {};
-let limit = 5; // Réduit à 5 pour alléger drastiquement le chargement initial
+let limit = 5;
 let offset = 0;
 let loading = false;
 let allLoaded = false;
@@ -358,7 +358,7 @@ async function loadPosts(reset = false){
 
     let { data, error } = await client
         .from("posts")
-        .select("id, name, price, image, videos, desc, user_id, likes, views") // Sélection ciblée pour éviter les gros volumes de données
+        .select("id, name, price, image, videos, desc, user_id, likes, views")
         .order("id", { ascending: false })
         .range(offset, offset + limit - 1);
 
@@ -507,18 +507,36 @@ async function addComment(postId){
     openComments(postId);
 }
 
+// SYSTÈME DE VUES OPTIMISÉ ET FIABLE
 async function addView(postId){
-    let seen = JSON.parse(localStorage.getItem("seenPosts") || "[]");
-    if(seen.includes(postId)) return;
-    seen.push(postId);
-    localStorage.setItem("seenPosts", JSON.stringify(seen));
-
     let post = posts.find(p => p.id === postId);
-    if(post){
-        let newViews = (post.views || 0) + 1;
-        await client.from("posts").update({ views: newViews }).eq("id", postId);
-    }
+    if(!post) return;
+
+    // Incrémente immédiatement dans l'objet local et met à jour le texte à l'écran sans re-rendre tout le feed
+    post.views = (post.views || 0) + 1;
+    let viewsEl = document.getElementById(`views-count-${postId}`);
+    if(viewsEl) viewsEl.innerText = post.views;
+
+    // Enregistre en base de données de manière asynchrone
+    await client.from("posts").update({ views: post.views }).eq("id", postId);
 }
+
+// IntersectionObserver pour déclencher la vue dès que la carte apparaît à l'écran
+let viewObserver = new IntersectionObserver((entries, observer) => {
+    entries.forEach(entry => {
+        if(entry.isIntersecting){
+            let postId = Number(entry.target.dataset.postId);
+            let seenKey = `seen_post_${user}_${postId}`;
+            
+            // Compte une seule vue par utilisateur et par post dans cette session/appareil
+            if(!localStorage.getItem(seenKey)){
+                localStorage.setItem(seenKey, "true");
+                addView(postId);
+            }
+            observer.unobserve(entry.target);
+        }
+    });
+}, { threshold: 0.6 }); // Déclenche quand 60% de la carte est visible
 
 function getFavorites(){
     return JSON.parse(localStorage.getItem("favorites") || "[]");
@@ -576,7 +594,7 @@ async function render(){
         div.className = "post";
 
         div.innerHTML = `
-            <div class="card" onclick="openPost(${p.id})">
+            <div class="card" data-post-id="${p.id}" onclick="openPost(${p.id})">
                 <div>
                     <h2>${p.name}</h2>
                     <img src="${p.image}">
@@ -592,7 +610,7 @@ async function render(){
                 </div>
 
                 <div style="display:flex; justify-content:space-between; align-items:center;">
-                    <div style="font-size:11px; opacity:0.6;">❤️ ${p.likes || 0} · 👀 ${p.views || 0} vues</div>
+                    <div style="font-size:11px; opacity:0.6;">❤️ ${p.likes || 0} · 👀 <span id="views-count-${p.id}">${p.views || 0}</span> vues</div>
                     <button class="likeBtn ${isLiked(p.id) ? 'liked' : ''}" onclick="event.stopPropagation(); likePost(${p.id}, ${p.likes || 0}, event)">❤️</button>
                 </div>
 
@@ -607,11 +625,15 @@ async function render(){
             </div>
         `;
         fragment.appendChild(div);
-        addView(p.id);
         loadAvatar(p);
     }
 
     feed.appendChild(fragment);
+
+    // Attache l'observateur sur les nouvelles cartes affichées pour compter les vues au scroll
+    document.querySelectorAll('.card[data-post-id]').forEach(card => {
+        viewObserver.observe(card);
+    });
 }
 
 function openPost(id){
@@ -763,7 +785,8 @@ async function create(){
         price: price,
         desc: desc,
         user_id: user,
-        likes: 0
+        likes: 0,
+        views: 0
     }]);
 
     if(error){ alert(error.message); return; }
@@ -804,7 +827,7 @@ async function giveItem(itemId){
             html += `<button style="width:100%; padding:12px; margin:6px 0; border:none; border-radius:10px; background:rgba(255,255,255,0.08); color:white; font-weight:bold; cursor:pointer;" onclick="sendItem(${itemId}, '${friend}')">@${friend}</button>`;
         });
     }
-    html += `<button onclick="document.getElementById('modal').style.display='none'" style="width:100%; margin-top:10px; padding:10px; border:none; border-radius:10px; background:transparent; color:white; opacity:0.7; cursor:pointer;">Fermer</button>`;
+    html += `<button onclick="document.getElementById('modal').style.display='none'" style="width:100%; margin-top:10px; padding:10px; border-radius:10px; background:transparent; color:white; opacity:0.7; cursor:pointer;">Fermer</button>`;
     document.getElementById("box").innerHTML = html;
 }
 
