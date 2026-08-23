@@ -18,7 +18,6 @@ body{
     user-select: none;
 }
 
-/* TOPBAR TYPE INSTAGRAM/TIKTOK */
 .topbar{
     position:fixed;
     top:0;
@@ -57,9 +56,7 @@ body{
     font-size: 13px;
     transition: background 0.2s;
 }
-#search:focus {
-    background:rgba(255,255,255,0.18);
-}
+#search:focus { background:rgba(255,255,255,0.18); }
 
 .topbar-right{
     display:flex;
@@ -89,7 +86,6 @@ body{
     padding: 5px;
 }
 
-/* FILTERS DISCRET */
 #filters{
     position: fixed;
     top: 55px;
@@ -101,11 +97,6 @@ body{
     z-index: 99;
     display: none;
     border-bottom: 1px solid rgba(255,255,255,0.1);
-    animation: slideDown 0.2s ease;
-}
-@keyframes slideDown {
-    from { transform: translateY(-20px); opacity: 0; }
-    to { transform: translateY(0); opacity: 1; }
 }
 #filters input {
     background: rgba(255,255,255,0.08);
@@ -116,7 +107,6 @@ body{
     font-size: 13px;
 }
 
-/* FEED FLUIDE & MAGNÉTIQUE TYPE TIKTOK/REELS */
 #feed{
     height:100vh;
     overflow-y:scroll;
@@ -169,7 +159,6 @@ body{
     background: #000;
 }
 
-/* INFO STYLISÉE */
 .info{
     font-size: 12px;
     opacity: 0.9;
@@ -181,7 +170,6 @@ body{
     border-radius: 12px;
 }
 
-/* BOUTONS D'ACTION RAPIDE */
 .card-actions {
     display: grid;
     grid-template-columns: 1fr 1fr;
@@ -205,7 +193,6 @@ body{
 .comment-btn { background: #2d6bff; color: white; }
 .fav-btn { background: rgba(255, 215, 0, 0.2); color: gold; border: 1px solid rgba(255,215,0,0.3); }
 
-/* BOUTON LIKE FLUIDE */
 .likeBtn {
     width: 44px;
     height: 44px;
@@ -241,20 +228,16 @@ body{
     100% { transform: translate(-50%, -140%) scale(1.5); opacity:0; }
 }
 
-/* MODAL DESIGN BOTTOM SHEET / OVERLAY FLUIDE */
 .modal{
     position:fixed;
     inset:0;
     background:rgba(0,0,0,0.85);
     backdrop-filter: blur(10px);
-    -webkit-backdrop-filter: blur(10px);
     display:none;
     justify-content:center;
     align-items:flex-end;
     z-index:1000;
-    animation: fadeIn 0.2s ease;
 }
-@keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
 
 .box{
     width:100%;
@@ -265,10 +248,8 @@ body{
     max-height:85vh;
     overflow-y:auto;
     box-sizing:border-box;
-    animation: slideUp 0.3s cubic-bezier(0.1, 0.9, 0.2, 1);
     border-top: 1px solid rgba(255,255,255,0.1);
 }
-@keyframes slideUp { from { transform: translateY(100%); } to { transform: translateY(0); } }
 
 input, textarea{
     width:100%;
@@ -337,7 +318,7 @@ const client = supabase.createClient(supabaseUrl, supabaseKey);
 
 let posts = [];
 let usersCache = {};
-let limit = 10;
+let limit = 5; // Réduit à 5 pour alléger drastiquement le chargement initial
 let offset = 0;
 let loading = false;
 let allLoaded = false;
@@ -365,7 +346,7 @@ function toggleFilters(){
 }
 
 async function loadPosts(reset = false){
-    if(loading) return;
+    if(loading || allLoaded) return;
     loading = true;
 
     if(reset){
@@ -377,17 +358,17 @@ async function loadPosts(reset = false){
 
     let { data, error } = await client
         .from("posts")
-        .select("*")
+        .select("id, name, price, image, videos, desc, user_id, likes, views") // Sélection ciblée pour éviter les gros volumes de données
         .order("id", { ascending: false })
         .range(offset, offset + limit - 1);
 
     if(error){
-        console.log(error);
+        console.error("Erreur chargement posts:", error);
         loading = false;
         return;
     }
 
-    if(data.length === 0){
+    if(!data || data.length === 0){
         allLoaded = true;
         loading = false;
         return;
@@ -408,12 +389,20 @@ window.addEventListener("scroll", () => {
 });
 
 async function loadAvatar(post){
+    if(usersCache[post.user_id] !== undefined){
+        let img = usersCache[post.user_id]?.avatar || "";
+        let el = document.getElementById(`avatar-${post.id}`);
+        if(el) el.innerHTML = img ? `<img src="${img}" style="width:24px;height:24px;border-radius:50%;object-fit:cover;">` : "👤";
+        return;
+    }
+
     let { data } = await client
         .from("users")
-        .select("avatar")
+        .select("avatar, last_seen")
         .eq("username", post.user_id)
         .maybeSingle();
 
+    usersCache[post.user_id] = data || null;
     let img = data?.avatar || "";
     let el = document.getElementById(`avatar-${post.id}`);
     if(el){
@@ -455,17 +444,6 @@ function isOnline(lastSeen){
     return (Date.now() - new Date(lastSeen).getTime()) < 60000;
 }
 
-async function getUser(username){
-    if(usersCache[username]) return usersCache[username];
-    let { data } = await client
-        .from("users")
-        .select("avatar, last_seen")
-        .eq("username", username)
-        .maybeSingle();
-    usersCache[username] = data;
-    return data;
-}
-
 async function likePost(id, currentLikes, event){
     let btn = event.currentTarget;
     let liked = isLiked(id);
@@ -492,7 +470,9 @@ async function likePost(id, currentLikes, event){
     btn.appendChild(pop);
     setTimeout(()=>pop.remove(), 500);
 
-    loadPosts(true);
+    let targetPost = posts.find(p => p.id === id);
+    if(targetPost) targetPost.likes = newLikes;
+    render();
 }
 
 function scorePost(p){
@@ -592,7 +572,6 @@ async function render(){
     let fragment = document.createDocumentFragment();
 
     for (let p of filteredPosts) {
-        let userData = await getUser(p.user_id);
         let div = document.createElement("div");
         div.className = "post";
 
@@ -605,9 +584,9 @@ async function render(){
 
                 <div class="info">
                     <div style="display:flex; align-items:center; gap:6px; cursor:pointer;" onclick="event.stopPropagation(); openUserMenu('${p.user_id}')">
-                        <span id="avatar-${p.id}"></span>
+                        <span id="avatar-${p.id}">👤</span>
                         <span style="color:#00ccff; font-weight:600;">@${p.user_id}</span>
-                        ${userData && isOnline(userData.last_seen) ? "🟢" : "⚫"}
+                        <span id="status-${p.user_id}"></span>
                     </div>
                     <div>💰 <b>${p.price}</b></div>
                 </div>
