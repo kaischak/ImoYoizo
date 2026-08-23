@@ -4,252 +4,284 @@
 <link rel="manifest" href="manifest.json">
 <meta name="theme-color" content="#0b0b0f">
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Market FIXED</title>
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<title>Market Fluid</title>
 
 <style>
 * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
 body{
     margin:0;
-    font-family:Arial;
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
     background:#0b0b0f;
     color:white;
+    overflow: hidden;
+    user-select: none;
 }
 
+/* TOPBAR TYPE INSTAGRAM/TIKTOK */
 .topbar{
     position:fixed;
     top:0;
     left:0;
     right:0;
-    height:60px;
-    display:grid;
-    grid-template-columns: 1fr 2fr 1fr;
+    height:55px;
+    display:flex;
+    justify-content:space-between;
     align-items:center;
-    padding:0 10px;
-    background:rgba(0,0,0,0.6);
-    backdrop-filter:blur(10px);
-    z-index:10;
-    gap:10px;
+    padding:0 15px;
+    background:rgba(11, 11, 15, 0.75);
+    backdrop-filter:blur(20px);
+    -webkit-backdrop-filter:blur(20px);
+    z-index:100;
+    border-bottom: 1px solid rgba(255,255,255,0.08);
 }
 
-/* LEFT */
 #miniProfile{
     display:flex;
     flex-direction:column;
     justify-content:center;
-    font-size:12px;
-    overflow:hidden;
+    font-size:11px;
+    font-weight: 600;
 }
+#pname { color: #fff; }
+#money { color: #00ff99; font-weight: bold; }
 
-/* CENTER */
 #search{
-    width:100%;
-    padding:10px;
-    border-radius:10px;
+    width:35%;
+    padding:8px 12px;
+    border-radius:20px;
     border:none;
+    background:rgba(255,255,255,0.1);
+    color:white;
     outline:none;
+    font-size: 13px;
+    transition: background 0.2s;
+}
+#search:focus {
+    background:rgba(255,255,255,0.18);
 }
 
-/* RIGHT */
 .topbar-right{
     display:flex;
-    justify-content:flex-end;
-    gap:8px;
+    gap:10px;
     align-items: center;
 }
 #addBtn{
-    width:45px;
-    height:45px;
+    width:36px;
+    height:36px;
     border-radius:50%;
     border:none;
-    background:#00ff99;
-    font-size:20px;
+    background:linear-gradient(135deg, #00ff99, #00ccff);
+    font-size:18px;
     cursor:pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: black;
+    font-weight: bold;
 }
 
-/* FEED */
+.topbar-right button:not(#addBtn){
+    background: transparent;
+    border: none;
+    font-size: 18px;
+    cursor: pointer;
+    padding: 5px;
+}
+
+/* FILTERS DISCRET */
+#filters{
+    position: fixed;
+    top: 55px;
+    left: 0;
+    right: 0;
+    background: rgba(22, 22, 29, 0.95);
+    backdrop-filter: blur(15px);
+    padding: 12px 15px;
+    z-index: 99;
+    display: none;
+    border-bottom: 1px solid rgba(255,255,255,0.1);
+    animation: slideDown 0.2s ease;
+}
+@keyframes slideDown {
+    from { transform: translateY(-20px); opacity: 0; }
+    to { transform: translateY(0); opacity: 1; }
+}
+#filters input {
+    background: rgba(255,255,255,0.08);
+    color: white;
+    border: none;
+    padding: 8px 12px;
+    border-radius: 8px;
+    font-size: 13px;
+}
+
+/* FEED FLUIDE & MAGNÉTIQUE TYPE TIKTOK/REELS */
 #feed{
     height:100vh;
-    overflow-y:auto;
-    padding-top:60px;
+    overflow-y:scroll;
+    scroll-snap-type: y mandatory;
+    -webkit-overflow-scrolling: touch;
     scroll-behavior: smooth;
     will-change: transform;
-    transform: translateZ(0);
 }
+
 .post{
-    min-height:100vh;
-    display:flex;
-    justify-content:center;
-    align-items:flex-start;
-    position:relative;
-    padding:20px 0;
-}
-.card{
-    width:90%;
-    max-width:450px;
-    background:#16161d;
-    border-radius:20px;
-    padding:15px;
-    text-align:center;
+    height: 100vh;
+    width: 100vw;
     scroll-snap-align: start;
+    scroll-snap-stop: always;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    padding-top: 55px;
+    box-sizing: border-box;
+}
+
+.card{
+    width: 100%;
+    max-width: 420px;
+    height: 82vh;
+    background: #16161d;
+    border-radius: 24px;
+    padding: 14px;
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
+    position: relative;
+    box-shadow: 0 10px 30px rgba(0,0,0,0.5);
+    border: 1px solid rgba(255,255,255,0.05);
+}
+
+.card h2 {
+    font-size: 16px;
+    margin: 0 0 8px 0;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
 }
 
 .card img{
-    width:100%;
-    border-radius:15px;
+    width: 100%;
+    height: 52vh;
+    object-fit: cover;
+    border-radius: 16px;
+    background: #000;
 }
 
-/* INFO */
+/* INFO STYLISÉE */
 .info{
-    text-align:left;
-    margin-top:10px;
+    font-size: 12px;
+    opacity: 0.9;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    background: rgba(0,0,0,0.25);
+    padding: 8px 12px;
+    border-radius: 12px;
 }
 
-/* ACTIONS */
-.actions{
-    position:absolute;
-    right:15px;
-    bottom:120px;
-    display:flex;
-    flex-direction:column;
-    gap:10px;
+/* BOUTONS D'ACTION RAPIDE */
+.card-actions {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 8px;
 }
 
-.actions button{
-    width:55px;
-    height:55px;
-    border-radius:50%;
-    border:none;
+.card-actions button {
+    padding: 10px;
+    border: none;
+    border-radius: 12px;
+    font-weight: 600;
+    font-size: 13px;
+    cursor: pointer;
+    transition: transform 0.1s ease, opacity 0.2s;
 }
+.card-actions button:active { transform: scale(0.96); }
 
-.likeBtn{background:#ff2d55;color:white;}
-.commentBtn{background:#2d6bff;color:white;}
-.buyBtn{background:#00ff99;}
+.buy-btn { background: #00ff99; color: black; }
+.chat-btn-custom { background: #00ccff; color: black; }
+.video-btn { background: rgba(255,255,255,0.1); color: white; }
+.comment-btn { background: #2d6bff; color: white; }
+.fav-btn { background: rgba(255, 215, 0, 0.2); color: gold; border: 1px solid rgba(255,215,0,0.3); }
 
-.modal{
-    position:fixed;
-    inset:0;
-    background:rgba(0,0,0,0.92);
-    display:none;
-    justify-content:center;
-    align-items:flex-start;
-    overflow-y:auto;
-    padding:20px 0;
-    z-index:100;
-}
-
-.box{
-    width:90%;
-    max-width:500px;
-    background:#16161d;
-    padding:20px;
-    border-radius:20px;
-    max-height:90vh;
-    overflow-y:auto;
-}
-
+/* BOUTON LIKE FLUIDE */
 .likeBtn {
-    width:60px;
-    height:60px;
-    border-radius:50%;
-    border:none;
-    cursor:pointer;
-    display:flex;
-    align-items:center;
-    justify-content:center;
-    font-size:26px;
-    background:rgba(255,255,255,0.08);
+    width: 44px;
+    height: 44px;
+    border-radius: 50%;
+    border: none;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 20px;
+    background: rgba(255,255,255,0.08);
     backdrop-filter: blur(10px);
-    color:white;
+    color: white;
     transition: transform 0.15s ease, background 0.2s ease;
     position: relative;
     overflow: hidden;
+    margin: 0 auto;
 }
-
 .likeBtn.liked {
-    background: rgba(0, 255, 153, 0.25);
-    color:#00ff99;
+    background: rgba(255, 45, 85, 0.25);
+    color: #ff2d55;
 }
-
-.likeBtn:active {
-    transform: scale(0.85);
-}
+.likeBtn:active { transform: scale(0.8); }
 
 .like-pop {
     position:absolute;
-    font-size:18px;
-    animation: pop 0.6s ease forwards;
+    font-size:16px;
+    animation: pop 0.5s cubic-bezier(0.175, 0.885, 0.32, 1.275) forwards;
+    pointer-events: none;
 }
-
 @keyframes pop {
     0% { transform: translate(-50%, -50%) scale(0.3); opacity:1; }
-    100% { transform: translate(-50%, -120%) scale(1.6); opacity:0; }
+    100% { transform: translate(-50%, -140%) scale(1.5); opacity:0; }
 }
 
-.chat-btn{
-    width:100%;
-    margin-top:10px;
-    padding:12px;
-    border:none;
-    border-radius:16px;
-    cursor:pointer;
-    font-size:15px;
-    font-weight:bold;
-    color:white;
-    background: rgba(255,255,255,0.08);
-    border: 1px solid rgba(255,255,255,0.12);
+/* MODAL DESIGN BOTTOM SHEET / OVERLAY FLUIDE */
+.modal{
+    position:fixed;
+    inset:0;
+    background:rgba(0,0,0,0.85);
     backdrop-filter: blur(10px);
-    transition: 0.2s ease;
-}
-
-#consoleBtn{
-    position:fixed;
-    bottom:15px;
-    left:15px;
-    z-index:9999;
-    padding:10px 14px;
-    border:none;
-    border-radius:12px;
-    background:#00ccff;
-    color:black;
-    font-weight:bold;
-}
-
-#devConsole{
-    position:fixed;
-    bottom:60px;
-    left:15px;
-    width:260px;
-    height:180px;
-    background:#0b0b0f;
-    border:1px solid #333;
-    border-radius:12px;
+    -webkit-backdrop-filter: blur(10px);
     display:none;
-    z-index:9999;
-    overflow:auto;
-    padding:10px;
-    font-family:monospace;
-    font-size:12px;
-    color:#00ff99;
+    justify-content:center;
+    align-items:flex-end;
+    z-index:1000;
+    animation: fadeIn 0.2s ease;
 }
+@keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
 
-.chat-btn:hover{
-    background: rgba(0, 255, 153, 0.15);
-    border: 1px solid rgba(0, 255, 153, 0.4);
-    transform: translateY(-2px);
+.box{
+    width:100%;
+    max-width:500px;
+    background:#16161d;
+    padding:20px;
+    border-radius:24px 24px 0 0;
+    max-height:85vh;
+    overflow-y:auto;
+    box-sizing:border-box;
+    animation: slideUp 0.3s cubic-bezier(0.1, 0.9, 0.2, 1);
+    border-top: 1px solid rgba(255,255,255,0.1);
 }
+@keyframes slideUp { from { transform: translateY(100%); } to { transform: translateY(0); } }
 
-.chat-btn:active{
-    transform: scale(0.98);
-}
-    
 input, textarea{
     width:100%;
-    margin:5px 0;
-    padding:10px;
-    border-radius:10px;
+    margin:6px 0;
+    padding:12px;
+    border-radius:12px;
     border:none;
+    background: rgba(255,255,255,0.06);
+    color: white;
+    font-size: 14px;
+    outline: none;
 }
+input:focus, textarea:focus { background: rgba(255,255,255,0.12); }
 </style>
 </head>
 
@@ -261,25 +293,26 @@ input, textarea{
         <div id="money"></div>
     </div>
 
-    <input id="search" placeholder="recherche..." oninput="render()">
+    <input id="search" placeholder="Rechercher..." oninput="render()">
 
     <div class="topbar-right">
         <button id="addBtn" onclick="openSell()">+</button>
         <button onclick="openInv()">📦</button>
         <button onclick="location.href='friends.html'">👥</button>
         <button onclick="location.href='profile.html'">👤</button>
-        <button onclick="toggleFilters()" title="Recherche">🔍</button>
-        <button onclick="event.stopPropagation(); toggleFavoritePost()">⭐</button>
+        <button onclick="toggleFilters()" title="Filtres">🔍</button>
     </div>
 </div>
 
-<div id="devConsole"><div id="consoleContent"></div></div>
-
-<div id="filters" style="display:none; padding:15px; background:#16161d; margin-top:60px;">
-    <input id="minPrice" type="number" placeholder="💰 Prix minimum">
-    <input id="maxPrice" type="number" placeholder="💰 Prix maximum">
-    <label><input id="videoOnly" type="checkbox"> 🎥 Avec vidéos</label>
-    <label><input id="popularOnly" type="checkbox"> 🔥 Populaires</label>
+<div id="filters">
+    <div style="display:grid; grid-template-columns:1fr 1fr; gap:8px; margin-bottom:8px;">
+        <input id="minPrice" type="number" placeholder="💰 Min" oninput="render()">
+        <input id="maxPrice" type="number" placeholder="💰 Max" oninput="render()">
+    </div>
+    <div style="display:flex; gap:15px; font-size:13px; opacity:0.9;">
+        <label><input id="videoOnly" type="checkbox" onchange="render()"> 🎥 Vidéos</label>
+        <label><input id="popularOnly" type="checkbox" onchange="render()"> 🔥 Populaires</label>
+    </div>
 </div>
 
 <div id="feed"></div>
@@ -303,22 +336,14 @@ const supabaseKey = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZS
 const client = supabase.createClient(supabaseUrl, supabaseKey);
 
 let posts = [];
-localStorage.setItem("user", user);
-let showFavorites = false;
 let usersCache = {};
+let limit = 10;
+let offset = 0;
+let loading = false;
+let allLoaded = false;
 
 async function updateLastSeen(){
     await client.from("users").update({ last_seen: new Date() }).eq("username", user);
-}
-
-function toggleFavorite(id){
-    let favs = getFavorites();
-    if(favs.includes(id)){
-        favs = favs.filter(x => x !== id);
-    } else {
-        favs.push(id);
-    }
-    localStorage.setItem("favorites", JSON.stringify(favs));
 }
 
 function getMoney(){
@@ -330,7 +355,7 @@ function setMoney(v){
 }
 
 async function loadProfile(){
-    document.getElementById("pname").innerText = "👤 " + user;
+    document.getElementById("pname").innerText = "@" + user;
     setMoney(getMoney());
 }
 
@@ -338,11 +363,6 @@ function toggleFilters(){
     let filters = document.getElementById("filters");
     filters.style.display = filters.style.display === "none" ? "block" : "none";
 }
-
-let limit = 10;
-let offset = 0;
-let loading = false;
-let allLoaded = false;
 
 async function loadPosts(reset = false){
     if(loading) return;
@@ -381,9 +401,8 @@ async function loadPosts(reset = false){
 }
 
 window.addEventListener("scroll", () => {
-    let scrollPos = window.innerHeight + window.scrollY;
-    let bottom = document.body.offsetHeight - 200;
-    if(scrollPos >= bottom){
+    let feed = document.getElementById("feed");
+    if(feed.scrollTop + feed.clientHeight >= feed.scrollHeight - 300){
         loadPosts();
     }
 });
@@ -398,7 +417,7 @@ async function loadAvatar(post){
     let img = data?.avatar || "";
     let el = document.getElementById(`avatar-${post.id}`);
     if(el){
-        el.innerHTML = img ? `<img src="${img}" style="width:28px;height:28px;border-radius:50%;">` : "";
+        el.innerHTML = img ? `<img src="${img}" style="width:24px;height:24px;border-radius:50%;object-fit:cover;">` : "👤";
     }
 }
 
@@ -407,20 +426,14 @@ async function deletePost(id){
 
     let { error } = await client.from("posts").delete().eq("id", id);
     if(error){
-        console.log(error);
         alert("Erreur suppression");
         return;
     }
-    alert("Annonce supprimée !");
     loadPosts(true);
 }
 
 function openChat(username){
-    let user = localStorage.getItem("user");
-    if(!user){
-        alert("Tu dois être connecté");
-        return;
-    }
+    if(!user) return;
     if(username === user){
         alert("Tu ne peux pas chatter avec toi-même 😅");
         return;
@@ -439,8 +452,7 @@ function isLiked(id){
 
 function isOnline(lastSeen){
     if(!lastSeen) return false;
-    let diff = Date.now() - new Date(lastSeen).getTime();
-    return diff < 60000;
+    return (Date.now() - new Date(lastSeen).getTime()) < 60000;
 }
 
 async function getUser(username){
@@ -470,7 +482,7 @@ async function likePost(id, currentLikes, event){
     }
     localStorage.setItem("likedPosts", JSON.stringify(likedList));
 
-    if (navigator.vibrate) navigator.vibrate(60);
+    if (navigator.vibrate) navigator.vibrate(50);
 
     let pop = document.createElement("div");
     pop.className = "like-pop";
@@ -478,15 +490,13 @@ async function likePost(id, currentLikes, event){
     pop.style.left = "50%";
     pop.style.top = "50%";
     btn.appendChild(pop);
-    setTimeout(()=>pop.remove(), 600);
+    setTimeout(()=>pop.remove(), 500);
 
     loadPosts(true);
 }
 
 function scorePost(p){
-    let likes = p.likes || 0;
-    let views = p.views || 0;
-    return likes * 3 + views * 0.5;
+    return (p.likes || 0) * 3 + (p.views || 0) * 0.5;
 }
 
 async function openComments(postId){
@@ -494,15 +504,18 @@ async function openComments(postId){
     let comments = data || [];
 
     document.getElementById("box").innerHTML = `
-        <h2>💬 Commentaires</h2>
-        ${comments.map(c => `
-            <div style="background:#222;padding:10px;margin:8px 0;border-radius:12px;">
-                <b>${c.user_id}</b><br>${c.text}
-            </div>
-        `).join("")}
-        <textarea id="commentText" placeholder="Écris..."></textarea>
-        <button onclick="addComment(${postId})" style="width:100%;padding:12px;margin-top:10px;background:#00ccff;border:none;border-radius:10px;font-weight:bold;cursor:pointer;">Envoyer</button>
-        <button onclick="document.getElementById('modal').style.display='none'" style="width:100%;margin-top:10px;padding:10px;border:none;border-radius:10px;cursor:pointer;">Fermer</button>
+        <h3 style="margin-top:0;">💬 Commentaires</h3>
+        <div style="max-height: 40vh; overflow-y: auto; margin-bottom: 10px;">
+            ${comments.length === 0 ? "<p style='opacity:0.6; text-align:center;'>Aucun commentaire</p>" : ""}
+            ${comments.map(c => `
+                <div style="background:rgba(255,255,255,0.04); padding:10px; margin:6px 0; border-radius:10px;">
+                    <b style="font-size:12px; color:#00ccff;">@${c.user_id}</b><br><span style="font-size:13px;">${c.text}</span>
+                </div>
+            `).join("")}
+        </div>
+        <textarea id="commentText" placeholder="Écris un commentaire..." style="height:70px; resize:none;"></textarea>
+        <button onclick="addComment(${postId})" style="width:100%; padding:12px; margin-top:8px; background:#00ccff; border:none; border-radius:12px; font-weight:bold; cursor:pointer; color:black;">Envoyer</button>
+        <button onclick="document.getElementById('modal').style.display='none'" style="width:100%; margin-top:6px; padding:10px; border:none; border-radius:12px; background:transparent; opacity:0.7; cursor:pointer; color:white;">Fermer</button>
     `;
     document.getElementById("modal").style.display = "flex";
 }
@@ -520,18 +533,18 @@ async function addView(postId){
     seen.push(postId);
     localStorage.setItem("seenPosts", JSON.stringify(seen));
 
-    await client.from("posts").update({ views: client.sql ? client.sql`views + 1` : ((posts.find(p=>p.id===postId)?.views || 0) + 1) }).eq("id", postId);
+    let post = posts.find(p => p.id === postId);
+    if(post){
+        let newViews = (post.views || 0) + 1;
+        await client.from("posts").update({ views: newViews }).eq("id", postId);
+    }
 }
 
 function getFavorites(){
     return JSON.parse(localStorage.getItem("favorites") || "[]");
 }
 
-function isFavorite(id){
-    return getFavorites().includes(id);
-}
-
-function toggleFavoritePost(id){
+function toggleFavorite(id){
     let favs = getFavorites();
     if(favs.includes(id)){
         favs = favs.filter(x => x !== id);
@@ -543,28 +556,39 @@ function toggleFavoritePost(id){
 }
 
 function vibrateSoft(btn){
-    if (navigator.vibrate) navigator.vibrate(20);
+    if (navigator.vibrate) navigator.vibrate(15);
     if (btn) {
-        btn.style.transform = "scale(0.95)";
-        setTimeout(() => btn.style.transform = "", 120);
+        btn.style.transform = "scale(0.96)";
+        setTimeout(() => btn.style.transform = "", 100);
     }
 }
 
 async function render(){
     let s = document.getElementById("search").value.toLowerCase();
+    let minPrice = Number(document.getElementById("minPrice")?.value || 0);
+    let maxPrice = Number(document.getElementById("maxPrice")?.value || 99999999);
+    let videoOnly = document.getElementById("videoOnly")?.checked;
+    let popularOnly = document.getElementById("popularOnly")?.checked;
+
     let feed = document.getElementById("feed");
     feed.innerHTML = "";
 
-    let filteredPosts = posts
-        .sort((a, b) => scorePost(b) - scorePost(a))
-        .filter(p => (p.name || "").toLowerCase().includes(s));
+    let filteredPosts = posts.filter(p => {
+        let matchName = (p.name || "").toLowerCase().includes(s);
+        let matchPrice = (p.price >= minPrice) && (p.price <= maxPrice);
+        let matchVideo = !videoOnly || (p.videos && p.videos.length > 0);
+        return matchName && matchPrice && matchVideo;
+    });
+
+    if(popularOnly){
+        filteredPosts.sort((a,b) => scorePost(b) - scorePost(a));
+    }
 
     if(filteredPosts.length === 0){
-        feed.innerHTML = "<p style='text-align:center'>Aucun post</p>";
+        feed.innerHTML = "<div style='display:flex; height:100vh; align-items:center; justify-content:center; opacity:0.5;'>Aucune annonce trouvée</div>";
         return;
     }
 
-    // 🔥 Optimisation : Utilisation d'un DocumentFragment pour fluidifier le rendu des posts en masse
     let fragment = document.createDocumentFragment();
 
     for (let p of filteredPosts) {
@@ -573,31 +597,34 @@ async function render(){
         div.className = "post";
 
         div.innerHTML = `
-            <div class="card" onclick="openPost(${p.id})" style="cursor:pointer; position:relative;">
-                <h2>${p.name}</h2>
-                <img src="${p.image}">
-                <br>
-                <span id="avatar-${p.id}"></span>
-                <div class="info">
-                    💰 ${p.price}<br>
-                    ❤️ ${p.likes || 0}<br>
-                    👀 ${p.views || 0} vues <br>
-                    ${userData && isOnline(userData.last_seen) ? "🟢 En ligne" : "⚫ Hors ligne"}
-                    <span onclick="event.stopPropagation(); openUserMenu('${p.user_id}')" style="color:#00ccff; cursor:pointer;">
-                        👤 ${p.user_id}
-                    </span>
+            <div class="card" onclick="openPost(${p.id})">
+                <div>
+                    <h2>${p.name}</h2>
+                    <img src="${p.image}">
                 </div>
 
-                <button onclick="event.stopPropagation(); vibrateSoft(); buy(${p.id}, event)" style="margin-top:10px; width:100%; padding:10px; border:none; border-radius:15px; background:#00ff99; color:black; font-weight:bold; cursor:pointer;">🛒 BUY</button>
-                <button onclick="event.stopPropagation(); openChat('${p.user_id}')" style="margin-top:10px; padding:10px; border:none; border-radius:15px; background:#00ccff; color:black; cursor:pointer; width:100%; font-weight:bold;">💬 Chat</button>
-                <button onclick="event.stopPropagation(); openVideos(${p.id})" style="margin-top:10px; padding:10px; border:none; border-radius:15px; background:#00ccff; color:black; cursor:pointer; width:100%; font-weight:bold;">🎥 Vidéos</button>
-                
-                <button class="likeBtn ${isLiked(p.id) ? 'liked' : ''}" onclick="event.stopPropagation(); likePost(${p.id}, ${p.likes || 0}, event)" style="margin:10px auto 0 auto;">❤️</button>
-                
-                <button onclick="event.stopPropagation(); openComments(${p.id})" style="margin-top:10px; width:100%; padding:10px; border:none; border-radius:15px; background:#2d6bff; color:white; font-weight:bold; cursor:pointer;">💬 Commentaires</button>
-                <button onclick="event.stopPropagation(); toggleFavorite(${p.id}); render();" style="margin-top:10px; width:100%; padding:10px; border:none; border-radius:15px; background:gold; font-weight:bold; cursor:pointer;">${getFavorites().includes(p.id) ? "⭐ Favori" : "☆ Ajouter aux favoris"}</button>
+                <div class="info">
+                    <div style="display:flex; align-items:center; gap:6px; cursor:pointer;" onclick="event.stopPropagation(); openUserMenu('${p.user_id}')">
+                        <span id="avatar-${p.id}"></span>
+                        <span style="color:#00ccff; font-weight:600;">@${p.user_id}</span>
+                        ${userData && isOnline(userData.last_seen) ? "🟢" : "⚫"}
+                    </div>
+                    <div>💰 <b>${p.price}</b></div>
+                </div>
 
-                ${p.user_id === user ? `<button onclick="event.stopPropagation(); deletePost(${p.id})" style="background:red; color:white; margin-top:10px; width:100%; border:none; border-radius:15px; padding:10px; cursor:pointer;">🗑 Supprimer</button>` : ""}
+                <div style="display:flex; justify-content:space-between; align-items:center;">
+                    <div style="font-size:11px; opacity:0.6;">❤️ ${p.likes || 0} · 👀 ${p.views || 0} vues</div>
+                    <button class="likeBtn ${isLiked(p.id) ? 'liked' : ''}" onclick="event.stopPropagation(); likePost(${p.id}, ${p.likes || 0}, event)">❤️</button>
+                </div>
+
+                <div class="card-actions">
+                    <button class="buy-btn" onclick="event.stopPropagation(); vibrateSoft(); buy(${p.id}, event)">🛒 Acheter</button>
+                    <button class="chat-btn-custom" onclick="event.stopPropagation(); openChat('${p.user_id}')">💬 Message</button>
+                    ${p.videos && p.videos.length > 0 ? `<button class="video-btn" onclick="event.stopPropagation(); openVideos(${p.id})">🎥 Vidéos</button>` : `<button class="comment-btn" onclick="event.stopPropagation(); openComments(${p.id})">💬 Avis</button>`}
+                    <button class="fav-btn" onclick="event.stopPropagation(); toggleFavorite(${p.id})">${getFavorites().includes(p.id) ? "⭐ Favori" : "☆ Favori"}</button>
+                </div>
+
+                ${p.user_id === user ? `<button onclick="event.stopPropagation(); deletePost(${p.id})" style="background:rgba(255,0,0,0.15); color:#ff4d4d; border:none; border-radius:10px; padding:6px; font-size:12px; cursor:pointer;">Supprimer l'annonce</button>` : ""}
             </div>
         `;
         fragment.appendChild(div);
@@ -606,37 +633,27 @@ async function render(){
     }
 
     feed.appendChild(fragment);
-
-    if(allLoaded){
-        let end = document.createElement("div");
-        end.style.textAlign = "center";
-        end.style.padding = "20px";
-        end.style.opacity = "0.5";
-        end.innerText = "Fin du feed";
-        feed.appendChild(end);
-    }
 }
 
 function openPost(id){
     let p = posts.find(x=>x.id===id);
+    if(!p) return;
     document.getElementById("box").innerHTML = `
-        <h1>${p.name}</h1>
-        <img src="${p.image}" style="width:100%; border-radius:20px;">
-        <br><br>📝 ${p.desc}
-        <br><br>💰 ${p.price}
-        <br><br>❤️ ${p.likes}
-        <br><br>👤 ${p.user_id}
-        <button onclick="document.getElementById('modal').style.display='none'" style="width:100%; margin-top:15px; padding:12px; border:none; border-radius:15px; cursor:pointer;">Fermer</button>
+        <h2 style="margin-top:0;">${p.name}</h2>
+        <img src="${p.image}" style="width:100%; height:250px; object-fit:cover; border-radius:14px; margin-bottom:10px;">
+        <p style="opacity:0.9; font-size:14px;">📝 ${p.desc || "Aucune description"}</p>
+        <p style="font-weight:bold; color:#00ff99;">💰 ${p.price}</p>
+        <button onclick="document.getElementById('modal').style.display='none'" style="width:100%; margin-top:15px; padding:12px; border:none; border-radius:14px; background:rgba(255,255,255,0.1); color:white; cursor:pointer; font-weight:bold;">Fermer</button>
     `;
     document.getElementById("modal").style.display="flex";
 }
 
 function openUserMenu(username){
     document.getElementById("box").innerHTML = `
-        <h2>${username}</h2>
-        <button onclick="openProfile('${username}')" style="width:100%; padding:15px; margin-top:10px; border:none; border-radius:12px; cursor:pointer;">👤 Voir le profil</button>
-        <button onclick="location.href='dm.html?user=${username}'" style="width:100%; padding:15px; margin-top:10px; border:none; border-radius:12px; cursor:pointer;">💬 DM</button>
-        <button onclick="document.getElementById('modal').style.display='none'" style="width:100%; margin-top:10px; padding:12px; border:none; border-radius:12px; cursor:pointer;">Fermer</button>
+        <h3 style="margin-top:0;">@${username}</h3>
+        <button onclick="location.href='profile.html?user=${username}'" style="width:100%; padding:14px; margin-top:6px; border:none; border-radius:12px; background:rgba(255,255,255,0.08); color:white; cursor:pointer; font-weight:600;">👤 Voir le profil</button>
+        <button onclick="openChat('${username}')" style="width:100%; padding:14px; margin-top:6px; border:none; border-radius:12px; background:#00ccff; color:black; cursor:pointer; font-weight:600;">💬 Envoyer un message</button>
+        <button onclick="document.getElementById('modal').style.display='none'" style="width:100%; margin-top:10px; padding:10px; border:none; border-radius:12px; background:transparent; opacity:0.7; color:white; cursor:pointer;">Fermer</button>
     `;
     document.getElementById("modal").style.display="flex";
 }
@@ -644,22 +661,21 @@ function openUserMenu(username){
 function openVideos(id){
     let post = posts.find(p=>p.id===id);
     document.getElementById("box").innerHTML = `
-        <h1>🎥 Vidéos</h1>
+        <h3 style="margin-top:0;">🎥 Vidéos de l'annonce</h3>
         ${(post.videos || []).map((v,i)=>`
-            <div onclick="playVideo('${v}')" style="background:#222; padding:15px; margin:10px 0; border-radius:20px; cursor:pointer; font-size:20px;">
-                ▶️ Vidéo ${i+1}
+            <div onclick="playVideo('${v}')" style="background:rgba(255,255,255,0.05); padding:14px; margin:8px 0; border-radius:12px; cursor:pointer; font-weight:bold; display:flex; justify-content:space-between; align-items:center;">
+                <span>▶️ Regarder la vidéo ${i+1}</span>
             </div>
         `).join("")}
-        <button onclick="document.getElementById('modal').style.display='none'" style="width:100%; padding:15px; border:none; border-radius:20px; background:#333; color:white; cursor:pointer;">Fermer</button>
+        <button onclick="document.getElementById('modal').style.display='none'" style="width:100%; margin-top:10px; padding:12px; border:none; border-radius:12px; background:rgba(255,255,255,0.1); color:white; cursor:pointer;">Fermer</button>
     `;
     document.getElementById("modal").style.display = "flex";
 }
 
 function playVideo(video){
     document.getElementById("box").innerHTML = `
-        <h1>🎥 Lecture vidéo</h1>
-        <video src="${video}" controls autoplay style="width:100%; border-radius:20px; max-height:80vh; background:black;"></video>
-        <button onclick="document.getElementById('modal').style.display='none'" style="width:100%; margin-top:15px; padding:15px; border:none; border-radius:20px; background:#333; color:white; cursor:pointer;">Fermer</button>
+        <video src="${video}" controls autoplay style="width:100%; border-radius:14px; max-height:70vh; background:black;"></video>
+        <button onclick="document.getElementById('modal').style.display='none'" style="width:100%; margin-top:10px; padding:12px; border:none; border-radius:12px; background:rgba(255,255,255,0.1); color:white; cursor:pointer;">Fermer</button>
     `;
 }
 
@@ -688,69 +704,65 @@ async function buy(id, event){
     setMoney(money);
 
     if(btn){
-        btn.innerText = "✔ ACHETÉ";
+        btn.innerText = "✔ Acheté";
         btn.style.background = "#00ff99";
-        setTimeout(()=>btn.innerText = "🛒 BUY", 1200);
+        setTimeout(()=>btn.innerText = "🛒 Acheter", 1200);
     }
     if (navigator.vibrate) navigator.vibrate([20, 30, 20]);
-    alert("Acheté !");
 }
 
 function openSell(){
     document.getElementById("box").innerHTML = `
-        <div style="text-align:center;">
-            <h1 style="margin-top:0; font-size:32px;">🚀 Nouvelle Annonce</h1>
-            <p style="opacity:.8; margin-bottom:20px;">Publie ton objet sur le marché</p>
-            <div style="background:#20202b; padding:15px; border-radius:20px; margin-bottom:15px;">
-                <input id="name" placeholder="📦 Nom de l'objet" style="font-size:18px; padding:15px;">
-            </div>
-            <div style="background:#20202b; padding:15px; border-radius:20px; margin-bottom:15px;">
-                <textarea id="desc" placeholder="📝 Description détaillée..." style="height:120px; resize:none; font-size:16px;"></textarea>
-            </div>
-            <div style="background:#20202b; padding:15px; border-radius:20px; margin-bottom:15px;">
-                <input id="price" type="number" placeholder="💰 Prix" style="font-size:18px; padding:15px;">
-            </div>
-            <div id="dropZone" style="border:3px dashed #00ff99; border-radius:20px; padding:30px; cursor:pointer; margin-bottom:15px; background:rgba(0,255,153,.08);">
-                <div style="font-size:50px;">🖼️</div>
-                <b>Glisse une image ici</b><br><br>ou clique pour choisir un fichier
-                <input id="fileInput" type="file" accept="image/*" style="display:none;">
-            </div>
-            <img id="preview" style="display:none; width:100%; border-radius:20px; margin-bottom:15px; max-height:300px; object-fit:cover;">
-            
-            <div id="videoZone" style="border:3px dashed #00ccff; border-radius:20px; padding:30px; cursor:pointer; margin-bottom:15px; background:rgba(0,170,255,.08);">
-                <div style="font-size:50px;">🎥</div>
-                <b>Glisse jusqu'à 3 vidéos ici</b><br><br>ou clique pour choisir des fichiers
-                <input id="videoInput" type="file" accept="video/*" multiple style="display:none;">
-            </div>
-            <div id="videoPreview"></div>
-
-            <button onclick="create()" style="width:100%; padding:18px; border:none; border-radius:20px; font-size:20px; font-weight:bold; background:linear-gradient(45deg,#00ff99,#00ccff); cursor:pointer; color:black; margin-top:10px;">🚀 Publier l'annonce</button>
-            <button onclick="document.getElementById('modal').style.display='none'" style="width:100%; padding:12px; border:none; border-radius:20px; margin-top:10px; background:#333; color:white; cursor:pointer;">Fermer</button>
+        <h2 style="margin-top:0;">🚀 Nouvelle Annonce</h2>
+        <input id="name" placeholder="📦 Nom de l'objet">
+        <textarea id="desc" placeholder="📝 Description..." style="height:80px; resize:none;"></textarea>
+        <input id="price" type="number" placeholder="💰 Prix">
+        
+        <div id="dropZone" style="border:2px dashed #00ff99; border-radius:12px; padding:20px; text-align:center; cursor:pointer; margin:8px 0; background:rgba(0,255,153,.04);">
+            <b>🖼️ Choisir une image</b>
+            <input id="fileInput" type="file" accept="image/*" style="display:none;">
         </div>
+        <img id="preview" style="display:none; width:100%; height:120px; object-fit:cover; border-radius:10px; margin-bottom:8px;">
+
+        <div id="videoZone" style="border:2px dashed #00ccff; border-radius:12px; padding:15px; text-align:center; cursor:pointer; margin-bottom:8px; background:rgba(0,170,255,.04);">
+            <b>🎥 Ajouter des vidéos (max 3)</b>
+            <input id="videoInput" type="file" accept="video/*" multiple style="display:none;">
+        </div>
+        <div id="videoPreview"></div>
+
+        <button onclick="create()" style="width:100%; padding:14px; border:none; border-radius:14px; font-weight:bold; background:linear-gradient(135deg,#00ff99,#00ccff); color:black; cursor:pointer; margin-top:6px;">Publier</button>
+        <button onclick="document.getElementById('modal').style.display='none'" style="width:100%; margin-top:6px; padding:10px; border:none; border-radius:12px; background:transparent; opacity:0.7; color:white; cursor:pointer;">Fermer</button>
     `;
     document.getElementById("modal").style.display = "flex";
 
-    const dropZone = document.getElementById("dropZone");
-    const fileInput = document.getElementById("fileInput");
-    dropZone.onclick = () => fileInput.click();
-    fileInput.onchange = e => { if(e.target.files[0]) loadImage(e.target.files[0]); };
+    document.getElementById("dropZone").onclick = () => document.getElementById("fileInput").click();
+    document.getElementById("fileInput").onchange = e => {
+        if(e.target.files[0]){
+            let reader = new FileReader();
+            reader.onload = ev => {
+                window.selectedImage = ev.target.result;
+                let prev = document.getElementById("preview");
+                prev.src = ev.target.result;
+                prev.style.display = "block";
+            };
+            reader.readAsDataURL(e.target.files[0]);
+        }
+    };
 
     window.selectedImage = "";
     window.selectedVideos = [];
 
-    const videoInput = document.getElementById("videoInput");
-    const videoZone = document.getElementById("videoZone");
-    videoZone.onclick = () => videoInput.click();
-    videoInput.onchange = e => {
-        const files = [...e.target.files];
+    document.getElementById("videoZone").onclick = () => document.getElementById("videoInput").click();
+    document.getElementById("videoInput").onchange = e => {
+        let files = [...e.target.files];
         if(files.length > 3){ alert("Maximum 3 vidéos"); return; }
         window.selectedVideos = [];
         let html = "";
         files.forEach(file => {
-            const reader = new FileReader();
+            let reader = new FileReader();
             reader.onload = ev => {
                 window.selectedVideos.push(ev.target.result);
-                html += `<video src="${ev.target.result}" controls style="width:100%; margin-top:10px; border-radius:20px;"></video>`;
+                html += `<div style="font-size:11px; opacity:0.8; margin-top:2px;">📹 Vidéo ajoutée</div>`;
                 document.getElementById("videoPreview").innerHTML = html;
             };
             reader.readAsDataURL(file);
@@ -758,25 +770,14 @@ function openSell(){
     };
 }
 
-function loadImage(file){
-    const reader = new FileReader();
-    reader.onload = function(e){
-        window.selectedImage = e.target.result;
-        const preview = document.getElementById("preview");
-        preview.src = e.target.result;
-        preview.style.display = "block";
-    };
-    reader.readAsDataURL(file);
-}
-
 async function create(){
-    const name = document.getElementById("name").value.trim();
-    const desc = document.getElementById("desc").value.trim();
-    const price = Number(document.getElementById("price").value);
+    let name = document.getElementById("name").value.trim();
+    let desc = document.getElementById("desc").value.trim();
+    let price = Number(document.getElementById("price").value);
 
     if(!name || !price){ alert("Nom et prix obligatoires !"); return; }
 
-    let { error: postError } = await client.from("posts").insert([{
+    let { error } = await client.from("posts").insert([{
         name: name,
         image: window.selectedImage || "",
         videos: window.selectedVideos || [],
@@ -786,9 +787,8 @@ async function create(){
         likes: 0
     }]);
 
-    if(postError){ alert(postError.message); return; }
+    if(error){ alert(error.message); return; }
 
-    alert("Annonce publiée ! 🚀");
     document.getElementById("modal").style.display = "none";
     loadPosts(true);
 }
@@ -798,34 +798,35 @@ async function openInv(){
     let items = data || [];
 
     document.getElementById("box").innerHTML = `
-        <h2>📦 Inventaire</h2>
-        ${items.length === 0 ? "<p>Aucun objet 😢</p>" : ""}
-        ${items.map(i => `
-            <div style="background:#222; padding:10px; margin:10px 0; border-radius:15px; display:flex; align-items:center; gap:10px;">
-                <img src="${i.image}" style="width:50px; height:50px; border-radius:10px; object-fit:cover;">
-                <div style="flex:1;"><b>${i.item}</b><br>💰 ${i.price}</div>
-                <button onclick="giveItem('${i.id}')" style="background:#00ff99; border:none; border-radius:12px; padding:10px; cursor:pointer; font-weight:bold;">🎁 Donner</button>
-            </div>
-        `).join("")}
-        <button onclick="document.getElementById('modal').style.display='none'" style="width:100%; padding:12px; margin-top:10px; border:none; border-radius:12px; cursor:pointer;">Fermer</button>
+        <h3 style="margin-top:0;">📦 Mon Inventaire</h3>
+        <div style="max-height:50vh; overflow-y:auto;">
+            ${items.length === 0 ? "<p style='opacity:0.6; text-align:center;'>Aucun objet</p>" : ""}
+            ${items.map(i => `
+                <div style="background:rgba(255,255,255,0.04); padding:10px; margin:8px 0; border-radius:12px; display:flex; align-items:center; gap:10px;">
+                    <img src="${i.image}" style="width:45px; height:45px; border-radius:8px; object-fit:cover;">
+                    <div style="flex:1;"><b>${i.item}</b><br><span style="font-size:12px; color:#00ff99;">💰 ${i.price}</span></div>
+                    <button onclick="giveItem('${i.id}')" style="background:#00ff99; border:none; border-radius:10px; padding:8px 12px; font-weight:bold; cursor:pointer; color:black;">🎁</button>
+                </div>
+            `).join("")}
+        </div>
+        <button onclick="document.getElementById('modal').style.display='none'" style="width:100%; padding:12px; margin-top:10px; border:none; border-radius:12px; background:rgba(255,255,255,0.1); color:white; cursor:pointer;">Fermer</button>
     `;
     document.getElementById("modal").style.display = "flex";
 }
 
 async function giveItem(itemId){
     let { data: friends } = await client.from("friends").select("*").eq("status","accepted").or(`user1.eq.${user},user2.eq.${user}`);
-    let html = `<h2>🎁 Donner l'objet</h2>`;
+    let html = `<h3 style="margin-top:0;">🎁 Choisir un ami</h3>`;
     if(!friends || friends.length === 0){
-        html += "<p>Aucun ami</p>";
+        html += "<p style='opacity:0.6; text-align:center;'>Aucun ami disponible</p>";
     } else {
         friends.forEach(f => {
             let friend = f.user1 === user ? f.user2 : f.user1;
-            html += `<button style="width:100%; padding:15px; margin:5px 0; border:none; border-radius:15px; cursor:pointer;" onclick="sendItem(${itemId}, '${friend}')">👤 ${friend}</button>`;
+            html += `<button style="width:100%; padding:12px; margin:6px 0; border:none; border-radius:10px; background:rgba(255,255,255,0.08); color:white; font-weight:bold; cursor:pointer;" onclick="sendItem(${itemId}, '${friend}')">@${friend}</button>`;
         });
     }
-    html += `<button onclick="modal.style.display='none'" style="width:100%; margin-top:10px; padding:10px; border:none; border-radius:10px; cursor:pointer;">Fermer</button>`;
-    box.innerHTML = html;
-    modal.style.display = "flex";
+    html += `<button onclick="document.getElementById('modal').style.display='none'" style="width:100%; margin-top:10px; padding:10px; border:none; border-radius:10px; background:transparent; color:white; opacity:0.7; cursor:pointer;">Fermer</button>`;
+    document.getElementById("box").innerHTML = html;
 }
 
 async function sendItem(itemId, friend){
@@ -836,8 +837,7 @@ async function sendItem(itemId, friend){
     await client.from("inventaire").delete().eq("id", itemId);
 
     if(navigator.vibrate) navigator.vibrate([40,50,40]);
-    alert(`🎁 Objet envoyé à ${friend}`);
-    modal.style.display = "none";
+    document.getElementById("modal").style.display = "none";
     openInv();
 }
 
