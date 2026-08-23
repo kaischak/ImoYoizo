@@ -157,6 +157,7 @@ body{
     object-fit: cover;
     border-radius: 16px;
     background: #000;
+    cursor: pointer;
 }
 
 .info{
@@ -439,11 +440,6 @@ function isLiked(id){
     return getLikedPosts().includes(id);
 }
 
-function isOnline(lastSeen){
-    if(!lastSeen) return false;
-    return (Date.now() - new Date(lastSeen).getTime()) < 60000;
-}
-
 async function likePost(id, currentLikes, event){
     let btn = event.currentTarget;
     let liked = isLiked(id);
@@ -472,7 +468,17 @@ async function likePost(id, currentLikes, event){
 
     let targetPost = posts.find(p => p.id === id);
     if(targetPost) targetPost.likes = newLikes;
-    render();
+    
+    // Mise à jour ciblée du texte des likes sans relancer tout le rendu
+    let likesEl = document.getElementById(`likes-count-${id}`);
+    if(likesEl) likesEl.innerText = newLikes;
+    
+    // Met à jour la classe du bouton like
+    if(liked){
+        btn.classList.remove('liked');
+    } else {
+        btn.classList.add('liked');
+    }
 }
 
 function scorePost(p){
@@ -507,28 +513,24 @@ async function addComment(postId){
     openComments(postId);
 }
 
-// SYSTÈME DE VUES OPTIMISÉ ET FIABLE
+// SYSTÈME DE VUES OPTIMISÉ ET SANS RECHARGEMENT
 async function addView(postId){
     let post = posts.find(p => p.id === postId);
     if(!post) return;
 
-    // Incrémente immédiatement dans l'objet local et met à jour le texte à l'écran sans re-rendre tout le feed
     post.views = (post.views || 0) + 1;
     let viewsEl = document.getElementById(`views-count-${postId}`);
     if(viewsEl) viewsEl.innerText = post.views;
 
-    // Enregistre en base de données de manière asynchrone
     await client.from("posts").update({ views: post.views }).eq("id", postId);
 }
 
-// IntersectionObserver pour déclencher la vue dès que la carte apparaît à l'écran
 let viewObserver = new IntersectionObserver((entries, observer) => {
     entries.forEach(entry => {
         if(entry.isIntersecting){
             let postId = Number(entry.target.dataset.postId);
             let seenKey = `seen_post_${user}_${postId}`;
             
-            // Compte une seule vue par utilisateur et par post dans cette session/appareil
             if(!localStorage.getItem(seenKey)){
                 localStorage.setItem(seenKey, "true");
                 addView(postId);
@@ -536,21 +538,25 @@ let viewObserver = new IntersectionObserver((entries, observer) => {
             observer.unobserve(entry.target);
         }
     });
-}, { threshold: 0.6 }); // Déclenche quand 60% de la carte est visible
+}, { threshold: 0.6 });
 
 function getFavorites(){
     return JSON.parse(localStorage.getItem("favorites") || "[]");
 }
 
-function toggleFavorite(id){
+function toggleFavorite(id, event){
     let favs = getFavorites();
-    if(favs.includes(id)){
+    let isFav = favs.includes(id);
+    if(isFav){
         favs = favs.filter(x => x !== id);
     } else {
         favs.push(id);
     }
     localStorage.setItem("favorites", JSON.stringify(favs));
-    render();
+    
+    // Mise à jour directe du bouton favori sans re-rendre la page
+    let btn = event.currentTarget;
+    if(btn) btn.innerText = !isFav ? "⭐ Favori" : "☆ Favori";
 }
 
 function vibrateSoft(btn){
@@ -594,14 +600,14 @@ async function render(){
         div.className = "post";
 
         div.innerHTML = `
-            <div class="card" data-post-id="${p.id}" onclick="openPost(${p.id})">
+            <div class="card" data-post-id="${p.id}">
                 <div>
                     <h2>${p.name}</h2>
-                    <img src="${p.image}">
+                    <img src="${p.image}" onclick="openPost(${p.id})">
                 </div>
 
                 <div class="info">
-                    <div style="display:flex; align-items:center; gap:6px; cursor:pointer;" onclick="event.stopPropagation(); openUserMenu('${p.user_id}')">
+                    <div style="display:flex; align-items:center; gap:6px; cursor:pointer;" onclick="openUserMenu('${p.user_id}')">
                         <span id="avatar-${p.id}">👤</span>
                         <span style="color:#00ccff; font-weight:600;">@${p.user_id}</span>
                         <span id="status-${p.user_id}"></span>
@@ -610,18 +616,18 @@ async function render(){
                 </div>
 
                 <div style="display:flex; justify-content:space-between; align-items:center;">
-                    <div style="font-size:11px; opacity:0.6;">❤️ ${p.likes || 0} · 👀 <span id="views-count-${p.id}">${p.views || 0}</span> vues</div>
-                    <button class="likeBtn ${isLiked(p.id) ? 'liked' : ''}" onclick="event.stopPropagation(); likePost(${p.id}, ${p.likes || 0}, event)">❤️</button>
+                    <div style="font-size:11px; opacity:0.6;">❤️ <span id="likes-count-${p.id}">${p.likes || 0}</span> · 👀 <span id="views-count-${p.id}">${p.views || 0}</span> vues</div>
+                    <button class="likeBtn ${isLiked(p.id) ? 'liked' : ''}" onclick="likePost(${p.id}, ${p.likes || 0}, event)">❤️</button>
                 </div>
 
                 <div class="card-actions">
-                    <button class="buy-btn" onclick="event.stopPropagation(); vibrateSoft(); buy(${p.id}, event)">🛒 Acheter</button>
-                    <button class="chat-btn-custom" onclick="event.stopPropagation(); openChat('${p.user_id}')">💬 Message</button>
-                    ${p.videos && p.videos.length > 0 ? `<button class="video-btn" onclick="event.stopPropagation(); openVideos(${p.id})">🎥 Vidéos</button>` : `<button class="comment-btn" onclick="event.stopPropagation(); openComments(${p.id})">💬 Avis</button>`}
-                    <button class="fav-btn" onclick="event.stopPropagation(); toggleFavorite(${p.id})">${getFavorites().includes(p.id) ? "⭐ Favori" : "☆ Favori"}</button>
+                    <button class="buy-btn" onclick="vibrateSoft(this); buy(${p.id}, event)">🛒 Acheter</button>
+                    <button class="chat-btn-custom" onclick="openChat('${p.user_id}')">💬 Message</button>
+                    ${p.videos && p.videos.length > 0 ? `<button class="video-btn" onclick="openVideos(${p.id})">🎥 Vidéos</button>` : `<button class="comment-btn" onclick="openComments(${p.id})">💬 Avis</button>`}
+                    <button class="fav-btn" onclick="toggleFavorite(${p.id}, event)">${getFavorites().includes(p.id) ? "⭐ Favori" : "☆ Favori"}</button>
                 </div>
 
-                ${p.user_id === user ? `<button onclick="event.stopPropagation(); deletePost(${p.id})" style="background:rgba(255,0,0,0.15); color:#ff4d4d; border:none; border-radius:10px; padding:6px; font-size:12px; cursor:pointer;">Supprimer l'annonce</button>` : ""}
+                ${p.user_id === user ? `<button onclick="deletePost(${p.id})" style="background:rgba(255,0,0,0.15); color:#ff4d4d; border:none; border-radius:10px; padding:6px; font-size:12px; cursor:pointer;">Supprimer l'annonce</button>` : ""}
             </div>
         `;
         fragment.appendChild(div);
@@ -630,7 +636,6 @@ async function render(){
 
     feed.appendChild(fragment);
 
-    // Attache l'observateur sur les nouvelles cartes affichées pour compter les vues au scroll
     document.querySelectorAll('.card[data-post-id]').forEach(card => {
         viewObserver.observe(card);
     });
@@ -849,10 +854,7 @@ const box = document.getElementById("box");
 modal.addEventListener("click", () => { modal.style.display = "none"; });
 box.addEventListener("click", (e) => { e.stopPropagation(); });
 
-client.channel('posts-channel').on('postgres_changes', { event: '*', schema: 'public', table: 'posts' }, () => {
-    loadPosts(true);
-}).subscribe();
-
+// Suppression de l'écouteur Realtime globale qui rechargeait tout le flux à chaque modification
 loadPosts(true);
 loadProfile();
 setInterval(updateLastSeen, 30000);
