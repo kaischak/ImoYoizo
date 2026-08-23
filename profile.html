@@ -2,109 +2,239 @@
 <html lang="fr">
 <head>
 <meta charset="UTF-8">
-<title>Profil</title>
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<title>Mon Profil - Market Fluid</title>
 
 <style>
-body{
-font-family:Arial;
-background:#0b0b0f;
-color:white;
-text-align:center;
-padding:20px;
+* { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
+body {
+    margin: 0;
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+    background: #0b0b0f;
+    color: white;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    min-height: 100vh;
+    padding: 20px;
+    user-select: none;
 }
 
-img{
-width:120px;
-height:120px;
-border-radius:50%;
-object-fit:cover;
-margin:20px;
-border:2px solid #00ccff;
+.profile-card {
+    width: 100%;
+    max-width: 400px;
+    background: #16161d;
+    border-radius: 28px;
+    padding: 28px 20px;
+    box-shadow: 0 10px 30px rgba(0,0,0,0.5);
+    border: 1px solid rgba(255,255,255,0.05);
+    text-align: center;
+    animation: fadeInCard 0.4s ease;
 }
 
-input{
-margin-top:10px;
+@keyframes fadeInCard {
+    from { opacity: 0; transform: scale(0.95); }
+    to { opacity: 1; transform: scale(1); }
 }
 
-button{
-padding:10px 15px;
-margin-top:15px;
-border:none;
-border-radius:10px;
-cursor:pointer;
-background:#00ccff;
+h2 {
+    margin-top: 0;
+    font-size: 22px;
+    margin-bottom: 6px;
 }
+
+#username-display {
+    font-size: 14px;
+    color: #00ccff;
+    font-weight: 600;
+    margin-bottom: 24px;
+}
+
+.avatar-container {
+    position: relative;
+    width: 130px;
+    height: 130px;
+    margin: 0 auto 20px auto;
+    cursor: pointer;
+}
+
+#avatar {
+    width: 100%;
+    height: 100%;
+    border-radius: 50%;
+    object-fit: cover;
+    background: #000;
+    border: 3px solid #00ccff;
+    box-shadow: 0 0 20px rgba(0,204,255,0.3);
+    transition: transform 0.2s;
+}
+
+.avatar-container:active #avatar {
+    transform: scale(0.95);
+}
+
+.avatar-overlay {
+    position: absolute;
+    inset: 0;
+    border-radius: 50%;
+    background: rgba(0,0,0,0.4);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 24px;
+    opacity: 0;
+    transition: opacity 0.2s;
+}
+
+.avatar-container:hover .avatar-overlay {
+    opacity: 1;
+}
+
+input[type="file"] {
+    display: none;
+}
+
+.file-btn {
+    display: block;
+    width: 100%;
+    padding: 12px;
+    background: rgba(255,255,255,0.08);
+    border-radius: 14px;
+    font-size: 14px;
+    font-weight: 600;
+    cursor: pointer;
+    margin-bottom: 15px;
+    border: 1px solid rgba(255,255,255,0.05);
+    transition: background 0.2s, transform 0.1s;
+}
+.file-btn:active { transform: scale(0.97); background: rgba(255,255,255,0.15); }
+
+.save-btn {
+    width: 100%;
+    padding: 14px;
+    border: none;
+    border-radius: 14px;
+    font-weight: bold;
+    font-size: 15px;
+    background: linear-gradient(135deg, #00ff99, #00ccff);
+    color: black;
+    cursor: pointer;
+    transition: transform 0.15s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+    box-shadow: 0 4px 15px rgba(0,255,153,0.2);
+}
+.save-btn:active { transform: scale(0.95); }
+
+.back-btn {
+    background: transparent;
+    border: none;
+    color: white;
+    opacity: 0.7;
+    margin-top: 20px;
+    font-size: 13px;
+    cursor: pointer;
+    transition: opacity 0.2s;
+}
+.back-btn:hover { opacity: 1; }
 </style>
 </head>
 
 <body>
 
-<h2>👤 Mon profil</h2>
+<div class="profile-card">
+    <h2>👤 Mon Profil</h2>
+    <div id="username-display">Chargement...</div>
 
-<img id="avatar" src="https://via.placeholder.com/120">
+    <div class="avatar-container" onclick="document.getElementById('file').click()">
+        <img id="avatar" src="https://via.placeholder.com/130" alt="Avatar">
+        <div class="avatar-overlay">📷</div>
+    </div>
 
-<br>
+    <input type="file" id="file" accept="image/*">
+    <label for="file" class="file-btn">🖼️ Changer d'avatar</label>
 
-<input type="file" id="file" accept="image/*">
+    <button class="save-btn" onclick="save()">💾 Sauvegarder</button>
+</div>
 
-<br>
-
-<button onclick="save()">💾 Sauvegarder</button>
+<button class="back-btn" onclick="history.back()">← Retour</button>
 
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 
 <script>
-
-const client = supabase.createClient(
-"https://eezsocswqhqgkvghhygq.supabase.co",
-"eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImVlenNvY3N3cWhxZ2t2Z2hoeWdxIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODEwNjg5MjYsImV4cCI6MjA5NjY0NDkyNn0.TVI962lsUo67i6Ltq8okbOw-_GO-5yc4KDCyc8OkdVQ"
-);
+const supabaseUrl = "https://eezsocswqhqgkvghhygq.supabase.co";
+const supabaseKey = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImVlenNvY3N3cWhxZ2t2Z2hoeWdxIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODEwNjg5MjYsImV4cCI6MjA5NjY0NDkyNn0.TVI962lsUo67i6Ltq8okbOw-_GO-5yc4KDCyc8OkdVQ";
+const client = supabase.createClient(supabaseUrl, supabaseKey);
 
 let user = localStorage.getItem("user");
+
+if(!user || user.startsWith("user")){
+    localStorage.removeItem("user");
+    window.location.href = "auth.html";
+}
+
 let imageData = "";
 
-/* charger avatar */
-async function load(){
+/* Charger les informations du profil */
+async function loadProfile(){
+    document.getElementById("username-display").innerText = "@" + user;
 
-let { data } = await client
-.from("users")
-.select("*")
-.eq("username", user)
-.single();
+    let { data, error } = await client
+        .from("users")
+        .select("avatar")
+        .eq("username", user)
+        .maybeSingle();
 
-if(data?.avatar){
-document.getElementById("avatar").src = data.avatar;
-imageData = data.avatar;
+    if(error){
+        console.error("Erreur de chargement:", error);
+        return;
+    }
+
+    if(data?.avatar){
+        document.getElementById("avatar").src = data.avatar;
+        imageData = data.avatar;
+    } else {
+        document.getElementById("avatar").src = "https://via.placeholder.com/130";
+    }
 }
 
-}
+/* Gestion du changement d'image */
+document.getElementById("file").onchange = e => {
+    const file = e.target.files[0];
+    if(!file) return;
 
-/* upload image */
-document.getElementById("file").onchange = e=>{
-const file = e.target.files[0];
-const reader = new FileReader();
-
-reader.onload = ev=>{
-imageData = ev.target.result;
-document.getElementById("avatar").src = imageData;
+    const reader = new FileReader();
+    reader.onload = ev => {
+        imageData = ev.target.result;
+        document.getElementById("avatar").src = imageData;
+        if(navigator.vibrate) navigator.vibrate(20);
+    };
+    reader.readAsDataURL(file);
 };
 
-reader.readAsDataURL(file);
-};
-
-/* sauvegarder */
+/* Sauvegarder le profil dans Supabase */
 async function save(){
+    let btn = document.querySelector(".save-btn");
+    btn.innerText = "Sauvegarde...";
+    btn.style.opacity = "0.7";
 
-await client
-.from("users")
-.update({ avatar: imageData })
-.eq("username", user);
+    let { error } = await client
+        .from("users")
+        .update({ avatar: imageData })
+        .eq("username", user);
 
-alert("Profil mis à jour !");
+    btn.innerText = "💾 Sauvegarder";
+    btn.style.opacity = "1";
+
+    if(error){
+        alert("Erreur lors de la mise à jour : " + error.message);
+        return;
+    }
+
+    if(navigator.vibrate) navigator.vibrate([30, 40, 30]);
+    alert("Profil mis à jour avec succès !");
 }
 
-load();
-
+loadProfile();
 </script>
 
 </body>
