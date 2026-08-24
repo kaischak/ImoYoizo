@@ -18,6 +18,28 @@ body{
     user-select: none;
 }
 
+/* Zone de drop customisée ultra stylée */
+.custom-drop-zone {
+    border: 2px dashed rgba(255, 255, 255, 0.18);
+    background: rgba(255, 255, 255, 0.03);
+    border-radius: 18px;
+    padding: 24px 16px;
+    text-align: center;
+    cursor: pointer;
+    transition: all 0.25s ease;
+    position: relative;
+    overflow: hidden;
+}
+.custom-drop-zone:hover {
+    border-color: rgba(0, 255, 153, 0.5);
+    background: rgba(0, 255, 153, 0.04);
+}
+.custom-drop-zone.dragover {
+    border-color: #00ff99;
+    background: rgba(0, 255, 153, 0.1);
+    transform: scale(1.01);
+}
+
 /* Topbar ultra propre pour mobile */
 .topbar{
     position:fixed;
@@ -504,7 +526,11 @@ function openNotifications(){
 }
 
 // Interface de publication redessinée avec un design ultra propre
+let uploadedMediaData = { image: "", video: "" };
+
 function openSell(){
+    uploadedMediaData = { image: "", video: "" };
+
     document.getElementById("box").innerHTML = `
         <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:16px;">
             <div style="display:flex; align-items:center; gap:8px;">
@@ -514,7 +540,7 @@ function openSell(){
             <button onclick="document.getElementById('modal').style.display='none'" style="background:rgba(255,255,255,0.06); border:none; width:32px; height:32px; border-radius:50%; color:white; font-size:16px; cursor:pointer; display:flex; align-items:center; justify-content:center;">✕</button>
         </div>
         
-        <div style="display: flex; flex-direction: column; gap: 12px; max-height: 70vh; overflow-y: auto; padding-right: 4px;">
+        <div style="display: flex; flex-direction: column; gap: 14px; max-height: 72vh; overflow-y: auto; padding-right: 4px;">
             <div>
                 <label style="font-size:11px; opacity:0.7; font-weight:600; text-transform: uppercase; letter-spacing: 0.5px;">Titre de l'annonce</label>
                 <input id="newPostName" placeholder="Ex: Casque Gamer RGB Pro..." style="margin-top:4px;">
@@ -526,19 +552,18 @@ function openSell(){
             </div>
 
             <div>
-                <label style="font-size:11px; opacity:0.7; font-weight:600; text-transform: uppercase; letter-spacing: 0.5px;">Image (URL ou Import)</label>
-                <div style="display: flex; gap: 8px; margin-top:4px;">
-                    <input id="newPostImage" placeholder="Colle le lien de l'image ici..." style="margin:0; flex:1;">
-                    <label style="background:rgba(255,255,255,0.08); border:1px solid rgba(255,255,255,0.1); padding:0 12px; border-radius:14px; display:flex; align-items:center; justify-content:center; cursor:pointer; font-size:13px; font-weight:600; white-space:nowrap;">
-                        📁 Fichier
-                        <input type="file" accept="image/*" id="imageFileInput" onchange="handleImageFile(this)" style="display:none;">
-                    </label>
+                <label style="font-size:11px; opacity:0.7; font-weight:600; text-transform: uppercase; letter-spacing: 0.5px; display:block; margin-bottom:6px;">Média (Photo ou Vidéo)</label>
+                
+                <!-- Zone de Drop Customisée -->
+                <div id="dropZone" class="custom-drop-zone" onclick="document.getElementById('mediaFileInput').click()" ondragover="handleDragOver(event)" ondragleave="handleDragLeave(event)" ondrop="handleDrop(event)">
+                    <div style="font-size: 32px; margin-bottom: 8px;">📁</div>
+                    <div style="font-weight: 600; font-size: 13px; color: white;">Glisse ta photo ou vidéo ici</div>
+                    <div style="font-size: 11px; opacity: 0.5; margin-top: 4px;">ou clique pour parcourir tes fichiers</div>
+                    <input type="file" id="mediaFileInput" accept="image/*,video/*" style="display:none" onchange="handleFileSelect(this)">
                 </div>
-            </div>
 
-            <div>
-                <label style="font-size:11px; opacity:0.7; font-weight:600; text-transform: uppercase; letter-spacing: 0.5px;">Vidéos (URLs séparées par des virgules)</label>
-                <input id="newPostVideos" placeholder="https://lien-video-1.mp4, https://..." style="margin-top:4px;">
+                <!-- Aperçu du média sélectionné -->
+                <div id="mediaPreviewContainer" style="display:none; position: relative; border-radius: 16px; overflow: hidden; background: #000; border: 1px solid rgba(255,255,255,0.1);"></div>
             </div>
             
             <div>
@@ -555,36 +580,94 @@ function openSell(){
     document.getElementById("modal").style.display = "flex";
 }
 
-// Fonction pour transformer un fichier image local en URL base64 si l'utilisateur choisit un fichier
-function handleImageFile(input) {
-    if (input.files && input.files[0]) {
-        let reader = new FileReader();
-        reader.onload = function(e) {
-            document.getElementById("newPostImage").value = e.target.result;
-        };
-        reader.readAsDataURL(input.files[0]);
+// Gestionnaires de Drag & Drop et Sélection de fichiers
+function handleDragOver(e) {
+    e.preventDefault();
+    e.stopPropagation();
+    document.getElementById('dropZone').classList.add('dragover');
+}
+
+function handleDragLeave(e) {
+    e.preventDefault();
+    e.stopPropagation();
+    document.getElementById('dropZone').classList.remove('dragover');
+}
+
+function handleDrop(e) {
+    e.preventDefault();
+    e.stopPropagation();
+    document.getElementById('dropZone').classList.remove('dragover');
+    if (e.dataTransfer.files && e.dataTransfer.files.length > 0) {
+        processFile(e.dataTransfer.files[0]);
     }
+}
+
+function handleFileSelect(input) {
+    if (input.files && input.files[0]) {
+        processFile(input.files[0]);
+    }
+}
+
+function processFile(file) {
+    let reader = new FileReader();
+    let isVideo = file.type.startsWith('video');
+
+    reader.onload = function(e) {
+        let result = e.target.result;
+        let previewContainer = document.getElementById('mediaPreviewContainer');
+        let dropZone = document.getElementById('dropZone');
+
+        if (isVideo) {
+            uploadedMediaData.video = result;
+            uploadedMediaData.image = "https://via.placeholder.com/400x400?text=Video"; // Image de secours miniature
+            previewContainer.innerHTML = `
+                <video src="${result}" controls autoplay muted style="width: 100%; max-height: 180px; object-fit: contain; display: block;"></video>
+                <button onclick="clearMedia()" style="position: absolute; top: 8px; right: 8px; background: rgba(0,0,0,0.7); border: none; color: white; border-radius: 50%; width: 30px; height: 30px; cursor: pointer; font-weight: bold; display: flex; align-items: center; justify-content: center;">✕</button>
+            `;
+        } else {
+            uploadedMediaData.image = result;
+            uploadedMediaData.video = "";
+            previewContainer.innerHTML = `
+                <img src="${result}" style="width: 100%; max-height: 180px; object-fit: cover; display: block;">
+                <button onclick="clearMedia()" style="position: absolute; top: 8px; right: 8px; background: rgba(0,0,0,0.7); border: none; color: white; border-radius: 50%; width: 30px; height: 30px; cursor: pointer; font-weight: bold; display: flex; align-items: center; justify-content: center;">✕</button>
+            `;
+        }
+
+        dropZone.style.display = 'none';
+        previewContainer.style.display = 'block';
+    };
+    reader.readAsDataURL(file);
+}
+
+function clearMedia() {
+    uploadedMediaData = { image: "", video: "" };
+    document.getElementById('mediaPreviewContainer').style.display = 'none';
+    document.getElementById('mediaPreviewContainer').innerHTML = '';
+    document.getElementById('dropZone').style.display = 'block';
+    document.getElementById('mediaFileInput').value = '';
 }
 
 async function submitPost(){
     let name = document.getElementById("newPostName").value.trim();
     let price = Number(document.getElementById("newPostPrice").value);
-    let image = document.getElementById("newPostImage").value.trim();
-    let videosInput = document.getElementById("newPostVideos").value.trim();
     let desc = document.getElementById("newPostDesc").value.trim();
 
-    if(!name || !image || isNaN(price)){
-        alert("Le nom, le prix et l'image sont obligatoires !");
+    if(!name || isNaN(price)){
+        alert("Remplis le nom et le prix correctement !");
         return;
     }
 
-    // Convertit la chaîne de vidéos en tableau propre si des liens sont présents
-    let videosArray = videosInput ? videosInput.split(',').map(v => v.trim()).filter(v => v.length > 0) : [];
+    if(!uploadedMediaData.image && !uploadedMediaData.video){
+        alert("Tu dois impérativement ajouter une photo ou une vidéo !");
+        return;
+    }
+
+    let videosArray = uploadedMediaData.video ? [uploadedMediaData.video] : [];
 
     let { error } = await client.from("posts").insert([{
         name: name,
         price: price,
-        image: image,
+        image: uploadedMediaData.image || "https://via.placeholder.com/400x400",
         videos: videosArray,
         desc: desc,
         user_id: user,
