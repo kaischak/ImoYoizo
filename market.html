@@ -506,44 +506,86 @@ function openNotifications(){
 // Interface de publication redessinée avec un design ultra propre
 function openSell(){
     document.getElementById("box").innerHTML = `
-        <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:14px;">
-            <h3 style="margin:0; font-size:18px;">✨ Publier une annonce</h3>
-            <button onclick="document.getElementById('modal').style.display='none'" style="background:none; border:none; color:white; font-size:18px; cursor:pointer; opacity:0.7;">✕</button>
+        <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:16px;">
+            <div style="display:flex; align-items:center; gap:8px;">
+                <div style="width:36px; height:36px; border-radius:12px; background:linear-gradient(135deg, #00ff99, #00ccff); display:flex; align-items:center; justify-content:center; color:black; font-size:18px; font-weight:bold;">✨</div>
+                <h3 style="margin:0; font-size:18px; font-weight:700;">Créer une annonce</h3>
+            </div>
+            <button onclick="document.getElementById('modal').style.display='none'" style="background:rgba(255,255,255,0.06); border:none; width:32px; height:32px; border-radius:50%; color:white; font-size:16px; cursor:pointer; display:flex; align-items:center; justify-content:center;">✕</button>
         </div>
         
-        <label style="font-size:12px; opacity:0.7; font-weight:600;">Titre de l'annonce</label>
-        <input id="newPostName" placeholder="Ex: Casque Gamer RGB...">
+        <div style="display: flex; flex-direction: column; gap: 12px; max-height: 70vh; overflow-y: auto; padding-right: 4px;">
+            <div>
+                <label style="font-size:11px; opacity:0.7; font-weight:600; text-transform: uppercase; letter-spacing: 0.5px;">Titre de l'annonce</label>
+                <input id="newPostName" placeholder="Ex: Casque Gamer RGB Pro..." style="margin-top:4px;">
+            </div>
+            
+            <div>
+                <label style="font-size:11px; opacity:0.7; font-weight:600; text-transform: uppercase; letter-spacing: 0.5px;">Prix (en pièces 💰)</label>
+                <input id="newPostPrice" type="number" placeholder="Ex: 150" style="margin-top:4px;">
+            </div>
+
+            <div>
+                <label style="font-size:11px; opacity:0.7; font-weight:600; text-transform: uppercase; letter-spacing: 0.5px;">Image (URL ou Import)</label>
+                <div style="display: flex; gap: 8px; margin-top:4px;">
+                    <input id="newPostImage" placeholder="Colle le lien de l'image ici..." style="margin:0; flex:1;">
+                    <label style="background:rgba(255,255,255,0.08); border:1px solid rgba(255,255,255,0.1); padding:0 12px; border-radius:14px; display:flex; align-items:center; justify-content:center; cursor:pointer; font-size:13px; font-weight:600; white-space:nowrap;">
+                        📁 Fichier
+                        <input type="file" accept="image/*" id="imageFileInput" onchange="handleImageFile(this)" style="display:none;">
+                    </label>
+                </div>
+            </div>
+
+            <div>
+                <label style="font-size:11px; opacity:0.7; font-weight:600; text-transform: uppercase; letter-spacing: 0.5px;">Vidéos (URLs séparées par des virgules)</label>
+                <input id="newPostVideos" placeholder="https://lien-video-1.mp4, https://..." style="margin-top:4px;">
+            </div>
+            
+            <div>
+                <label style="font-size:11px; opacity:0.7; font-weight:600; text-transform: uppercase; letter-spacing: 0.5px;">Description détaillée</label>
+                <textarea id="newPostDesc" placeholder="Décris ton article, ses caractéristiques..." style="height:80px; resize:none; margin-top:4px;"></textarea>
+            </div>
+        </div>
         
-        <label style="font-size:12px; opacity:0.7; font-weight:600;">Prix (en pièces)</label>
-        <input id="newPostPrice" type="number" placeholder="Ex: 150">
-        
-        <label style="font-size:12px; opacity:0.7; font-weight:600;">Lien de l'image (URL)</label>
-        <input id="newPostImage" placeholder="https://...">
-        
-        <label style="font-size:12px; opacity:0.7; font-weight:600;">Description</label>
-        <textarea id="newPostDesc" placeholder="Décris ton article..." style="height:85px; resize:none;"></textarea>
-        
-        <button onclick="submitPost()" style="width:100%; padding:14px; margin-top:6px; background:linear-gradient(135deg, #00ff99, #00ccff); border:none; border-radius:14px; font-weight:bold; cursor:pointer; color:black; font-size:15px; box-shadow: 0 4px 15px rgba(0,255,153,0.3);">Publier l'annonce</button>
-        <button onclick="document.getElementById('modal').style.display='none'" style="width:100%; margin-top:8px; padding:10px; border:none; border-radius:12px; background:transparent; opacity:0.6; color:white; cursor:pointer;">Annuler</button>
+        <div style="display: flex; gap: 8px; margin-top: 16px;">
+            <button onclick="document.getElementById('modal').style.display='none'" style="flex: 1; padding: 13px; border: none; border-radius: 14px; background: rgba(255,255,255,0.06); color: white; cursor: pointer; font-weight: 600; font-size: 14px;">Annuler</button>
+            <button onclick="submitPost()" style="flex: 2; padding: 13px; background: linear-gradient(135deg, #00ff99, #00ccff); border: none; border-radius: 14px; font-weight: bold; cursor: pointer; color: black; font-size: 14px; box-shadow: 0 4px 20px rgba(0,255,153,0.3);">Publier l'annonce</button>
+        </div>
     `;
     document.getElementById("modal").style.display = "flex";
+}
+
+// Fonction pour transformer un fichier image local en URL base64 si l'utilisateur choisit un fichier
+function handleImageFile(input) {
+    if (input.files && input.files[0]) {
+        let reader = new FileReader();
+        reader.onload = function(e) {
+            document.getElementById("newPostImage").value = e.target.result;
+        };
+        reader.readAsDataURL(input.files[0]);
+    }
 }
 
 async function submitPost(){
     let name = document.getElementById("newPostName").value.trim();
     let price = Number(document.getElementById("newPostPrice").value);
     let image = document.getElementById("newPostImage").value.trim();
+    let videosInput = document.getElementById("newPostVideos").value.trim();
     let desc = document.getElementById("newPostDesc").value.trim();
 
     if(!name || !image || isNaN(price)){
-        alert("Remplis correctement tous les champs obligatoires !");
+        alert("Le nom, le prix et l'image sont obligatoires !");
         return;
     }
+
+    // Convertit la chaîne de vidéos en tableau propre si des liens sont présents
+    let videosArray = videosInput ? videosInput.split(',').map(v => v.trim()).filter(v => v.length > 0) : [];
 
     let { error } = await client.from("posts").insert([{
         name: name,
         price: price,
         image: image,
+        videos: videosArray,
         desc: desc,
         user_id: user,
         likes: 0,
@@ -556,6 +598,7 @@ async function submitPost(){
     }
 
     document.getElementById("modal").style.display = "none";
+    if(navigator.vibrate) navigator.vibrate(40);
     loadPosts();
 }
 
