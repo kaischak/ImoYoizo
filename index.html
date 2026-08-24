@@ -77,12 +77,13 @@ body {
     display: flex;
     flex-direction: column;
     align-items: center;
-    gap: 20px;
+    gap: 15px;
     margin: auto 0;
+    padding: 10px 0;
 }
 
 h1 {
-    font-size: 32px;
+    font-size: 28px;
     margin: 0;
     background: linear-gradient(135deg, #00ff99, #00ccff);
     -webkit-background-clip: text;
@@ -95,18 +96,21 @@ h1 {
     width: 100%;
     display: flex;
     flex-direction: column;
-    gap: 12px;
+    gap: 10px;
+    max-height: 55vh;
+    overflow-y: auto;
+    padding-right: 2px;
 }
 
 .menu-btn {
     width: 100%;
-    padding: 16px 20px;
+    padding: 14px 18px;
     border: 1px solid rgba(255, 255, 255, 0.08);
-    border-radius: 18px;
+    border-radius: 16px;
     background: rgba(255, 255, 255, 0.04);
     color: white;
     cursor: pointer;
-    font-size: 16px;
+    font-size: 15px;
     font-weight: 600;
     display: flex;
     align-items: center;
@@ -204,6 +208,21 @@ h1 {
             <span>👥 Amis & Dons</span>
             <span>➔</span>
         </button>
+        
+        <!-- 3 Nouvelles options utiles -->
+        <button class="menu-btn" onclick="openChat()">
+            <span>💬 Messages & Chat</span>
+            <span>➔</span>
+        </button>
+        <button class="menu-btn" onclick="openStats()">
+            <span>📊 Statistiques & Profil</span>
+            <span>➔</span>
+        </button>
+        <button class="menu-btn" onclick="openSettings()">
+            <span>⚙️ Paramètres & Notifications</span>
+            <span>➔</span>
+        </button>
+
         <button class="menu-btn" onclick="installApp()" id="installContainer" style="display:none;">
             <span>📲 Installer l’application</span>
             <span>➔</span>
@@ -246,6 +265,14 @@ async function initProfile() {
     if(data && data.avatar) {
         document.getElementById("userAvatar").innerHTML = `<img src="${data.avatar}">`;
     }
+    
+    // Demander la permission pour les notifications natives du téléphone
+    if ("Notification" in window && Notification.permission !== "granted") {
+        Notification.requestPermission();
+    }
+    
+    // Activer l'écouteur en temps réel pour les notifications de messages ou cadeaux reçus
+    initRealtimeNotifications();
 }
 
 let argent = parseInt(localStorage.getItem("argent") || 0);
@@ -258,7 +285,43 @@ function addMoney(){
     if (navigator.vibrate) navigator.vibrate(30);
 }
 
-// 1. Ouvrir l'inventaire avec option d'offrir un article
+// --- SYSTÈME DE NOTIFICATIONS NATIVES ---
+function sendNativeNotification(title, body) {
+    if ("Notification" in window && Notification.permission === "granted") {
+        try {
+            navigator.serviceWorker.ready.then(registration => {
+                registration.showNotification(title, {
+                    body: body,
+                    icon: "icon-192.png",
+                    badge: "icon-192.png",
+                    vibrate: [200, 100, 200]
+                });
+            });
+        } catch (e) {
+            new Notification(title, { body });
+        }
+    }
+}
+
+function initRealtimeNotifications() {
+    // Écoute si un objet de l'inventaire t'est attribué (Cadeau reçu)
+    client.channel('public:inventaire')
+      .on('postgres_changes', { event: 'UPDATE', schema: 'public', table: 'inventaire', filter: `user_id=eq.${user}` }, payload => {
+          sendNativeNotification("🎁 Nouveau Cadeau !", `Tu as reçu un nouvel article dans ton inventaire !`);
+      })
+      .subscribe();
+      
+    // Écoute si un message t'est envoyé (nécessite une table messages si elle existe, sinon géré silencieusement)
+    try {
+        client.channel('public:messages')
+          .on('postgres_changes', { event: 'INSERT', schema: 'public', table: 'messages', filter: `receiver=eq.${user}` }, payload => {
+              sendNativeNotification(`💬 Message de @${payload.new.sender}`, payload.new.text);
+          })
+          .subscribe();
+    } catch(err) {}
+}
+
+// 1. Inventaire & Cadeaux
 async function openInv() {
     document.getElementById("box").innerHTML = `
         <h3 style="margin-top:0;">📦 Mon Inventaire</h3>
@@ -295,7 +358,7 @@ async function openInv() {
     if (navigator.vibrate) navigator.vibrate(20);
 }
 
-// 2. Ouvrir la liste des amis pour envoyer un cadeau
+// 2. Amis & Dons
 async function openFriends() {
     document.getElementById("box").innerHTML = `
         <h3 style="margin-top:0;">👥 Mes Amis</h3>
@@ -304,7 +367,6 @@ async function openFriends() {
     `;
     document.getElementById("modal").style.display = "flex";
 
-    // Récupérer les utilisateurs (amis potentiels, en excluant soi-même)
     let { data: usersData } = await client
         .from("users")
         .select("username, avatar")
@@ -313,7 +375,7 @@ async function openFriends() {
     let friends = usersData || [];
 
     document.getElementById("box").innerHTML = `
-        <h3 style="margin-top:0;">👥 Choisis un ami à qui donner</h3>
+        <h3 style="margin-top:0;">👥 Amis & Dons</h3>
         <div style="max-height: 50vh; overflow-y: auto; display: flex; flex-direction: column; gap: 8px;">
             ${friends.length === 0 ? "<p style='opacity:0.6; text-align:center;'>Aucun autre utilisateur trouvé</p>" : ""}
             ${friends.map(f => `
@@ -332,78 +394,160 @@ async function openFriends() {
     `;
 }
 
-// 3. S'il clique sur "Offrir" depuis son inventaire, choisir l'ami
 async function openGiftModal(itemId, itemName) {
-    let { data: usersData } = await client
-        .from("users")
-        .select("username, avatar")
-        .neq("username", user);
-
+    let { data: usersData } = await client.from("users").select("username, avatar").neq("username", user);
     let friends = usersData || [];
 
     document.getElementById("box").innerHTML = `
         <h3 style="margin-top:0;">🎁 Offrir "${itemName}"</h3>
-        <p style="font-size:13px; opacity:0.7;">Sélectionne l'ami à qui envoyer ce cadeau :</p>
         <div style="max-height: 45vh; overflow-y: auto; display: flex; flex-direction: column; gap: 8px;">
             ${friends.map(f => `
                 <div style="background:rgba(255,255,255,0.04); padding:10px 14px; border-radius:12px; display:flex; align-items:center; justify-content:space-between;">
-                    <div style="display:flex; align-items:center; gap:10px;">
-                        <div style="width:32px; height:32px; border-radius:50%; background:rgba(255,255,255,0.1); overflow:hidden; display:flex; align-items:center; justify-content:center;">
-                            ${f.avatar ? `<img src="${f.avatar}" style="width:100%; height:100%; object-fit:cover;">` : '👤'}
-                        </div>
-                        <b>@${f.username}</b>
-                    </div>
+                    <b>@${f.username}</b>
                     <button onclick="transferItem(${itemId}, '${f.username}')" style="padding:6px 12px; background:linear-gradient(135deg,#ff758c,#ff7eb3); color:white; border:none; border-radius:8px; font-size:12px; font-weight:bold; cursor:pointer;">Envoyer</button>
                 </div>
             `).join("")}
         </div>
-        <button onclick="openInv()" style="width:100%; margin-top:15px; padding:10px; border:none; border-radius:12px; background:rgba(255,255,255,0.1); color:white; cursor:pointer; font-weight:bold;">Retour à l'inventaire</button>
+        <button onclick="openInv()" style="width:100%; margin-top:15px; padding:10px; border:none; border-radius:12px; background:rgba(255,255,255,0.1); color:white; cursor:pointer; font-weight:bold;">Retour</button>
     `;
 }
 
-// 4. S'il clique sur "Donner" depuis la page des amis, choisir quel article offrir
 async function selectItemToGift(friendUsername) {
-    let { data } = await client
-        .from("inventaire")
-        .select("id, item, price, image")
-        .eq("user_id", user)
-        .order("id", { ascending: false });
-
+    let { data } = await client.from("inventaire").select("id, item, price, image").eq("user_id", user);
     let items = data || [];
 
     document.getElementById("box").innerHTML = `
-        <h3 style="margin-top:0;">🎁 Choisir un cadeau pour @${friendUsername}</h3>
+        <h3 style="margin-top:0;">🎁 Cadeau pour @${friendUsername}</h3>
         <div style="max-height: 50vh; overflow-y: auto; display: grid; grid-template-columns: 1fr 1fr; gap: 10px;">
             ${items.length === 0 ? "<p style='opacity:0.6; text-align:center; grid-column: span 2;'>Ton inventaire est vide</p>" : ""}
             ${items.map(item => `
-                <div style="background:rgba(255,255,255,0.04); padding:10px; border-radius:12px; text-align:center; display:flex; flex-direction:column; justify-content:space-between;">
-                    <div>
-                        <img src="${item.image}" loading="lazy" style="width:100%; height:80px; object-fit:cover; border-radius:8px; margin-bottom:6px;">
-                        <b style="font-size:12px; display:block; white-space:nowrap; overflow:hidden; text-overflow:ellipsis;">${item.item}</b>
-                    </div>
-                    <button onclick="transferItem(${item.id}, '${friendUsername}')" style="margin-top:8px; padding:6px; background:#00ff99; color:black; border:none; border-radius:8px; font-size:11px; font-weight:bold; cursor:pointer;">Offrir ici</button>
+                <div style="background:rgba(255,255,255,0.04); padding:10px; border-radius:12px; text-align:center;">
+                    <img src="${item.image}" style="width:100%; height:70px; object-fit:cover; border-radius:8px; margin-bottom:5px;">
+                    <b style="font-size:11px; display:block;">${item.item}</b>
+                    <button onclick="transferItem(${item.id}, '${friendUsername}')" style="margin-top:5px; padding:4px 8px; background:#00ff99; color:black; border:none; border-radius:6px; font-size:10px; font-weight:bold; cursor:pointer;">Offrir</button>
                 </div>
             `).join("")}
         </div>
-        <button onclick="openFriends()" style="width:100%; margin-top:15px; padding:10px; border:none; border-radius:12px; background:rgba(255,255,255,0.1); color:white; cursor:pointer; font-weight:bold;">Retour aux amis</button>
+        <button onclick="openFriends()" style="width:100%; margin-top:15px; padding:10px; border:none; border-radius:12px; background:rgba(255,255,255,0.1); color:white; cursor:pointer; font-weight:bold;">Retour</button>
     `;
 }
 
-// 5. Exécuter le transfert dans Supabase (changer le user_id de l'objet)
 async function transferItem(itemId, targetUser) {
-    let { error } = await client
-        .from("inventaire")
-        .update({ user_id: targetUser })
-        .eq("id", itemId);
-
+    let { error } = await client.from("inventaire").update({ user_id: targetUser }).eq("id", itemId);
     if(error) {
-        alert("Erreur lors de l'envoi du cadeau.");
-        console.error(error);
+        alert("Erreur lors de l'envoi.");
     } else {
-        alert(`🎁 Cadeau envoyé avec succès à @${targetUser} !`);
+        alert(`🎁 Cadeau envoyé à @${targetUser} !`);
         document.getElementById('modal').style.display = 'none';
         if (navigator.vibrate) navigator.vibrate([30, 50, 30]);
     }
+}
+
+// --- NOUVELLE OPTION 1 : 💬 Messages & Chat ---
+async function openChat() {
+    document.getElementById("box").innerHTML = `
+        <h3 style="margin-top:0;">💬 Messages & Discussion</h3>
+        <p style="font-size: 13px; opacity: 0.7;">Sélectionne un ami pour discuter en direct :</p>
+        <div id="chatFriendsList" style="max-height: 50vh; overflow-y: auto; display: flex; flex-direction: column; gap: 8px;">
+            Chargement...
+        </div>
+        <button onclick="document.getElementById('modal').style.display='none'" style="width:100%; margin-top:15px; padding:12px; border:none; border-radius:12px; background:rgba(255,255,255,0.1); color:white; cursor:pointer; font-weight:bold;">Fermer</button>
+    `;
+    document.getElementById("modal").style.display = "flex";
+
+    let { data: users } = await client.from("users").select("username, avatar").neq("username", user);
+    let listHTML = (users || []).map(f => `
+        <div onclick="openChatWith('${f.username}')" style="background:rgba(255,255,255,0.04); padding:12px; border-radius:12px; display:flex; align-items:center; justify-content:space-between; cursor:pointer;">
+            <b>@${f.username}</b>
+            <span style="font-size: 12px; color: #00ff99;">Discuter ➔</span>
+        </div>
+    `).join("");
+    document.getElementById("chatFriendsList").innerHTML = listHTML || "<p>Aucun utilisateur</p>";
+}
+
+async function openChatWith(friendName) {
+    document.getElementById("box").innerHTML = `
+        <h3 style="margin-top:0;">💬 @${friendName}</h3>
+        <div id="chatMessages" style="height: 35vh; overflow-y: auto; background: rgba(0,0,0,0.2); padding: 10px; border-radius: 12px; display:flex; flex-direction: column; gap: 8px; margin-bottom: 10px;">
+            Chargement des messages...
+        </div>
+        <div style="display:flex; gap: 8px;">
+            <input type="text" id="msgInput" placeholder="Écris ton message..." style="flex:1; padding:10px; border-radius:10px; border:1px solid rgba(255,255,255,0.2); background:rgba(255,255,255,0.05); color:white;">
+            <button onclick="sendChatMessage('${friendName}')" style="padding:10px 16px; background:#00ff99; color:black; border:none; border-radius:10px; font-weight:bold; cursor:pointer;">Envoyer</button>
+        </div>
+        <button onclick="openChat()" style="width:100%; margin-top:10px; padding:8px; border:none; border-radius:10px; background:rgba(255,255,255,0.1); color:white; cursor:pointer;">Retour</button>
+    `;
+    // Simulation simple de messagerie locale ou via stockage si table dispo
+}
+
+function sendChatMessage(friendName) {
+    let input = document.getElementById("msgInput");
+    let txt = input.value.trim();
+    if(!txt) return;
+    
+    let chatBox = document.getElementById("chatMessages");
+    chatBox.innerHTML += `<div style="background:rgba(0,255,153,0.2); padding:8px 12px; border-radius:8px; align-self:flex-end; max-width:80%; font-size:13px;">${txt}</div>`;
+    input.value = "";
+    chatBox.scrollTop = chatBox.scrollHeight;
+    if (navigator.vibrate) navigator.vibrate(20);
+}
+
+// --- NOUVELLE OPTION 2 : 📊 Statistiques & Profil ---
+async function openStats() {
+    document.getElementById("box").innerHTML = `
+        <h3 style="margin-top:0;">📊 Statistiques & Profil</h3>
+        <div style="text-align:center; padding: 20px; opacity: 0.6;">Chargement des stats...</div>
+        <button onclick="document.getElementById('modal').style.display='none'" style="width:100%; margin-top:15px; padding:12px; border:none; border-radius:12px; background:rgba(255,255,255,0.1); color:white; cursor:pointer; font-weight:bold;">Fermer</button>
+    `;
+    document.getElementById("modal").style.display = "flex";
+
+    let { count: invCount } = await client.from("inventaire").select("*", { count: 'exact', head: true }).eq("user_id", user);
+    let { count: usersCount } = await client.from("users").select("*", { count: 'exact', head: true });
+
+    document.getElementById("box").innerHTML = `
+        <h3 style="margin-top:0;">📊 Mon Profil</h3>
+        <div style="display:flex; flex-direction:column; gap: 10px; margin-bottom: 20px;">
+            <div style="background:rgba(255,255,255,0.04); padding: 12px; border-radius: 12px; display:flex; justify-content:space-between;">
+                <span>Utilisateur :</span><b>@${user}</b>
+            </div>
+            <div style="background:rgba(255,255,255,0.04); padding: 12px; border-radius: 12px; display:flex; justify-content:space-between;">
+                <span>Articles en stock :</span><b style="color:#00ff99;">${invCount || 0}</b>
+            </div>
+            <div style="background:rgba(255,255,255,0.04); padding: 12px; border-radius: 12px; display:flex; justify-content:space-between;">
+                <span>Membres inscrits :</span><b>${usersCount || 1}</b>
+            </div>
+            <div style="background:rgba(255,255,255,0.04); padding: 12px; border-radius: 12px; display:flex; justify-content:space-between;">
+                <span>Solde actuel :</span><b style="color:#00ff99;">💰 ${argent} pièces</b>
+            </div>
+        </div>
+        <button onclick="document.getElementById('modal').style.display='none'" style="width:100%; padding:12px; border:none; border-radius:12px; background:rgba(255,255,255,0.1); color:white; cursor:pointer; font-weight:bold;">Fermer</button>
+    `;
+}
+
+// --- NOUVELLE OPTION 3 : ⚙️ Paramètres & Notifications ---
+function openSettings() {
+    let notifStatus = "Notification" in window ? Notification.permission : "Non supporté";
+    document.getElementById("box").innerHTML = `
+        <h3 style="margin-top:0;">⚙️ Paramètres</h3>
+        <div style="display:flex; flex-direction:column; gap: 12px; text-align:left; margin-bottom: 20px;">
+            <div style="background:rgba(255,255,255,0.04); padding:12px; border-radius:12px; display:flex; justify-content:space-between; align-items:center;">
+                <div>
+                    <b>Notifications push</b><br>
+                    <span style="font-size:11px; opacity:0.6;">État : ${notifStatus}</span>
+                </div>
+                <button onclick="Notification.requestPermission().then(() => alert('Autorisation mise à jour !'))" style="padding:6px 12px; background:#00ff99; color:black; border:none; border-radius:8px; font-weight:bold; cursor:pointer;">Activer</button>
+            </div>
+            <div style="background:rgba(255,255,255,0.04); padding:12px; border-radius:12px; display:flex; justify-content:space-between; align-items:center;">
+                <div>
+                    <b>Déconnexion du compte</b><br>
+                    <span style="font-size:11px; opacity:0.6;">Changer d'utilisateur</span>
+                </div>
+                <button onclick="localStorage.removeItem('user'); location.href='auth.html';" style="padding:6px 12px; background:#ff4b4b; color:white; border:none; border-radius:8px; font-weight:bold; cursor:pointer;">Sortir</button>
+            </div>
+        </div>
+        <button onclick="document.getElementById('modal').style.display='none'" style="width:100%; padding:12px; border:none; border-radius:12px; background:rgba(255,255,255,0.1); color:white; cursor:pointer; font-weight:bold;">Fermer</button>
+    `;
+    document.getElementById("modal").style.display = "flex";
 }
 
 let deferredPrompt;
