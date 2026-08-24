@@ -1,331 +1,564 @@
 <!DOCTYPE html>
 <html lang="fr">
 <head>
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <meta charset="UTF-8">
-    <title>Chat</title>
-    <style>
-        * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
-        body { margin: 0; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif; background: #0b0b0f; color: white; display: flex; flex-direction: column; height: 100vh; overflow: hidden; }
-        #header { padding: 15px; background: #16161d; font-weight: bold; display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid rgba(255,255,255,0.05); }
-        #with { opacity: 0.7; font-size: 14px; }
-        #messages { flex: 1; overflow-y: auto; padding: 15px; display: flex; flex-direction: column; gap: 10px; scroll-behavior: smooth; }
-        .msg { max-width: 75%; padding: 10px 14px; border-radius: 18px; word-wrap: break-word; font-size: 15px; animation: fadeIn 0.2s ease-out; }
-        @keyframes fadeIn { from { opacity: 0; transform: translateY(4px); } to { opacity: 1; transform: translateY(0); } }
-        .me { background: #00ff99; color: black; align-self: flex-end; border-bottom-right-radius: 5px; }
-        .other { background: #1c1c2a; align-self: flex-start; border-bottom-left-radius: 5px; }
-        .recording { animation: pulse 1s infinite; background: #ff3b3b !important; color: white !important; }
-        @keyframes pulse { 0% { transform: scale(1); } 50% { transform: scale(1.08); } 100% { transform: scale(1); } }
-        #inputBar { display: flex; padding: 10px; background: #16161d; gap: 10px; border-top: 1px solid rgba(255,255,255,0.05); align-items: center; }
-        #input { flex: 1; padding: 12px; border: none; border-radius: 12px; background: #1c1c2a; color: white; outline: none; font-size: 15px; }
-        #sendBtn { width: 50px; height: 45px; border: none; border-radius: 12px; background: #00ccff; color: black; font-size: 18px; cursor: pointer; display: flex; align-items: center; justify-content: center; transition: opacity 0.2s; }
-        #sendBtn:active, button:active { opacity: 0.7; }
-        #recordBtn { width: 50px; height: 45px; border: none; border-radius: 12px; background: #292936; color: white; font-size: 20px; cursor: pointer; display: flex; align-items: center; justify-content: center; }
-        .offer-btn { border: none; padding: 6px 12px; border-radius: 10px; font-weight: bold; cursor: pointer; font-size: 13px; }
-        .voice-message { width: 230px; max-width: 100%; display: flex; align-items: center; gap: 10px; user-select: none; }
-        .voice-play { width: 36px; height: 36px; border: none; border-radius: 50%; display: flex; align-items: center; justify-content: center; background: #00ccff; color: #000; font-size: 14px; cursor: pointer; flex-shrink: 0; }
-        .me .voice-play { background: #000; color: #00ff99; }
-        .voice-info { flex: 1; min-width: 0; display: flex; flex-direction: column; gap: 4px; }
-        .voice-progress { width: 100%; height: 4px; background: rgba(255,255,255,0.2); border-radius: 10px; overflow: hidden; }
-        .voice-progress-bar { width: 0%; height: 100%; background: currentColor; border-radius: 10px; transition: width 0.1s linear; }
-        .voice-bottom { display: flex; justify-content: space-between; font-size: 10px; opacity: 0.7; }
-        .offer-container { display: flex; flex-direction: column; gap: 6px; }
-        .offer-price { font-size: 18px; font-weight: bold; }
-    </style>
+<link rel="manifest" href="manifest.json">
+<meta name="theme-color" content="#0b0b0f">
+<link rel="apple-touch-icon" href="icon-192.png">
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<title>ImoYoizo</title>
+
+<style>
+* { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
+body {
+    margin: 0;
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+    background: #0b0b0f;
+    color: white;
+    min-height: 100vh;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: space-between;
+    padding: 20px;
+    user-select: none;
+    overflow-x: hidden;
+}
+
+.topbar {
+    width: 100%;
+    max-width: 420px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    background: rgba(255, 255, 255, 0.05);
+    backdrop-filter: blur(20px);
+    -webkit-backdrop-filter: blur(20px);
+    border: 1px solid rgba(255, 255, 255, 0.08);
+    padding: 12px 16px;
+    border-radius: 20px;
+}
+
+.user-info {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+}
+
+.avatar {
+    width: 36px;
+    height: 36px;
+    border-radius: 50%;
+    background: rgba(255, 255, 255, 0.1);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    overflow: hidden;
+    font-size: 16px;
+}
+.avatar img { width: 100%; height: 100%; object-fit: cover; }
+
+.argent-badge {
+    background: rgba(0, 255, 153, 0.1);
+    border: 1px solid rgba(0, 255, 153, 0.3);
+    color: #00ff99;
+    padding: 6px 12px;
+    border-radius: 12px;
+    font-weight: bold;
+    font-size: 14px;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+}
+
+.main-content {
+    width: 100%;
+    max-width: 420px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 15px;
+    margin: auto 0;
+    padding: 10px 0;
+}
+
+h1 {
+    font-size: 28px;
+    margin: 0;
+    background: linear-gradient(135deg, #00ff99, #00ccff);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    font-weight: 800;
+    letter-spacing: -0.5px;
+}
+
+.menu-grid {
+    width: 100%;
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+    max-height: 55vh;
+    overflow-y: auto;
+    padding-right: 2px;
+}
+
+.menu-btn {
+    width: 100%;
+    padding: 14px 18px;
+    border: 1px solid rgba(255, 255, 255, 0.08);
+    border-radius: 16px;
+    background: rgba(255, 255, 255, 0.04);
+    color: white;
+    cursor: pointer;
+    font-size: 15px;
+    font-weight: 600;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.menu-btn:active {
+    transform: scale(0.97);
+    background: rgba(255, 255, 255, 0.08);
+}
+
+.menu-btn.primary {
+    background: linear-gradient(135deg, #00ff99, #00ccff);
+    color: black;
+    border: none;
+    font-weight: 700;
+}
+
+.add-money-container {
+    width: 100%;
+    max-width: 420px;
+}
+
+.add-money-btn {
+    width: 100%;
+    background: rgba(255, 255, 255, 0.04);
+    border: 1px dashed rgba(255, 255, 255, 0.2);
+    padding: 12px;
+    border-radius: 14px;
+    color: rgba(255, 255, 255, 0.7);
+    font-size: 13px;
+    cursor: pointer;
+    font-weight: 600;
+    transition: all 0.2s;
+}
+.add-money-btn:active {
+    background: rgba(255, 255, 255, 0.08);
+    transform: scale(0.98);
+}
+
+/* Modal global */
+.modal{
+    position: fixed;
+    inset: 0;
+    background: rgba(0,0,0,0.85);
+    backdrop-filter: blur(12px);
+    display: none;
+    justify-content: center;
+    align-items: flex-end;
+    z-index: 1000;
+}
+.box{
+    width: 100%;
+    max-width: 500px;
+    background: #16161d;
+    padding: 22px;
+    border-radius: 28px 28px 0 0;
+    max-height: 88vh;
+    overflow-y: auto;
+    border-top: 1px solid rgba(255,255,255,0.12);
+    box-shadow: 0 -10px 40px rgba(0,0,0,0.6);
+}
+</style>
 </head>
+
 <body>
-    <div id="header">
-        💬 Chat
-        <div id="with">...</div>
+
+<div class="topbar">
+    <div class="user-info">
+        <div class="avatar" id="userAvatar">👤</div>
+        <div>
+            <div id="usernameDisplay" style="font-size: 13px; font-weight: bold;">Chargement...</div>
+            <div style="font-size: 10px; opacity: 0.5;">En ligne</div>
+        </div>
     </div>
-    <div id="messages"></div>
-    <div id="inputBar">
-        <input id="input" placeholder="Écris un message..." autocomplete="off">
-        <button class="offer-btn" onclick="offerPrice()" style="background:#ffd43b; color:black; height:45px;">💰 Offre</button>
-        <button id="recordBtn" title="Maintenir ou cliquer pour enregistrer">🎤</button>
-        <button id="sendBtn" onclick="send()">➤</button>
+    <div class="argent-badge">
+        💰 <span id="argent">0</span>
     </div>
+</div>
 
-    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-    <script>
-        const supabaseUrl = "https://eezsocswqhqgkvghhygq.supabase.co";
-        const supabaseKey = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImVlenNvY3N3cWhxZ2t2Z2hoeWdxIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODEwNjg5MjYsImV4cCI6MjA5NjY0NDkyNn0.TVI962lsUo67i6Ltq8okbOw-_GO-5yc4KDCyc8OkdVQ";
-        const client = supabase.createClient(supabaseUrl, supabaseKey);
+<div class="main-content">
+    <h1>ImoYoizo</h1>
+    
+    <div class="menu-grid">
+        <button class="menu-btn primary" onclick="location.href='market.html'">
+            <span>🏪 Marché</span>
+            <span>➔</span>
+        </button>
+        <button class="menu-btn" onclick="openInv()">
+            <span>📦 Inventaire & Cadeaux</span>
+            <span>➔</span>
+        </button>
+        <button class="menu-btn" onclick="openFriends()">
+            <span>👥 Amis & Dons</span>
+            <span>➔</span>
+        </button>
+        
+        <!-- 3 Nouvelles options utiles -->
+        <button class="menu-btn" onclick="openChat()">
+            <span>💬 Messages & Chat</span>
+            <span>➔</span>
+        </button>
+        <button class="menu-btn" onclick="openStats()">
+            <span>📊 Statistiques & Profil</span>
+            <span>➔</span>
+        </button>
+        <button class="menu-btn" onclick="openSettings()">
+            <span>⚙️ Paramètres & Notifications</span>
+            <span>➔</span>
+        </button>
 
-        let user = localStorage.getItem("user");
-        let friend = localStorage.getItem("chatWith");
-        if(!user || !friend){
-            alert("Erreur chat");
-            location.href="index.html";
-        }
-        document.getElementById("with").innerText = "avec " + friend;
+        <button class="menu-btn" onclick="installApp()" id="installContainer" style="display:none;">
+            <span>📲 Installer l’application</span>
+            <span>➔</span>
+        </button>
+    </div>
+</div>
 
-        let usersCache = {};
-        let mediaRecorder = null;
-        let audioChunks = [];
-        let currentAudio = null;
-        let currentVoiceBox = null;
-        const recordBtn = document.getElementById("recordBtn");
-        const messagesBox = document.getElementById("messages");
+<div class="add-money-container">
+    <button class="add-money-btn" onclick="addMoney()">+ 💰 Ajouter 100 pièces (Bonus)</button>
+</div>
 
-        async function preloadUsers() {
-            let { data } = await client.from("users").select("username, avatar");
-            if (data) {
-                data.forEach(u => {
-                    usersCache[u.username] = u.avatar || `https://ui-avatars.com/api/?name=${encodeURIComponent(u.username)}`;
+<!-- Modal global -->
+<div id="modal" class="modal">
+    <div class="box" id="box"></div>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+
+<script>
+let user = localStorage.getItem("user");
+
+if(!user || user.startsWith("user")){
+    localStorage.removeItem("user");
+    window.location.href = "auth.html";
+}
+
+const supabaseUrl = "https://eezsocswqhqgkvghhygq.supabase.co";
+const supabaseKey = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImVlenNvY3N3cWhxZ2t2Z2hoeWdxIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODEwNjg5MjYsImV4cCI6MjA5NjY0NDkyNn0.TVI962lsUo67i6Ltq8okbOw-_GO-5yc4KDCyc8OkdVQ";
+const client = supabase.createClient(supabaseUrl, supabaseKey);
+
+async function initProfile() {
+    document.getElementById("usernameDisplay").innerText = "@" + user;
+    
+    let { data } = await client
+        .from("users")
+        .select("avatar")
+        .eq("username", user)
+        .maybeSingle();
+        
+    if(data && data.avatar) {
+        document.getElementById("userAvatar").innerHTML = `<img src="${data.avatar}">`;
+    }
+    
+    // Demander la permission pour les notifications natives du téléphone
+    if ("Notification" in window && Notification.permission !== "granted") {
+        Notification.requestPermission();
+    }
+    
+    // Activer l'écouteur en temps réel pour les notifications de messages ou cadeaux reçus
+    initRealtimeNotifications();
+}
+
+let argent = parseInt(localStorage.getItem("argent") || 0);
+document.getElementById("argent").innerText = argent;
+
+function addMoney(){
+    argent += 100;
+    localStorage.setItem("argent", argent);
+    document.getElementById("argent").innerText = argent;
+    if (navigator.vibrate) navigator.vibrate(30);
+}
+
+// --- SYSTÈME DE NOTIFICATIONS NATIVES ---
+function sendNativeNotification(title, body) {
+    if ("Notification" in window && Notification.permission === "granted") {
+        try {
+            navigator.serviceWorker.ready.then(registration => {
+                registration.showNotification(title, {
+                    body: body,
+                    icon: "icon-192.png",
+                    badge: "icon-192.png",
+                    vibrate: [200, 100, 200]
                 });
-            }
-        }
-
-        function getAvatar(username) {
-            return usersCache[username] || `https://ui-avatars.com/api/?name=${encodeURIComponent(username)}`;
-        }
-
-        function formatTime(seconds){
-            if(!isFinite(seconds)) return "0:00";
-            let min = Math.floor(seconds / 60);
-            let sec = Math.floor(seconds % 60);
-            return min + ":" + String(sec).padStart(2,"0");
-        }
-
-        function stopCurrentVoice(){
-            if(currentAudio){
-                currentAudio.pause();
-                currentAudio.currentTime = 0;
-                currentAudio = null;
-            }
-            if(currentVoiceBox){
-                let btn = currentVoiceBox.querySelector(".voice-play");
-                let bar = currentVoiceBox.querySelector(".voice-progress-bar");
-                if(btn) btn.innerText = "▶";
-                if(bar) bar.style.width = "0%";
-                currentVoiceBox = null;
-            }
-        }
-
-        function setupVoicePlayer(box, audio){
-            let btn = box.querySelector(".voice-play");
-            let progress = box.querySelector(".voice-progress-bar");
-            let currentTime = box.querySelector(".voice-current-time");
-            let duration = box.querySelector(".voice-duration");
-
-            box.addEventListener("click", () => {
-                if(currentAudio === audio){
-                    if(audio.paused) audio.play();
-                    else audio.pause();
-                    return;
-                }
-                stopCurrentVoice();
-                currentAudio = audio;
-                currentVoiceBox = box;
-                audio.play().catch(e => console.log(e));
             });
-
-            audio.addEventListener("loadedmetadata", () => {
-                if(duration) duration.innerText = formatTime(audio.duration);
-            });
-            audio.addEventListener("timeupdate", () => {
-                if(audio.duration) {
-                    progress.style.width = ((audio.currentTime / audio.duration) * 100) + "%";
-                    currentTime.innerText = formatTime(audio.currentTime);
-                }
-            });
-            audio.addEventListener("play", () => btn.innerText = "⏸");
-            audio.addEventListener("pause", () => btn.innerText = "▶");
-            audio.addEventListener("ended", () => {
-                btn.innerText = "▶";
-                progress.style.width = "0%";
-                currentTime.innerText = "0:00";
-                currentAudio = null;
-                currentVoiceBox = null;
-            });
+        } catch (e) {
+            new Notification(title, { body });
         }
+    }
+}
 
-        function createMessageElement(m) {
-            let div = document.createElement("div");
-            div.className = "msg " + (m.sender === user ? "me" : "other");
-            div.setAttribute("data-id", m.id);
-            let avatar = getAvatar(m.sender);
+function initRealtimeNotifications() {
+    // Écoute si un objet de l'inventaire t'est attribué (Cadeau reçu)
+    client.channel('public:inventaire')
+      .on('postgres_changes', { event: 'UPDATE', schema: 'public', table: 'inventaire', filter: `user_id=eq.${user}` }, payload => {
+          sendNativeNotification("🎁 Nouveau Cadeau !", `Tu as reçu un nouvel article dans ton inventaire !`);
+      })
+      .subscribe();
+      
+    // Écoute si un message t'est envoyé
+    try {
+        client.channel('public:messages')
+          .on('postgres_changes', { event: 'INSERT', schema: 'public', table: 'messages', filter: `receiver=eq.${user}` }, payload => {
+              sendNativeNotification(`💬 Message de @${payload.new.sender}`, payload.new.message || "Vocaux ou offre reçue");
+          })
+          .subscribe();
+    } catch(err) {}
+}
 
-            if(m.voice){
-                div.innerHTML = `
-                    <div class="voice-message">
-                        <button class="voice-play" type="button">▶</button>
-                        <div class="voice-info">
-                            <div style="font-size:11px; font-weight:bold; opacity:0.8;">🎙 Vocal</div>
-                            <div class="voice-progress"><div class="voice-progress-bar"></div></div>
-                            <div class="voice-bottom">
-                                <span class="voice-current-time">0:00</span>
-                                <span class="voice-duration">0:00</span>
-                            </div>
-                        </div>
+// 1. Inventaire & Cadeaux
+async function openInv() {
+    document.getElementById("box").innerHTML = `
+        <h3 style="margin-top:0;">📦 Mon Inventaire</h3>
+        <div style="text-align:center; padding: 40px; opacity: 0.6;">Chargement...</div>
+        <button onclick="document.getElementById('modal').style.display='none'" style="width:100%; margin-top:15px; padding:12px; border:none; border-radius:12px; background:rgba(255,255,255,0.1); color:white; cursor:pointer; font-weight:bold;">Fermer</button>
+    `;
+    document.getElementById("modal").style.display = "flex";
+
+    let { data } = await client
+        .from("inventaire")
+        .select("id, item, price, image")
+        .eq("user_id", user)
+        .order("id", { ascending: false });
+
+    let items = data || [];
+
+    document.getElementById("box").innerHTML = `
+        <h3 style="margin-top:0;">📦 Mon Inventaire (${items.length})</h3>
+        <div style="max-height: 50vh; overflow-y: auto; display: grid; grid-template-columns: 1fr 1fr; gap: 10px;">
+            ${items.length === 0 ? "<p style='opacity:0.6; text-align:center; grid-column: span 2;'>Ton inventaire est vide</p>" : ""}
+            ${items.map(item => `
+                <div style="background:rgba(255,255,255,0.04); padding:10px; border-radius:12px; text-align:center; display:flex; flex-direction:column; justify-content:space-between;">
+                    <div>
+                        <img src="${item.image}" loading="lazy" style="width:100%; height:80px; object-fit:cover; border-radius:8px; margin-bottom:6px;">
+                        <b style="font-size:12px; display:block; white-space:nowrap; overflow:hidden; text-overflow:ellipsis;">${item.item}</b>
+                        <span style="font-size:11px; color:#00ff99;">💰 ${item.price}</span>
                     </div>
-                `;
-                const audio = document.createElement("audio");
-                audio.src = m.voice;
-                audio.preload = "metadata";
-                div.querySelector(".voice-message").appendChild(audio);
-                setupVoicePlayer(div.querySelector(".voice-message"), audio);
-            }
-            else if(m.offer_price !== null && m.offer_price !== undefined){
-                let statusText = m.offer_status === "accepted" ? "✔ Acceptée" : m.offer_status === "rejected" ? "❌ Refusée" : "⏳ En attente";
-                div.innerHTML = `
-                    <div class="offer-container">
-                        <div style="display:flex; align-items:center; gap:6px;">
-                            <img src="${avatar}" style="width:20px;height:20px;border-radius:50%;">
-                            <span style="font-size:12px; opacity:0.8;">Offre d'argent</span>
+                    <button onclick='openGiftModal(${item.id}, ${JSON.stringify(item.item)})' style="margin-top:8px; padding:6px; background:linear-gradient(135deg,#ff758c,#ff7eb3); color:white; border:none; border-radius:8px; font-size:11px; font-weight:bold; cursor:pointer;">🎁 Offrir</button>
+                </div>
+            `).join("")}
+        </div>
+        <button onclick="document.getElementById('modal').style.display='none'" style="width:100%; margin-top:15px; padding:12px; border:none; border-radius:12px; background:rgba(255,255,255,0.1); color:white; cursor:pointer; font-weight:bold;">Fermer</button>
+    `;
+    if (navigator.vibrate) navigator.vibrate(20);
+}
+
+// 2. Amis & Dons
+async function openFriends() {
+    document.getElementById("box").innerHTML = `
+        <h3 style="margin-top:0;">👥 Mes Amis</h3>
+        <div style="text-align:center; padding: 40px; opacity: 0.6;">Chargement des amis...</div>
+        <button onclick="document.getElementById('modal').style.display='none'" style="width:100%; margin-top:15px; padding:12px; border:none; border-radius:12px; background:rgba(255,255,255,0.1); color:white; cursor:pointer; font-weight:bold;">Fermer</button>
+    `;
+    document.getElementById("modal").style.display = "flex";
+
+    let { data: usersData } = await client
+        .from("users")
+        .select("username, avatar")
+        .neq("username", user);
+
+    let friends = usersData || [];
+
+    document.getElementById("box").innerHTML = `
+        <h3 style="margin-top:0;">👥 Amis & Dons</h3>
+        <div style="max-height: 50vh; overflow-y: auto; display: flex; flex-direction: column; gap: 8px;">
+            ${friends.length === 0 ? "<p style='opacity:0.6; text-align:center;'>Aucun autre utilisateur trouvé</p>" : ""}
+            ${friends.map(f => `
+                <div style="background:rgba(255,255,255,0.04); padding:10px 14px; border-radius:12px; display:flex; align-items:center; justify-content:space-between;">
+                    <div style="display:flex; align-items:center; gap:10px;">
+                        <div style="width:32px; height:32px; border-radius:50%; background:rgba(255,255,255,0.1); overflow:hidden; display:flex; align-items:center; justify-content:center;">
+                            ${f.avatar ? `<img src="${f.avatar}" style="width:100%; height:100%; object-fit:cover;">` : '👤'}
                         </div>
-                        <b class="offer-price">${m.offer_price} 💰</b>
-                        <small class="offer-status-text">${statusText}</small>
-                        <div class="offer-actions" style="${m.offer_status === 'pending' ? 'display:flex;gap:6px;margin-top:4px;' : 'display:none;'}">
-                            <button class="offer-btn" onclick="acceptOffer('${m.id}')" style="background:#00ff99;color:black;">✔ Accepter</button>
-                            <button class="offer-btn" onclick="rejectOffer('${m.id}')" style="background:#ff3b3b;color:white;">❌ Refuser</button>
-                        </div>
+                        <b>@${f.username}</b>
                     </div>
-                `;
-            }
-            else {
-                div.innerHTML = `
-                    <div style="display:flex;align-items:center;gap:8px;">
-                        <img src="${avatar}" style="width:24px;height:24px;border-radius:50%;object-fit:cover;">
-                        <span>${escapeHTML(m.message || "")}</span>
-                    </div>
-                `;
-            }
-            return div;
+                    <button onclick="selectItemToGift('${f.username}')" style="padding:6px 12px; background:#00ff99; color:black; border:none; border-radius:8px; font-size:12px; font-weight:bold; cursor:pointer;">🎁 Donner</button>
+                </div>
+            `).join("")}
+        </div>
+        <button onclick="document.getElementById('modal').style.display='none'" style="width:100%; margin-top:15px; padding:12px; border:none; border-radius:12px; background:rgba(255,255,255,0.1); color:white; cursor:pointer; font-weight:bold;">Fermer</button>
+    `;
+}
+
+async function openGiftModal(itemId, itemName) {
+    let { data: usersData } = await client.from("users").select("username, avatar").neq("username", user);
+    let friends = usersData || [];
+
+    document.getElementById("box").innerHTML = `
+        <h3 style="margin-top:0;">🎁 Offrir "${itemName}"</h3>
+        <div style="max-height: 45vh; overflow-y: auto; display: flex; flex-direction: column; gap: 8px;">
+            ${friends.map(f => `
+                <div style="background:rgba(255,255,255,0.04); padding:10px 14px; border-radius:12px; display:flex; align-items:center; justify-content:space-between;">
+                    <b>@${f.username}</b>
+                    <button onclick="transferItem(${itemId}, '${f.username}')" style="padding:6px 12px; background:linear-gradient(135deg,#ff758c,#ff7eb3); color:white; border:none; border-radius:8px; font-size:12px; font-weight:bold; cursor:pointer;">Envoyer</button>
+                </div>
+            `).join("")}
+        </div>
+        <button onclick="openInv()" style="width:100%; margin-top:15px; padding:10px; border:none; border-radius:12px; background:rgba(255,255,255,0.1); color:white; cursor:pointer; font-weight:bold;">Retour</button>
+    `;
+}
+
+async function selectItemToGift(friendUsername) {
+    let { data } = await client.from("inventaire").select("id, item, price, image").eq("user_id", user);
+    let items = data || [];
+
+    document.getElementById("box").innerHTML = `
+        <h3 style="margin-top:0;">🎁 Cadeau pour @${friendUsername}</h3>
+        <div style="max-height: 50vh; overflow-y: auto; display: grid; grid-template-columns: 1fr 1fr; gap: 10px;">
+            ${items.length === 0 ? "<p style='opacity:0.6; text-align:center; grid-column: span 2;'>Ton inventaire est vide</p>" : ""}
+            ${items.map(item => `
+                <div style="background:rgba(255,255,255,0.04); padding:10px; border-radius:12px; text-align:center;">
+                    <img src="${item.image}" style="width:100%; height:70px; object-fit:cover; border-radius:8px; margin-bottom:5px;">
+                    <b style="font-size:11px; display:block;">${item.item}</b>
+                    <button onclick="transferItem(${item.id}, '${friendUsername}')" style="margin-top:5px; padding:4px 8px; background:#00ff99; color:black; border:none; border-radius:6px; font-size:10px; font-weight:bold; cursor:pointer;">Offrir</button>
+                </div>
+            `).join("")}
+        </div>
+        <button onclick="openFriends()" style="width:100%; margin-top:15px; padding:10px; border:none; border-radius:12px; background:rgba(255,255,255,0.1); color:white; cursor:pointer; font-weight:bold;">Retour</button>
+    `;
+}
+
+async function transferItem(itemId, targetUser) {
+    let { error } = await client.from("inventaire").update({ user_id: targetUser }).eq("id", itemId);
+    if(error) {
+        alert("Erreur lors de l'envoi.");
+    } else {
+        alert(`🎁 Cadeau envoyé à @${targetUser} !`);
+        document.getElementById('modal').style.display = 'none';
+        if (navigator.vibrate) navigator.vibrate([30, 50, 30]);
+    }
+}
+
+// --- OPTION 1 : 💬 Messages & Chat (Redirection vers chat.html) ---
+async function openChat() {
+    document.getElementById("box").innerHTML = `
+        <h3 style="margin-top:0;">💬 Messages & Discussion</h3>
+        <p style="font-size: 13px; opacity: 0.7;">Sélectionne un ami pour discuter en direct :</p>
+        <div id="chatFriendsList" style="max-height: 50vh; overflow-y: auto; display: flex; flex-direction: column; gap: 8px;">
+            Chargement...
+        </div>
+        <button onclick="document.getElementById('modal').style.display='none'" style="width:100%; margin-top:15px; padding:12px; border:none; border-radius:12px; background:rgba(255,255,255,0.1); color:white; cursor:pointer; font-weight:bold;">Fermer</button>
+    `;
+    document.getElementById("modal").style.display = "flex";
+
+    let { data: users } = await client.from("users").select("username, avatar").neq("username", user);
+    let listHTML = (users || []).map(f => `
+        <div onclick="openChatWith('${f.username}')" style="background:rgba(255,255,255,0.04); padding:12px; border-radius:12px; display:flex; align-items:center; justify-content:space-between; cursor:pointer;">
+            <div style="display:flex; align-items:center; gap:10px;">
+                <div style="width:28px; height:28px; border-radius:50%; background:rgba(255,255,255,0.1); overflow:hidden; display:flex; align-items:center; justify-content:center;">
+                    ${f.avatar ? `<img src="${f.avatar}" style="width:100%; height:100%; object-fit:cover;">` : '👤'}
+                </div>
+                <b>@${f.username}</b>
+            </div>
+            <span style="font-size: 12px; color: #00ff99;">Discuter ➔</span>
+        </div>
+    `).join("");
+    document.getElementById("chatFriendsList").innerHTML = listHTML || "<p>Aucun utilisateur</p>";
+}
+
+function openChatWith(friendName) {
+    localStorage.setItem("chatWith", friendName);
+    window.location.href = "chat.html";
+}
+
+// --- OPTION 2 : 📊 Statistiques & Profil ---
+async function openStats() {
+    document.getElementById("box").innerHTML = `
+        <h3 style="margin-top:0;">📊 Statistiques & Profil</h3>
+        <div style="text-align:center; padding: 20px; opacity: 0.6;">Chargement des stats...</div>
+        <button onclick="document.getElementById('modal').style.display='none'" style="width:100%; margin-top:15px; padding:12px; border:none; border-radius:12px; background:rgba(255,255,255,0.1); color:white; cursor:pointer; font-weight:bold;">Fermer</button>
+    `;
+    document.getElementById("modal").style.display = "flex";
+
+    let { count: invCount } = await client.from("inventaire").select("*", { count: 'exact', head: true }).eq("user_id", user);
+    let { count: usersCount } = await client.from("users").select("*", { count: 'exact', head: true });
+
+    document.getElementById("box").innerHTML = `
+        <h3 style="margin-top:0;">📊 Mon Profil</h3>
+        <div style="display:flex; flex-direction:column; gap: 10px; margin-bottom: 20px;">
+            <div style="background:rgba(255,255,255,0.04); padding: 12px; border-radius: 12px; display:flex; justify-content:space-between;">
+                <span>Utilisateur :</span><b>@${user}</b>
+            </div>
+            <div style="background:rgba(255,255,255,0.04); padding: 12px; border-radius: 12px; display:flex; justify-content:space-between;">
+                <span>Articles en stock :</span><b style="color:#00ff99;">${invCount || 0}</b>
+            </div>
+            <div style="background:rgba(255,255,255,0.04); padding: 12px; border-radius: 12px; display:flex; justify-content:space-between;">
+                <span>Membres inscrits :</span><b>${usersCount || 1}</b>
+            </div>
+            <div style="background:rgba(255,255,255,0.04); padding: 12px; border-radius: 12px; display:flex; justify-content:space-between;">
+                <span>Solde actuel :</span><b style="color:#00ff99;">💰 ${argent} pièces</b>
+            </div>
+        </div>
+        <button onclick="document.getElementById('modal').style.display='none'" style="width:100%; padding:12px; border:none; border-radius:12px; background:rgba(255,255,255,0.1); color:white; cursor:pointer; font-weight:bold;">Fermer</button>
+    `;
+}
+
+// --- OPTION 3 : ⚙️ Paramètres & Notifications ---
+function openSettings() {
+    let notifStatus = "Notification" in window ? Notification.permission : "Non supporté";
+    document.getElementById("box").innerHTML = `
+        <h3 style="margin-top:0;">⚙️ Paramètres</h3>
+        <div style="display:flex; flex-direction:column; gap: 12px; text-align:left; margin-bottom: 20px;">
+            <div style="background:rgba(255,255,255,0.04); padding:12px; border-radius:12px; display:flex; justify-content:space-between; align-items:center;">
+                <div>
+                    <b>Notifications push</b><br>
+                    <span style="font-size:11px; opacity:0.6;">État : ${notifStatus}</span>
+                </div>
+                <button onclick="Notification.requestPermission().then(() => alert('Autorisation mise à jour !'))" style="padding:6px 12px; background:#00ff99; color:black; border:none; border-radius:8px; font-weight:bold; cursor:pointer;">Activer</button>
+            </div>
+            <div style="background:rgba(255,255,255,0.04); padding:12px; border-radius:12px; display:flex; justify-content:space-between; align-items:center;">
+                <div>
+                    <b>Déconnexion du compte</b><br>
+                    <span style="font-size:11px; opacity:0.6;">Changer d'utilisateur</span>
+                </div>
+                <button onclick="localStorage.removeItem('user'); location.href='auth.html';" style="padding:6px 12px; background:#ff4b4b; color:white; border:none; border-radius:8px; font-weight:bold; cursor:pointer;">Sortir</button>
+            </div>
+        </div>
+        <button onclick="document.getElementById('modal').style.display='none'" style="width:100%; padding:12px; border:none; border-radius:12px; background:rgba(255,255,255,0.1); color:white; cursor:pointer; font-weight:bold;">Fermer</button>
+    `;
+    document.getElementById("modal").style.display = "flex";
+}
+
+let deferredPrompt;
+window.addEventListener("beforeinstallprompt", (e) => {
+    e.preventDefault();
+    deferredPrompt = e;
+    document.getElementById("installContainer").style.display = "flex";
+});
+
+async function installApp(){
+    if(deferredPrompt){
+        deferredPrompt.prompt();
+        const result = await deferredPrompt.userChoice;
+        if(result.outcome === 'accepted'){
+            document.getElementById("installContainer").style.display = "none";
         }
+        deferredPrompt = null;
+    } else {
+        alert("Installation non disponible (ouvre le site dans ton navigateur mobile)");
+    }
+}
 
-        async function load(){
-            let { data, error } = await client
-                .from("messages")
-                .select("*")
-                .or(`and(sender.eq.${user},receiver.eq.${friend}),and(sender.eq.${friend},receiver.eq.${user})`)
-                .order("created_at", { ascending: true });
+if ("serviceWorker" in navigator) {
+    navigator.serviceWorker.register("sw.js").catch(() => {});
+}
 
-            if(error) return;
+initProfile();
+</script>
 
-            messagesBox.innerHTML = "";
-            let fragment = document.createDocumentFragment();
-
-            (data || []).forEach(m => {
-                fragment.appendChild(createMessageElement(m));
-            });
-
-            messagesBox.appendChild(fragment);
-            messagesBox.scrollTop = messagesBox.scrollHeight;
-        }
-
-        function escapeHTML(text){
-            let d = document.createElement("div");
-            d.textContent = text;
-            return d.innerHTML;
-        }
-
-        async function send(){
-            let input = document.getElementById("input");
-            let msg = input.value.trim();
-            if(!msg) return;
-            input.value = "";
-            await client.from("messages").insert([{ sender: user, receiver: friend, message: msg }]);
-        }
-
-        async function offerPrice(){
-            let price = prompt("Montant de l'offre ?");
-            if(!price || isNaN(price)) return;
-            await client.from("messages").insert([{ sender: user, receiver: friend, offer_price: Number(price), offer_status: "pending" }]);
-        }
-
-        async function acceptOffer(id){
-            await client.from("messages").update({ offer_status: "accepted" }).eq("id", id);
-        }
-
-        async function rejectOffer(id){
-            await client.from("messages").update({ offer_status: "rejected" }).eq("id", id);
-        }
-
-        document.getElementById("input").addEventListener("keydown", e => {
-            if(e.key === "Enter") send();
-        });
-
-        // Gestion propre et instantanée du micro
-        let isRecording = false;
-        recordBtn.onclick = async () => {
-            if (!isRecording) {
-                try {
-                    const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
-                    let mimeType = MediaRecorder.isTypeSupported('audio/webm;codecs=opus') ? 'audio/webm;codecs=opus' : (MediaRecorder.isTypeSupported('audio/mp4') ? 'audio/mp4' : '');
-                    mediaRecorder = new MediaRecorder(stream, mimeType ? { mimeType } : {});
-                    audioChunks = [];
-
-                    mediaRecorder.ondataavailable = e => {
-                        if (e.data && e.data.size > 0) audioChunks.push(e.data);
-                    };
-
-                    mediaRecorder.onstop = async () => {
-                        stream.getTracks().forEach(track => track.stop());
-                        const audioBlob = new Blob(audioChunks, { type: mediaRecorder.mimeType || 'audio/webm' });
-                        
-                        const reader = new FileReader();
-                        reader.readAsDataURL(audioBlob);
-                        reader.onloadend = async () => {
-                            await client.from("messages").insert([{ 
-                                sender: user, 
-                                receiver: friend, 
-                                voice: reader.result 
-                            }]);
-                        };
-                    };
-
-                    mediaRecorder.start();
-                    isRecording = true;
-                    recordBtn.innerText = "⏹";
-                    recordBtn.classList.add("recording");
-
-                } catch (err) {
-                    alert("Erreur d'accès au micro.");
-                    console.error(err);
-                }
-            } else {
-                if (mediaRecorder && mediaRecorder.state === "recording") {
-                    mediaRecorder.stop();
-                }
-                isRecording = false;
-                recordBtn.innerText = "🎤";
-                recordBtn.classList.remove("recording");
-            }
-        };
-
-        // Temps réel Supabase instantané sans rechargement complet de page
-        client
-            .channel('chat_room_' + [user, friend].sort().join('_'))
-            .on('postgres_changes', { event: 'INSERT', schema: 'public', table: 'messages' }, payload => {
-                let m = payload.new;
-                // Vérifier si le message concerne bien la discussion actuelle
-                if ((m.sender === user && m.receiver === friend) || (m.sender === friend && m.receiver === user)) {
-                    // Éviter les doublons si on est l'expéditeur et qu'on l'a déjà affiché (optionnel, mais ici l'insertion déclenche l'écoute)
-                    messagesBox.appendChild(createMessageElement(m));
-                    messagesBox.scrollTop = messagesBox.scrollHeight;
-                }
-            })
-            .on('postgres_changes', { event: 'UPDATE', schema: 'public', table: 'messages' }, payload => {
-                let m = payload.new;
-                let existingEl = messagesBox.querySelector(`[data-id="${m.id}"]`);
-                if (existingEl) {
-                    // Mettre à jour l'affichage de l'offre si son statut change
-                    let statusText = m.offer_status === "accepted" ? "✔ Acceptée" : m.offer_status === "rejected" ? "❌ Refusée" : "⏳ En attente";
-                    let statusEl = existingEl.querySelector(".offer-status-text");
-                    let actionsEl = existingEl.querySelector(".offer-actions");
-                    if (statusEl) statusEl.innerText = statusText;
-                    if (actionsEl && m.offer_status !== "pending") actionsEl.style.display = "none";
-                }
-            })
-            .subscribe();
-
-        // Initialisation
-        (async () => {
-            await preloadUsers();
-            await load();
-        })();
-    </script>
 </body>
 </html>
