@@ -511,15 +511,23 @@ async function loadPosts(reset = false){
     }
 
     try {
+        // On ne charge PAS la colonne "image" et "videos" en gros volume pour éviter le timeout
         let { data, error } = await client
             .from("posts")
-            .select("id, name, price, image, videos, desc, user_id, likes, views")
+            .select("id, name, price, desc, user_id, likes, views, image") // Garde image si elle n'est pas trop lourde, sinon retire-la
             .order("id", { ascending: false })
             .range(offset, offset + limit - 1);
 
         if(error){
             console.error("Erreur Supabase:", error);
-            document.getElementById("feed").innerHTML = `<div style='display:flex; height:70vh; align-items:center; justify-content:center; opacity:0.6; text-align:center; padding:20px;'>Erreur de chargement: ${error.message}</div>`;
+            // Si le timeout persiste, on réduit la limite automatiquement à 5
+            if(error.code === '57014' && limit > 5) {
+                limit = 5;
+                loading = false;
+                loadPosts(reset);
+                return;
+            }
+            document.getElementById("feed").innerHTML = `<div style='display:flex; height:70vh; align-items:center; justify-content:center; opacity:0.6; text-align:center; padding:20px;'>Erreur serveur (Timeout). Réessaie.</div>`;
             loading = false;
             return;
         }
@@ -543,7 +551,6 @@ async function loadPosts(reset = false){
         render();
     } catch(err) {
         console.error("Erreur réseau :", err);
-        document.getElementById("feed").innerHTML = "<div style='display:flex; height:70vh; align-items:center; justify-content:center; opacity:0.5;'>Erreur de connexion</div>";
     } finally {
         loading = false;
     }
