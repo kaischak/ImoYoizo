@@ -311,11 +311,11 @@ function initRealtimeNotifications() {
       })
       .subscribe();
       
-    // Écoute si un message t'est envoyé (nécessite une table messages si elle existe, sinon géré silencieusement)
+    // Écoute si un message t'est envoyé
     try {
         client.channel('public:messages')
           .on('postgres_changes', { event: 'INSERT', schema: 'public', table: 'messages', filter: `receiver=eq.${user}` }, payload => {
-              sendNativeNotification(`💬 Message de @${payload.new.sender}`, payload.new.text);
+              sendNativeNotification(`💬 Message de @${payload.new.sender}`, payload.new.message || "Vocaux ou offre reçue");
           })
           .subscribe();
     } catch(err) {}
@@ -443,7 +443,7 @@ async function transferItem(itemId, targetUser) {
     }
 }
 
-// --- NOUVELLE OPTION 1 : 💬 Messages & Chat ---
+// --- OPTION 1 : 💬 Messages & Chat (Redirection vers chat.html) ---
 async function openChat() {
     document.getElementById("box").innerHTML = `
         <h3 style="margin-top:0;">💬 Messages & Discussion</h3>
@@ -458,41 +458,24 @@ async function openChat() {
     let { data: users } = await client.from("users").select("username, avatar").neq("username", user);
     let listHTML = (users || []).map(f => `
         <div onclick="openChatWith('${f.username}')" style="background:rgba(255,255,255,0.04); padding:12px; border-radius:12px; display:flex; align-items:center; justify-content:space-between; cursor:pointer;">
-            <b>@${f.username}</b>
+            <div style="display:flex; align-items:center; gap:10px;">
+                <div style="width:28px; height:28px; border-radius:50%; background:rgba(255,255,255,0.1); overflow:hidden; display:flex; align-items:center; justify-content:center;">
+                    ${f.avatar ? `<img src="${f.avatar}" style="width:100%; height:100%; object-fit:cover;">` : '👤'}
+                </div>
+                <b>@${f.username}</b>
+            </div>
             <span style="font-size: 12px; color: #00ff99;">Discuter ➔</span>
         </div>
     `).join("");
     document.getElementById("chatFriendsList").innerHTML = listHTML || "<p>Aucun utilisateur</p>";
 }
 
-async function openChatWith(friendName) {
-    document.getElementById("box").innerHTML = `
-        <h3 style="margin-top:0;">💬 @${friendName}</h3>
-        <div id="chatMessages" style="height: 35vh; overflow-y: auto; background: rgba(0,0,0,0.2); padding: 10px; border-radius: 12px; display:flex; flex-direction: column; gap: 8px; margin-bottom: 10px;">
-            Chargement des messages...
-        </div>
-        <div style="display:flex; gap: 8px;">
-            <input type="text" id="msgInput" placeholder="Écris ton message..." style="flex:1; padding:10px; border-radius:10px; border:1px solid rgba(255,255,255,0.2); background:rgba(255,255,255,0.05); color:white;">
-            <button onclick="sendChatMessage('${friendName}')" style="padding:10px 16px; background:#00ff99; color:black; border:none; border-radius:10px; font-weight:bold; cursor:pointer;">Envoyer</button>
-        </div>
-        <button onclick="openChat()" style="width:100%; margin-top:10px; padding:8px; border:none; border-radius:10px; background:rgba(255,255,255,0.1); color:white; cursor:pointer;">Retour</button>
-    `;
-    // Simulation simple de messagerie locale ou via stockage si table dispo
+function openChatWith(friendName) {
+    localStorage.setItem("chatWith", friendName);
+    window.location.href = "chat.html";
 }
 
-function sendChatMessage(friendName) {
-    let input = document.getElementById("msgInput");
-    let txt = input.value.trim();
-    if(!txt) return;
-    
-    let chatBox = document.getElementById("chatMessages");
-    chatBox.innerHTML += `<div style="background:rgba(0,255,153,0.2); padding:8px 12px; border-radius:8px; align-self:flex-end; max-width:80%; font-size:13px;">${txt}</div>`;
-    input.value = "";
-    chatBox.scrollTop = chatBox.scrollHeight;
-    if (navigator.vibrate) navigator.vibrate(20);
-}
-
-// --- NOUVELLE OPTION 2 : 📊 Statistiques & Profil ---
+// --- OPTION 2 : 📊 Statistiques & Profil ---
 async function openStats() {
     document.getElementById("box").innerHTML = `
         <h3 style="margin-top:0;">📊 Statistiques & Profil</h3>
@@ -524,7 +507,7 @@ async function openStats() {
     `;
 }
 
-// --- NOUVELLE OPTION 3 : ⚙️ Paramètres & Notifications ---
+// --- OPTION 3 : ⚙️ Paramètres & Notifications ---
 function openSettings() {
     let notifStatus = "Notification" in window ? Notification.permission : "Non supporté";
     document.getElementById("box").innerHTML = `
