@@ -209,7 +209,6 @@ h1 {
             <span>➔</span>
         </button>
         
-        <!-- 3 Nouvelles options utiles -->
         <button class="menu-btn" onclick="openChat()">
             <span>💬 Messages & Chat</span>
             <span>➔</span>
@@ -266,12 +265,10 @@ async function initProfile() {
         document.getElementById("userAvatar").innerHTML = `<img src="${data.avatar}">`;
     }
     
-    // Demander la permission pour les notifications natives du téléphone
     if ("Notification" in window && Notification.permission !== "granted") {
         Notification.requestPermission();
     }
     
-    // Activer l'écouteur en temps réel pour les notifications de messages ou cadeaux reçus
     initRealtimeNotifications();
 }
 
@@ -285,7 +282,6 @@ function addMoney(){
     if (navigator.vibrate) navigator.vibrate(30);
 }
 
-// --- SYSTÈME DE NOTIFICATIONS NATIVES ---
 function sendNativeNotification(title, body) {
     if ("Notification" in window && Notification.permission === "granted") {
         try {
@@ -304,14 +300,12 @@ function sendNativeNotification(title, body) {
 }
 
 function initRealtimeNotifications() {
-    // Écoute si un objet de l'inventaire t'est attribué (Cadeau reçu)
     client.channel('public:inventaire')
       .on('postgres_changes', { event: 'UPDATE', schema: 'public', table: 'inventaire', filter: `user_id=eq.${user}` }, payload => {
           sendNativeNotification("🎁 Nouveau Cadeau !", `Tu as reçu un nouvel article dans ton inventaire !`);
       })
       .subscribe();
       
-    // Écoute si un message t'est envoyé
     try {
         client.channel('public:messages')
           .on('postgres_changes', { event: 'INSERT', schema: 'public', table: 'messages', filter: `receiver=eq.${user}` }, payload => {
@@ -443,11 +437,11 @@ async function transferItem(itemId, targetUser) {
     }
 }
 
-// --- OPTION 1 : 💬 Messages & Chat (Redirection vers chat.html) ---
+// --- OPTION 1 : 💬 Messages & Chat (Redirection directe vers chat.html) ---
 async function openChat() {
     document.getElementById("box").innerHTML = `
-        <h3 style="margin-top:0;">💬 Messages & Discussion</h3>
-        <p style="font-size: 13px; opacity: 0.7;">Sélectionne un ami pour discuter en direct :</p>
+        <h3 style="margin-top:0;">💬 Conversations</h3>
+        <p style="font-size: 13px; opacity: 0.7;">Choisis un utilisateur pour lancer le chat :</p>
         <div id="chatFriendsList" style="max-height: 50vh; overflow-y: auto; display: flex; flex-direction: column; gap: 8px;">
             Chargement...
         </div>
@@ -455,19 +449,27 @@ async function openChat() {
     `;
     document.getElementById("modal").style.display = "flex";
 
-    let { data: users } = await client.from("users").select("username, avatar").neq("username", user);
-    let listHTML = (users || []).map(f => `
+    // Récupère les utilisateurs inscrits (ou amis) sauf soi-même
+    let { data: users, error } = await client.from("users").select("username, avatar").neq("username", user);
+    
+    if (error || !users || users.length === 0) {
+        document.getElementById("chatFriendsList").innerHTML = "<p style='text-align:center; opacity:0.6;'>Aucun utilisateur disponible</p>";
+        return;
+    }
+
+    let listHTML = users.map(f => `
         <div onclick="openChatWith('${f.username}')" style="background:rgba(255,255,255,0.04); padding:12px; border-radius:12px; display:flex; align-items:center; justify-content:space-between; cursor:pointer;">
             <div style="display:flex; align-items:center; gap:10px;">
-                <div style="width:28px; height:28px; border-radius:50%; background:rgba(255,255,255,0.1); overflow:hidden; display:flex; align-items:center; justify-content:center;">
+                <div style="width:32px; height:32px; border-radius:50%; background:rgba(255,255,255,0.1); overflow:hidden; display:flex; align-items:center; justify-content:center;">
                     ${f.avatar ? `<img src="${f.avatar}" style="width:100%; height:100%; object-fit:cover;">` : '👤'}
                 </div>
                 <b>@${f.username}</b>
             </div>
-            <span style="font-size: 12px; color: #00ff99;">Discuter ➔</span>
+            <span style="font-size: 12px; color: #00ff99; font-weight: bold;">Discuter ➔</span>
         </div>
     `).join("");
-    document.getElementById("chatFriendsList").innerHTML = listHTML || "<p>Aucun utilisateur</p>";
+
+    document.getElementById("chatFriendsList").innerHTML = listHTML;
 }
 
 function openChatWith(friendName) {
