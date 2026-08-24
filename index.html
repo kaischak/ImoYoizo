@@ -352,122 +352,63 @@ async function openInv() {
     if (navigator.vibrate) navigator.vibrate(20);
 }
 
-// 2. Amis & Dons
+// 2. Amis & Dons (Redirection vers la page dédiée ou modale gérant les amis)
 async function openFriends() {
-    document.getElementById("box").innerHTML = `
-        <h3 style="margin-top:0;">👥 Mes Amis</h3>
-        <div style="text-align:center; padding: 40px; opacity: 0.6;">Chargement des amis...</div>
-        <button onclick="document.getElementById('modal').style.display='none'" style="width:100%; margin-top:15px; padding:12px; border:none; border-radius:12px; background:rgba(255,255,255,0.1); color:white; cursor:pointer; font-weight:bold;">Fermer</button>
-    `;
-    document.getElementById("modal").style.display = "flex";
-
-    let { data: usersData } = await client
-        .from("users")
-        .select("username, avatar")
-        .neq("username", user);
-
-    let friends = usersData || [];
-
-    document.getElementById("box").innerHTML = `
-        <h3 style="margin-top:0;">👥 Amis & Dons</h3>
-        <div style="max-height: 50vh; overflow-y: auto; display: flex; flex-direction: column; gap: 8px;">
-            ${friends.length === 0 ? "<p style='opacity:0.6; text-align:center;'>Aucun autre utilisateur trouvé</p>" : ""}
-            ${friends.map(f => `
-                <div style="background:rgba(255,255,255,0.04); padding:10px 14px; border-radius:12px; display:flex; align-items:center; justify-content:space-between;">
-                    <div style="display:flex; align-items:center; gap:10px;">
-                        <div style="width:32px; height:32px; border-radius:50%; background:rgba(255,255,255,0.1); overflow:hidden; display:flex; align-items:center; justify-content:center;">
-                            ${f.avatar ? `<img src="${f.avatar}" style="width:100%; height:100%; object-fit:cover;">` : '👤'}
-                        </div>
-                        <b>@${f.username}</b>
-                    </div>
-                    <button onclick="selectItemToGift('${f.username}')" style="padding:6px 12px; background:#00ff99; color:black; border:none; border-radius:8px; font-size:12px; font-weight:bold; cursor:pointer;">🎁 Donner</button>
-                </div>
-            `).join("")}
-        </div>
-        <button onclick="document.getElementById('modal').style.display='none'" style="width:100%; margin-top:15px; padding:12px; border:none; border-radius:12px; background:rgba(255,255,255,0.1); color:white; cursor:pointer; font-weight:bold;">Fermer</button>
-    `;
+    window.location.href = "friends.html"; // Redirige directement si tu as une page amis dédiée, ou garde la modale :
 }
 
-async function openGiftModal(itemId, itemName) {
-    let { data: usersData } = await client.from("users").select("username, avatar").neq("username", user);
-    let friends = usersData || [];
-
-    document.getElementById("box").innerHTML = `
-        <h3 style="margin-top:0;">🎁 Offrir "${itemName}"</h3>
-        <div style="max-height: 45vh; overflow-y: auto; display: flex; flex-direction: column; gap: 8px;">
-            ${friends.map(f => `
-                <div style="background:rgba(255,255,255,0.04); padding:10px 14px; border-radius:12px; display:flex; align-items:center; justify-content:space-between;">
-                    <b>@${f.username}</b>
-                    <button onclick="transferItem(${itemId}, '${f.username}')" style="padding:6px 12px; background:linear-gradient(135deg,#ff758c,#ff7eb3); color:white; border:none; border-radius:8px; font-size:12px; font-weight:bold; cursor:pointer;">Envoyer</button>
-                </div>
-            `).join("")}
-        </div>
-        <button onclick="openInv()" style="width:100%; margin-top:15px; padding:10px; border:none; border-radius:12px; background:rgba(255,255,255,0.1); color:white; cursor:pointer; font-weight:bold;">Retour</button>
-    `;
-}
-
-async function selectItemToGift(friendUsername) {
-    let { data } = await client.from("inventaire").select("id, item, price, image").eq("user_id", user);
-    let items = data || [];
-
-    document.getElementById("box").innerHTML = `
-        <h3 style="margin-top:0;">🎁 Cadeau pour @${friendUsername}</h3>
-        <div style="max-height: 50vh; overflow-y: auto; display: grid; grid-template-columns: 1fr 1fr; gap: 10px;">
-            ${items.length === 0 ? "<p style='opacity:0.6; text-align:center; grid-column: span 2;'>Ton inventaire est vide</p>" : ""}
-            ${items.map(item => `
-                <div style="background:rgba(255,255,255,0.04); padding:10px; border-radius:12px; text-align:center;">
-                    <img src="${item.image}" style="width:100%; height:70px; object-fit:cover; border-radius:8px; margin-bottom:5px;">
-                    <b style="font-size:11px; display:block;">${item.item}</b>
-                    <button onclick="transferItem(${item.id}, '${friendUsername}')" style="margin-top:5px; padding:4px 8px; background:#00ff99; color:black; border:none; border-radius:6px; font-size:10px; font-weight:bold; cursor:pointer;">Offrir</button>
-                </div>
-            `).join("")}
-        </div>
-        <button onclick="openFriends()" style="width:100%; margin-top:15px; padding:10px; border:none; border-radius:12px; background:rgba(255,255,255,0.1); color:white; cursor:pointer; font-weight:bold;">Retour</button>
-    `;
-}
-
-async function transferItem(itemId, targetUser) {
-    let { error } = await client.from("inventaire").update({ user_id: targetUser }).eq("id", itemId);
-    if(error) {
-        alert("Erreur lors de l'envoi.");
-    } else {
-        alert(`🎁 Cadeau envoyé à @${targetUser} !`);
-        document.getElementById('modal').style.display = 'none';
-        if (navigator.vibrate) navigator.vibrate([30, 50, 30]);
-    }
-}
-
-// --- OPTION 1 : 💬 Messages & Chat (Redirection directe vers chat.html) ---
+// 3. --- OPTION : 💬 Messages & Chat (Filtre par Amis acceptés via la table friends) ---
 async function openChat() {
     document.getElementById("box").innerHTML = `
-        <h3 style="margin-top:0;">💬 Conversations</h3>
-        <p style="font-size: 13px; opacity: 0.7;">Choisis un utilisateur pour lancer le chat :</p>
+        <h3 style="margin-top:0;">💬 Discussions avec mes amis</h3>
+        <p style="font-size: 13px; opacity: 0.7;">Choisis un ami pour lancer le chat :</p>
         <div id="chatFriendsList" style="max-height: 50vh; overflow-y: auto; display: flex; flex-direction: column; gap: 8px;">
-            Chargement...
+            Chargement de tes amis...
         </div>
         <button onclick="document.getElementById('modal').style.display='none'" style="width:100%; margin-top:15px; padding:12px; border:none; border-radius:12px; background:rgba(255,255,255,0.1); color:white; cursor:pointer; font-weight:bold;">Fermer</button>
     `;
     document.getElementById("modal").style.display = "flex";
 
-    // Récupère les utilisateurs inscrits (ou amis) sauf soi-même
-    let { data: users, error } = await client.from("users").select("username, avatar").neq("username", user);
-    
-    if (error || !users || users.length === 0) {
-        document.getElementById("chatFriendsList").innerHTML = "<p style='text-align:center; opacity:0.6;'>Aucun utilisateur disponible</p>";
+    // Récupère uniquement les relations "accepted" où l'utilisateur est impliqué
+    let { data: friendsData, error } = await client
+        .from("friends")
+        .select("*")
+        .eq("status", "accepted")
+        .or(`user1.eq.${user},user2.eq.${user}`);
+
+    if (error || !friendsData || friendsData.length === 0) {
+        document.getElementById("chatFriendsList").innerHTML = "<p style='text-align:center; opacity:0.6; padding: 20px;'>Aucun ami pour le moment. Ajoute des amis pour discuter !</p>";
         return;
     }
 
-    let listHTML = users.map(f => `
-        <div onclick="openChatWith('${f.username}')" style="background:rgba(255,255,255,0.04); padding:12px; border-radius:12px; display:flex; align-items:center; justify-content:space-between; cursor:pointer;">
+    // Extraire les noms des amis (en excluant son propre pseudo)
+    let friendNames = friendsData.map(f => f.user1 === user ? f.user2 : f.user1);
+
+    // Récupérer les avatars correspondants depuis la table users
+    let { data: usersData } = await client
+        .from("users")
+        .select("username, avatar")
+        .in("username", friendNames);
+
+    let usersMap = {};
+    (usersData || []).forEach(u => {
+        usersMap[u.username] = u.avatar;
+    });
+
+    let listHTML = friendNames.map(friendName => {
+        let avatarUrl = usersMap[friendName];
+        return `
+        <div onclick="openChatWith('${friendName}')" style="background:rgba(255,255,255,0.04); padding:12px; border-radius:12px; display:flex; align-items:center; justify-content:space-between; cursor:pointer;">
             <div style="display:flex; align-items:center; gap:10px;">
                 <div style="width:32px; height:32px; border-radius:50%; background:rgba(255,255,255,0.1); overflow:hidden; display:flex; align-items:center; justify-content:center;">
-                    ${f.avatar ? `<img src="${f.avatar}" style="width:100%; height:100%; object-fit:cover;">` : '👤'}
+                    ${avatarUrl ? `<img src="${avatarUrl}" style="width:100%; height:100%; object-fit:cover;">` : '👤'}
                 </div>
-                <b>@${f.username}</b>
+                <b>@${friendName}</b>
             </div>
             <span style="font-size: 12px; color: #00ff99; font-weight: bold;">Discuter ➔</span>
         </div>
-    `).join("");
+        `;
+    }).join("");
 
     document.getElementById("chatFriendsList").innerHTML = listHTML;
 }
@@ -477,7 +418,7 @@ function openChatWith(friendName) {
     window.location.href = "chat.html";
 }
 
-// --- OPTION 2 : 📊 Statistiques & Profil ---
+// --- OPTION : 📊 Statistiques & Profil ---
 async function openStats() {
     document.getElementById("box").innerHTML = `
         <h3 style="margin-top:0;">📊 Statistiques & Profil</h3>
@@ -509,7 +450,7 @@ async function openStats() {
     `;
 }
 
-// --- OPTION 3 : ⚙️ Paramètres & Notifications ---
+// --- OPTION : ⚙️ Paramètres & Notifications ---
 function openSettings() {
     let notifStatus = "Notification" in window ? Notification.permission : "Non supporté";
     document.getElementById("box").innerHTML = `
