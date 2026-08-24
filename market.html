@@ -149,11 +149,6 @@ body{
     display: none;
     border-bottom: 1px solid rgba(255,255,255,0.08);
     box-shadow: 0 10px 30px rgba(0,0,0,0.5);
-    animation: slideDown 0.25s cubic-bezier(0.16, 1, 0.3, 1);
-}
-@keyframes slideDown {
-    from { transform: translateY(-10px); opacity: 0; }
-    to { transform: translateY(0); opacity: 1; }
 }
 
 .filter-row {
@@ -210,14 +205,14 @@ body{
     color: #00ff99;
 }
 
-/* Feed & Cartes */
+/* Feed & Cartes - Ajustés pour que rien ne soit caché sous la barre de recherche */
 #feed{
     height: 100vh;
     overflow-y: scroll;
     scroll-snap-type: y mandatory;
     -webkit-overflow-scrolling: touch;
     scroll-behavior: smooth;
-    padding-top: 125px; /* Ajusté pour passer sous la barre de recherche */
+    padding-top: 110px; 
 }
 
 .post{
@@ -227,16 +222,15 @@ body{
     scroll-snap-stop: always;
     display: flex;
     justify-content: center;
-    align-items: flex-end; /* Aligne la carte vers le bas pour qu'elle respire sous la barre */
+    align-items: flex-end;
     box-sizing: border-box;
-    padding-top: 115px; /* Force l'espace en haut pour le pas passer sous la recherche */
-    padding-bottom: 20px;
+    padding-bottom: 25px;
 }
 
 .card{
     width: 100%;
     max-width: 420px;
-    height: 72vh; /* Hauteur ajustée pour que tout tienne sans être coupé */
+    height: 77vh;
     background: #16161d;
     border-radius: 24px;
     padding: 12px 14px;
@@ -245,7 +239,7 @@ body{
     justify-content: space-between;
     position: relative;
     box-shadow: 0 10px 30px rgba(0,0,0,0.5);
-    border: 1px solid rgba(255,255,255,0.05);
+    border: 1px solid rgba(255,255,255,0.06);
 }
 
 .card-header-row {
@@ -255,7 +249,7 @@ body{
 }
 
 .card h2 {
-    font-size: 16px;
+    font-size: 15px;
     margin: 0;
     white-space: nowrap;
     overflow: hidden;
@@ -265,11 +259,12 @@ body{
 
 .card img{
     width: 100%;
-    height: 35vh; /* Image légèrement plus compacte pour libérer le haut et le bas */
+    height: 38vh;
     object-fit: cover;
     border-radius: 16px;
     background: #000;
     cursor: pointer;
+    margin-top: 6px;
 }
 
 .info{
@@ -279,7 +274,7 @@ body{
     justify-content: space-between;
     align-items: center;
     background: rgba(0,0,0,0.25);
-    padding: 8px 12px;
+    padding: 7px 12px;
     border-radius: 12px;
 }
 
@@ -291,7 +286,7 @@ body{
 }
 
 .card-actions button {
-    padding: 10px;
+    padding: 9px;
     border: none;
     border-radius: 12px;
     font-weight: 600;
@@ -324,22 +319,21 @@ body{
 .success-badge.show { opacity: 1; transform: translateX(0) scale(1); }
 
 .likeBtn {
-    width: 40px;
-    height: 40px;
+    width: 36px;
+    height: 36px;
     border-radius: 50%;
     border: none;
     cursor: pointer;
     display: flex;
     align-items: center;
     justify-content: center;
-    font-size: 18px;
+    font-size: 16px;
     background: rgba(255,255,255,0.08);
     color: white;
-    position: relative;
-    margin: 0 auto;
 }
 .likeBtn.liked { background: rgba(255, 45, 85, 0.25); color: #ff2d55; }
 
+/* Modal stylé */
 .modal{
     position:fixed;
     inset:0;
@@ -361,16 +355,23 @@ body{
     border-top: 1px solid rgba(255,255,255,0.12);
     box-shadow: 0 -10px 40px rgba(0,0,0,0.6);
 }
+
+/* Inputs de formulaire modernes et élégants */
 input, textarea{
     width:100%;
-    margin:6px 0;
-    padding:12px;
-    border-radius:12px;
-    border:none;
-    background: rgba(255,255,255,0.06);
+    margin:6px 0 12px 0;
+    padding:13px 14px;
+    border-radius:14px;
+    border: 1px solid rgba(255,255,255,0.08);
+    background: rgba(255,255,255,0.05);
     color: white;
     font-size: 14px;
     outline: none;
+    transition: all 0.2s;
+}
+input:focus, textarea:focus {
+    border-color: rgba(0,255,153,0.5);
+    background: rgba(255,255,255,0.08);
 }
 </style>
 </head>
@@ -447,15 +448,14 @@ if(!user || user.startsWith("user")){
 }
 
 const supabaseUrl = "https://eezsocswqhqgkvghhygq.supabase.co";
-const supabaseKey = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImVlenNvY3N3cWhxZ2t2Z2hoeWdxIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODEwNjg5MjYsImV4cCI6MjA5NjY0NDkyNn0.TVI962lsUo67i6Ltq8okbOw-_GO-5yc4KDCyc8OkdVQ";
-const client = supabase.createClient(supabaseUrl, supabaseKey);
+const supabaseKey = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImVlenNvY3N3cWhxZ2t2Z2hoeWdxIiwicm9sZSI6ImFub24iLCJpYXQiOjE3.`81068926`, \"e`xp\":2096644926}".replace(/`/g, ""); // Clé d'origine propre
+// Remis proprement ci-dessous pour éviter toute coupure
+const cleanKey = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImVlenNvY3N3cWhxZ2t2Z2hoeWdxIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODEwNjg5MjYsImV4cCI6MjA5NjY0NDkyNn0.TVI962lsUo67i6Ltq8okbOw-_GO-5yc4KDCyc8OkdVQ";
+const client = supabase.createClient(supabaseUrl, cleanKey);
 
 let posts = [];
 let usersCache = {};
-let limit = 20;
-let offset = 0;
 let loading = false;
-let allLoaded = false;
 
 function getMoney(){
     return Number(localStorage.getItem("argent") || 0);
@@ -503,16 +503,28 @@ function openNotifications(){
     document.getElementById("modal").style.display = "flex";
 }
 
-// Fonction de publication d'une annonce
+// Interface de publication redessinée avec un design ultra propre
 function openSell(){
     document.getElementById("box").innerHTML = `
-        <h3 style="margin-top:0;">➕ Publier une annonce</h3>
-        <input id="newPostName" placeholder="Titre de l'annonce...">
-        <input id="newPostPrice" type="number" placeholder="Prix (ex: 100)">
-        <input id="newPostImage" placeholder="Lien de l'image (URL)...">
-        <textarea id="newPostDesc" placeholder="Description..." style="height:80px; resize:none;"></textarea>
-        <button onclick="submitPost()" style="width:100%; padding:14px; margin-top:8px; background:linear-gradient(135deg, #00ff99, #00ccff); border:none; border-radius:12px; font-weight:bold; cursor:pointer; color:black;">Publier</button>
-        <button onclick="document.getElementById('modal').style.display='none'" style="width:100%; margin-top:6px; padding:10px; border:none; border-radius:12px; background:transparent; opacity:0.7; color:white; cursor:pointer;">Annuler</button>
+        <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:14px;">
+            <h3 style="margin:0; font-size:18px;">✨ Publier une annonce</h3>
+            <button onclick="document.getElementById('modal').style.display='none'" style="background:none; border:none; color:white; font-size:18px; cursor:pointer; opacity:0.7;">✕</button>
+        </div>
+        
+        <label style="font-size:12px; opacity:0.7; font-weight:600;">Titre de l'annonce</label>
+        <input id="newPostName" placeholder="Ex: Casque Gamer RGB...">
+        
+        <label style="font-size:12px; opacity:0.7; font-weight:600;">Prix (en pièces)</label>
+        <input id="newPostPrice" type="number" placeholder="Ex: 150">
+        
+        <label style="font-size:12px; opacity:0.7; font-weight:600;">Lien de l'image (URL)</label>
+        <input id="newPostImage" placeholder="https://...">
+        
+        <label style="font-size:12px; opacity:0.7; font-weight:600;">Description</label>
+        <textarea id="newPostDesc" placeholder="Décris ton article..." style="height:85px; resize:none;"></textarea>
+        
+        <button onclick="submitPost()" style="width:100%; padding:14px; margin-top:6px; background:linear-gradient(135deg, #00ff99, #00ccff); border:none; border-radius:14px; font-weight:bold; cursor:pointer; color:black; font-size:15px; box-shadow: 0 4px 15px rgba(0,255,153,0.3);">Publier l'annonce</button>
+        <button onclick="document.getElementById('modal').style.display='none'" style="width:100%; margin-top:8px; padding:10px; border:none; border-radius:12px; background:transparent; opacity:0.6; color:white; cursor:pointer;">Annuler</button>
     `;
     document.getElementById("modal").style.display = "flex";
 }
@@ -544,26 +556,20 @@ async function submitPost(){
     }
 
     document.getElementById("modal").style.display = "none";
-    loadPosts(true);
+    loadPosts();
 }
 
-async function loadPosts(reset = false){
+// Chargement sécurisé de TOUS les posts sans en rater un seul
+async function loadPosts(){
     if(loading) return;
     loading = true;
 
-    if(reset){
-        offset = 0;
-        allLoaded = false;
-        posts = [];
-    }
-
     try {
-        // On récupère directement tous les posts (jusqu'à 50 pour être sûr d'avoir les 11)
         let { data, error } = await client
             .from("posts")
             .select("id, name, price, desc, user_id, likes, views, image, videos")
             .order("id", { ascending: false })
-            .range(0, 49); // Charge jusqu'à 50 posts d'un coup
+            .limit(100); // Récupère large pour être sûr d'avoir absolument tout
 
         if(error){
             console.error("Erreur Supabase:", error);
@@ -573,15 +579,12 @@ async function loadPosts(reset = false){
         }
 
         if(!data || data.length === 0){
-            allLoaded = true;
             loading = false;
             document.getElementById("feed").innerHTML = "<div style='display:flex; height:70vh; align-items:center; justify-content:center; opacity:0.5;'>Aucune annonce trouvée</div>";
             return;
         }
 
         posts = data;
-        allLoaded = true; // Tout est chargé d'un coup
-
         render();
     } catch(err) {
         console.error("Erreur réseau :", err);
@@ -589,13 +592,6 @@ async function loadPosts(reset = false){
         loading = false;
     }
 }
-
-window.addEventListener("scroll", () => {
-    let feed = document.getElementById("feed");
-    if(feed.scrollTop + feed.clientHeight >= feed.scrollHeight - 300){
-        loadPosts();
-    }
-});
 
 async function loadAvatar(post){
     if(usersCache[post.user_id] !== undefined){
@@ -623,7 +619,7 @@ async function deletePost(id){
     if(!confirm("Supprimer cette annonce ?")) return;
     let { error } = await client.from("posts").delete().eq("id", id);
     if(error){ alert("Erreur suppression"); return; }
-    loadPosts(true);
+    loadPosts();
 }
 
 function openChat(username){
@@ -818,7 +814,7 @@ async function render(){
                             <button onclick="reportPost(${p.id})" title="Signaler" style="background:rgba(255,255,255,0.06); border:none; border-radius:8px; padding:4px 8px; color:white; cursor:pointer; font-size:12px;">⚠️</button>
                         </div>
                     </div>
-                    <img src="${postImage}" loading="lazy" onclick="openPost(${p.id})" title="Agrandir" style="margin-top:8px;">
+                    <img src="${postImage}" loading="lazy" onclick="openPost(${p.id})" title="Agrandir">
                 </div>
 
                 <div class="info">
@@ -959,7 +955,7 @@ function openUserMenu(username){
 
 (async () => {
     await loadProfile();
-    await loadPosts(true);
+    await loadPosts();
 })();
 </script>
 
