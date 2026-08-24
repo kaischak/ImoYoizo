@@ -502,6 +502,50 @@ function openNotifications(){
     document.getElementById("modal").style.display = "flex";
 }
 
+// Fonction de publication d'une annonce
+function openSell(){
+    document.getElementById("box").innerHTML = `
+        <h3 style="margin-top:0;">➕ Publier une annonce</h3>
+        <input id="newPostName" placeholder="Titre de l'annonce...">
+        <input id="newPostPrice" type="number" placeholder="Prix (ex: 100)">
+        <input id="newPostImage" placeholder="Lien de l'image (URL)...">
+        <textarea id="newPostDesc" placeholder="Description..." style="height:80px; resize:none;"></textarea>
+        <button onclick="submitPost()" style="width:100%; padding:14px; margin-top:8px; background:linear-gradient(135deg, #00ff99, #00ccff); border:none; border-radius:12px; font-weight:bold; cursor:pointer; color:black;">Publier</button>
+        <button onclick="document.getElementById('modal').style.display='none'" style="width:100%; margin-top:6px; padding:10px; border:none; border-radius:12px; background:transparent; opacity:0.7; color:white; cursor:pointer;">Annuler</button>
+    `;
+    document.getElementById("modal").style.display = "flex";
+}
+
+async function submitPost(){
+    let name = document.getElementById("newPostName").value.trim();
+    let price = Number(document.getElementById("newPostPrice").value);
+    let image = document.getElementById("newPostImage").value.trim();
+    let desc = document.getElementById("newPostDesc").value.trim();
+
+    if(!name || !image || isNaN(price)){
+        alert("Remplis correctement tous les champs obligatoires !");
+        return;
+    }
+
+    let { error } = await client.from("posts").insert([{
+        name: name,
+        price: price,
+        image: image,
+        desc: desc,
+        user_id: user,
+        likes: 0,
+        views: 0
+    }]);
+
+    if(error){
+        alert("Erreur lors de la publication.");
+        return;
+    }
+
+    document.getElementById("modal").style.display = "none";
+    loadPosts(true);
+}
+
 async function loadPosts(reset = false){
     if(loading) return;
     loading = true;
@@ -722,7 +766,6 @@ function toggleFavorite(id, event){
 
 function vibrateSoft(btn){ if (navigator.vibrate) navigator.vibrate(15); }
 
-// NOUVEAU: Partager le lien du post
 function sharePost(id, name){
     if (navigator.share) {
         navigator.share({ title: name, text: `Regarde cette annonce sur Market Fluid : ${name}`, url: window.location.href }).catch(() => {});
@@ -732,7 +775,6 @@ function sharePost(id, name){
     }
 }
 
-// NOUVEAU: Signaler une annonce
 function reportPost(id){
     let reason = prompt("Raison du signalement (spam, arnaque, contenu inapproprié...) :");
     if(reason){
