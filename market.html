@@ -774,11 +774,12 @@ async function loadPosts(){
     loading = true;
 
     try {
+        // On retire 'videos' de la sélection principale pour alléger drastiquement la requête, et on baisse la limite à 30
         let { data, error } = await client
             .from("posts")
-            .select("id, name, price, desc, user_id, likes, views, image, videos")
+            .select("id, name, price, desc, user_id, likes, views, image")
             .order("id", { ascending: false })
-            .limit(100);
+            .limit(30);
 
         if(error){
             console.error("Erreur Supabase:", error);
