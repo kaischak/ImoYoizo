@@ -4,109 +4,254 @@
 <link rel="manifest" href="manifest.json">
 <meta name="theme-color" content="#0b0b0f">
 <link rel="apple-touch-icon" href="icon-192.png">
-<meta name="theme-color" content="#6a11cb">
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
 <title>ImoYoizo</title>
 
 <style>
-body{
-margin:0;
-font-family:Arial;
-text-align:center;
-background:linear-gradient(135deg,#6a11cb,#2575fc);
-min-height:100vh;
-color:white;
+* { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
+body {
+    margin: 0;
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+    background: #0b0b0f;
+    color: white;
+    min-height: 100vh;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: space-between;
+    padding: 20px;
+    user-select: none;
+    overflow-x: hidden;
 }
 
-.topbar{
-display:flex;
-justify-content:flex-end;
-padding:15px;
+.topbar {
+    width: 100%;
+    max-width: 420px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    background: rgba(255, 255, 255, 0.05);
+    backdrop-filter: blur(20px);
+    -webkit-backdrop-filter: blur(20px);
+    border: 1px solid rgba(255, 255, 255, 0.08);
+    padding: 12px 16px;
+    border-radius: 20px;
 }
 
-.argent{
-background:white;
-color:black;
-padding:12px;
-border-radius:15px;
+.user-info {
+    display: flex;
+    align-items: center;
+    gap: 10px;
 }
 
-button{
-padding:10px;
-margin:5px;
-border:none;
-border-radius:10px;
-cursor:pointer;
+.avatar {
+    width: 36px;
+    height: 36px;
+    border-radius: 50%;
+    background: rgba(255, 255, 255, 0.1);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    overflow: hidden;
+    font-size: 16px;
+}
+.avatar img { width: 100%; height: 100%; object-fit: cover; }
+
+.argent-badge {
+    background: rgba(0, 255, 153, 0.1);
+    border: 1px solid rgba(0, 255, 153, 0.3);
+    color: #00ff99;
+    padding: 6px 12px;
+    border-radius: 12px;
+    font-weight: bold;
+    font-size: 14px;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+}
+
+.main-content {
+    width: 100%;
+    max-width: 420px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 20px;
+    margin: auto 0;
+}
+
+h1 {
+    font-size: 32px;
+    margin: 0;
+    background: linear-gradient(135deg, #00ff99, #00ccff);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    font-weight: 800;
+    letter-spacing: -0.5px;
+}
+
+.menu-grid {
+    width: 100%;
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+}
+
+.menu-btn {
+    width: 100%;
+    padding: 16px 20px;
+    border: 1px solid rgba(255, 255, 255, 0.08);
+    border-radius: 18px;
+    background: rgba(255, 255, 255, 0.04);
+    color: white;
+    cursor: pointer;
+    font-size: 16px;
+    font-weight: 600;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.menu-btn:active {
+    transform: scale(0.97);
+    background: rgba(255, 255, 255, 0.08);
+}
+
+.menu-btn.primary {
+    background: linear-gradient(135deg, #00ff99, #00ccff);
+    color: black;
+    border: none;
+    font-weight: 700;
+}
+
+.add-money-container {
+    width: 100%;
+    max-width: 420px;
+}
+
+.add-money-btn {
+    width: 100%;
+    background: rgba(255, 255, 255, 0.04);
+    border: 1px dashed rgba(255, 255, 255, 0.2);
+    padding: 12px;
+    border-radius: 14px;
+    color: rgba(255, 255, 255, 0.7);
+    font-size: 13px;
+    cursor: pointer;
+    font-weight: 600;
+    transition: all 0.2s;
+}
+.add-money-btn:active {
+    background: rgba(255, 255, 255, 0.08);
+    transform: scale(0.98);
 }
 </style>
 </head>
 
-<script>
+<body>
 
-    let user = localStorage.getItem("user");
+<div class="topbar">
+    <div class="user-info">
+        <div class="avatar" id="userAvatar">👤</div>
+        <div>
+            <div id="usernameDisplay" style="font-size: 13px; font-weight: bold;">Chargement...</div>
+            <div style="font-size: 10px; opacity: 0.5;">En ligne</div>
+        </div>
+    </div>
+    <div class="argent-badge">
+        💰 <span id="argent">0</span>
+    </div>
+</div>
+
+<div class="main-content">
+    <h1>ImoYoizo</h1>
+    
+    <div class="menu-grid">
+        <button class="menu-btn primary" onclick="location.href='market.html'">
+            <span>🏪 Marché</span>
+            <span>➔</span>
+        </button>
+        <button class="menu-btn" onclick="location.href='market.html'"> <!-- Ou inventaire.html si tu as recréé la page -->
+            <span>📦 Inventaire</span>
+            <span>➔</span>
+        </button>
+        <button class="menu-btn" onclick="installApp()" id="installContainer" style="display:none;">
+            <span>📲 Installer l’application</span>
+            <span>➔</span>
+        </button>
+    </div>
+</div>
+
+<div class="add-money-container">
+    <button class="add-money-btn" onclick="addMoney()">+ 💰 Ajouter 100 pièces (Bonus)</button>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+
+<script>
+let user = localStorage.getItem("user");
 
 if(!user || user.startsWith("user")){
     localStorage.removeItem("user");
     window.location.href = "auth.html";
 }
 
-let deferredPrompt;
+const supabaseUrl = "https://eezsocswqhqgkvghhygq.supabase.co";
+const supabaseKey = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImVlenNvY3N3cWhxZ2t2Z2hoeWdxIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODEwNjg5MjYsImV4cCI6MjA5NjY0NDkyNn0.TVI962lsUo67i6Ltq8okbOw-_GO-5yc4KDCyc8OkdVQ";
+const client = supabase.createClient(supabaseUrl, supabaseKey);
 
-window.addEventListener("beforeinstallprompt", (e) => {
-    e.preventDefault();
-    deferredPrompt = e;
-
-    // tu peux afficher un bouton install ici
-    console.log("App installable !");
-});
-
-async function installApp(){
-    if(deferredPrompt){
-        deferredPrompt.prompt();
-        const result = await deferredPrompt.userChoice;
-        console.log(result);
-        deferredPrompt = null;
-    } else {
-        alert("Installation non disponible (ouvre le site dans Chrome/Samsung Internet)");
+// Charger le profil et l'avatar depuis Supabase
+async function initProfile() {
+    document.getElementById("usernameDisplay").innerText = "@" + user;
+    
+    let { data } = await client
+        .from("users")
+        .select("avatar")
+        .eq("username", user)
+        .maybeSingle();
+        
+    if(data && data.avatar) {
+        document.getElementById("userAvatar").innerHTML = `<img src="${data.avatar}">`;
     }
 }
 
-</script>
-
-<body>
-
-<div class="topbar">
-<div class="argent">
-💰 <span id="argent">0</span><br><br>
-<button onclick="addMoney()">+100</button>
-</div>
-</div>
-
-<h1>ImoYoizo</h1>
-
-<button onclick="location.href='market.html'">🏪 Marché</button>
-<button onclick="location.href='inventaire.html'">📦 Inventaire</button>
-<button onclick="installApp()">
-📲 Installer l’app
-</button>
-
-<script>
-
 let argent = parseInt(localStorage.getItem("argent") || 0);
-
 document.getElementById("argent").innerText = argent;
 
 function addMoney(){
     argent += 100;
     localStorage.setItem("argent", argent);
     document.getElementById("argent").innerText = argent;
+    if (navigator.vibrate) navigator.vibrate(30);
+}
+
+let deferredPrompt;
+window.addEventListener("beforeinstallprompt", (e) => {
+    e.preventDefault();
+    deferredPrompt = e;
+    document.getElementById("installContainer").style.display = "flex";
+});
+
+async function installApp(){
+    if(deferredPrompt){
+        deferredPrompt.prompt();
+        const result = await deferredPrompt.userChoice;
+        if(result.outcome === 'accepted'){
+            document.getElementById("installContainer").style.display = "none";
+        }
+        deferredPrompt = null;
+    } else {
+        alert("Installation non disponible (ouvre le site dans ton navigateur mobile)");
+    }
 }
 
 if ("serviceWorker" in navigator) {
-    navigator.serviceWorker.register("sw.js");
+    navigator.serviceWorker.register("sw.js").catch(() => {});
 }
 
+initProfile();
 </script>
 
 </body>
