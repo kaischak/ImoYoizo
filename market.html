@@ -501,7 +501,7 @@ function openNotifications(){
 }
 
 async function loadPosts(reset = false){
-    if(loading || allLoaded) return;
+    if(loading) return;
     loading = true;
 
     if(reset){
@@ -510,36 +510,43 @@ async function loadPosts(reset = false){
         posts = [];
     }
 
-    let { data, error } = await client
-        .from("posts")
-        .select("id, name, price, image, videos, desc, user_id, likes, views")
-        .order("id", { ascending: false })
-        .range(offset, offset + limit - 1);
+    try {
+        let { data, error } = await client
+            .from("posts")
+            .select("id, name, price, image, videos, desc, user_id, likes, views")
+            .order("id", { ascending: false })
+            .range(offset, offset + limit - 1);
 
-    if(error){
-        console.error("Erreur chargement posts:", error);
-        loading = false;
-        return;
-    }
-
-    if(!data || data.length === 0){
-        allLoaded = true;
-        loading = false;
-        if(posts.length === 0){
-            document.getElementById("feed").innerHTML = "<div style='display:flex; height:70vh; align-items:center; justify-content:center; opacity:0.5;'>Aucune annonce trouvée</div>";
+        if(error){
+            console.error("Erreur Supabase:", error);
+            document.getElementById("feed").innerHTML = `<div style='display:flex; height:70vh; align-items:center; justify-content:center; opacity:0.6; text-align:center; padding:20px;'>Erreur de chargement: ${error.message}</div>`;
+            loading = false;
+            return;
         }
-        return;
+
+        if(!data || data.length === 0){
+            allLoaded = true;
+            loading = false;
+            if(posts.length === 0){
+                document.getElementById("feed").innerHTML = "<div style='display:flex; height:70vh; align-items:center; justify-content:center; opacity:0.5;'>Aucune annonce trouvée</div>";
+            }
+            return;
+        }
+
+        posts = posts.concat(data);
+        offset += limit;
+
+        if(data.length < limit){
+            allLoaded = true;
+        }
+
+        render();
+    } catch(err) {
+        console.error("Erreur réseau :", err);
+        document.getElementById("feed").innerHTML = "<div style='display:flex; height:70vh; align-items:center; justify-content:center; opacity:0.5;'>Erreur de connexion</div>";
+    } finally {
+        loading = false;
     }
-
-    posts = posts.concat(data);
-    offset += limit;
-
-    if(data.length < limit){
-        allLoaded = true;
-    }
-
-    render();
-    loading = false;
 }
 
 window.addEventListener("scroll", () => {
