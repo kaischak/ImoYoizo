@@ -47,6 +47,17 @@ body {
 
 #with { opacity: 0.6; font-size: 13px; font-weight: normal; }
 
+/* Indicateur de frappe dans le header */
+#typingIndicator {
+    font-size: 12px;
+    color: #00ff99;
+    font-style: italic;
+    opacity: 0;
+    transition: opacity 0.3s;
+    margin-top: 2px;
+}
+#typingIndicator.active { opacity: 1; }
+
 #messages { 
     flex: 1; 
     overflow-y: auto; 
@@ -140,6 +151,27 @@ button:active { transform: scale(0.93); }
 
 .offer-container { display: flex; flex-direction: column; gap: 6px; }
 .offer-price { font-size: 18px; font-weight: bold; }
+
+/* Style pour les aperçus de liens/images détectés */
+.link-preview {
+    margin-top: 6px;
+    border-radius: 8px;
+    overflow: hidden;
+    max-width: 100%;
+    display: block;
+}
+.link-preview img {
+    width: 100%;
+    max-height: 180px;
+    object-fit: cover;
+    border-radius: 8px;
+    display: block;
+}
+.link-preview a {
+    color: inherit;
+    text-decoration: underline;
+    word-break: break-all;
+}
 </style>
 </head>
 
@@ -151,6 +183,7 @@ button:active { transform: scale(0.93); }
         <div>
             💬 Chat
             <div id="with">...</div>
+            <div id="typingIndicator">est en train d'écrire...</div>
         </div>
     </div>
 </div>
@@ -158,7 +191,7 @@ button:active { transform: scale(0.93); }
 <div id="messages"></div>
 
 <div id="inputBar">
-    <input id="input" placeholder="Écris un message..." autocomplete="off">
+    <input id="input" placeholder="Écris un message ou partage un lien..." autocomplete="off">
     <button class="offer-btn" onclick="offerPrice()" style="background:#ffd43b; color:black; height:46px;">💰 Offre</button>
     <button id="recordBtn" title="Enregistrer un vocal">🎤</button>
     <button id="sendBtn" onclick="send()">➤</button>
@@ -186,6 +219,8 @@ let currentAudio = null;
 let currentVoiceBox = null;
 const recordBtn = document.getElementById("recordBtn");
 const messagesBox = document.getElementById("messages");
+const inputField = document.getElementById("input");
+const typingIndicator = document.getElementById("typingIndicator");
 
 async function preloadUsers() {
     let { data } = await client.from("users").select("username, avatar");
@@ -260,6 +295,25 @@ function setupVoicePlayer(box, audio){
     });
 }
 
+// Fonction intelligente pour détecter les liens et images et générer une belle preview
+function parseMessageWithPreviews(text) {
+    let escaped = escapeHTML(text);
+    
+    // Expression régulière basique pour détecter les URL
+    const urlRegex = /(https?:\/\/[^\s]+)/g;
+    
+    let formattedText = escaped.replace(urlRegex, (url) => {
+        // Si c'est une image directe (termine par png, jpg, jpeg, webp, gif)
+        if (/\.(png|jpg|jpeg|webp|gif)(\?.*)?$/i.test(url)) {
+            return `<br><div class="link-preview"><img src="${url}" alt="Aperçu d'image" loading="lazy"></div>`;
+        }
+        // Sinon, c'est un lien cliquable propre
+        return `<a href="${url}" target="_blank" rel="noopener noreferrer">${url}</a>`;
+    });
+
+    return formattedText;
+}
+
 function createMessageElement(m) {
     let div = document.createElement("div");
     div.className = "msg " + (m.sender === user ? "me" : "other");
@@ -305,16 +359,15 @@ function createMessageElement(m) {
     }
     else {
         div.innerHTML = `
-            <div style="display:flex;align-items:center;gap:8px;">
-                <img src="${avatar}" style="width:24px;height:24px;border-radius:50%;object-fit:cover;">
-                <span>${escapeHTML(m.message || "")}</span>
+            <div style="display:flex;align-items:flex-start;gap:8px;">
+                <img src="${avatar}" style="width:24px;height:24px;border-radius:50%;object-fit:cover;margin-top:2px;">
+                <div style="flex:1;">${parseMessageWithPreviews(m.message || "")}</div>
             </div>
         `;
     }
     return div;
 }
 
-// Fonction d'ajout fluide avec vérification anti-doublon
 function appendMessageIfNew(m) {
     if (m.id && messagesBox.querySelector(`[data-id="${m.id}"]`)) return;
     messagesBox.appendChild(createMessageElement(m));
@@ -341,10 +394,9 @@ function escapeHTML(text){
 }
 
 async function send(){
-    let input = document.getElementById("input");
-    let msg = input.value.trim();
+    let msg = inputField.value.trim();
     if(!msg) return;
-    input.value = "";
+    inputField.value = "";
 
     let { data } = await client.from("messages").insert([{ sender: user, receiver: friend, message: msg }]).select();
     if (data && data[0]) appendMessageIfNew(data[0]);
@@ -365,7 +417,7 @@ async function rejectOffer(id){
     await client.from("messages").update({ offer_status: "rejected" }).eq("id", id);
 }
 
-document.getElementById("input").addEventListener("keydown", e => {
+inputField.addEventListener("keydown", e => {
     if(e.key === "Enter") send();
 });
 
@@ -416,10 +468,13 @@ recordBtn.onclick = async () => {
     }
 };
 
-// Canal Supabase Realtime actif
+// Canal Supabase Realtime (Messages + Indicateur de frappe)
 const roomChannel = 'chat_room_' + [user, friend].sort().join('_');
-client
-.channel(roomChannel)
+const channel = client.channel(roomChannel, {
+    config: { broadcast: { self: false } }
+});
+
+channel
 .on('postgres_changes', { event: 'INSERT', schema: 'public', table: 'messages' }, payload => {
     let m = payload.new;
     if ((m.sender === user && m.receiver === friend) || (m.sender === friend && m.receiver === user)) {
@@ -437,7 +492,30 @@ client
         if (actionsEl && m.offer_status !== "pending") actionsEl.style.display = "none";
     }
 })
+.on('broadcast', { event: 'typing' }, payload => {
+    if (payload.user === friend) {
+        typingIndicator.classList.add('active');
+        clearTimeout(window.typingTimeout);
+        window.typingTimeout = setTimeout(() => {
+            typingIndicator.classList.remove('active');
+        }, 2000);
+    }
+})
 .subscribe();
+
+// Événement d'écriture (envoie un signal "en train d'écrire")
+let lastTypingTime = 0;
+inputField.addEventListener('input', () => {
+    let now = Date.now();
+    if (now - lastTypingTime > 1500) {
+        channel.send({
+            type: 'broadcast',
+            event: 'typing',
+            user: user
+        });
+        lastTypingTime = now;
+    }
+});
 
 (async () => {
     await preloadUsers();
