@@ -784,7 +784,7 @@ async function render(){
 
     let filteredPosts = posts.filter(p => {
         let matchName = (p.name || "").toLowerCase().includes(s);
-        let matchPrice = (p.price >= minPrice) && (p.price <= maxPrice);
+        let matchPrice = (Number(p.price) >= minPrice) && (Number(p.price) <= maxPrice);
         let matchVideo = !videoOnly || (p.videos && p.videos.length > 0);
         return matchName && matchPrice && matchVideo;
     });
@@ -804,17 +804,21 @@ async function render(){
         let div = document.createElement("div");
         div.className = "post";
 
+        let postName = p.name ? p.name : "Annonce sans titre";
+        let postImage = p.image ? p.image : "https://via.placeholder.com/400x400?text=Pas+d%27image";
+        let postPrice = p.price !== undefined ? p.price : 0;
+
         div.innerHTML = `
             <div class="card" data-post-id="${p.id}">
                 <div>
                     <div class="card-header-row">
-                        <h2>${p.name}</h2>
+                        <h2>${postName}</h2>
                         <div style="display:flex; gap:6px;">
-                            <button onclick="sharePost(${p.id}, '${escape(p.name)}')" title="Partager" style="background:rgba(255,255,255,0.06); border:none; border-radius:8px; padding:4px 8px; color:white; cursor:pointer; font-size:12px;">🔗</button>
+                            <button onclick="sharePost(${p.id}, '${escape(postName)}')" title="Partager" style="background:rgba(255,255,255,0.06); border:none; border-radius:8px; padding:4px 8px; color:white; cursor:pointer; font-size:12px;">🔗</button>
                             <button onclick="reportPost(${p.id})" title="Signaler" style="background:rgba(255,255,255,0.06); border:none; border-radius:8px; padding:4px 8px; color:white; cursor:pointer; font-size:12px;">⚠️</button>
                         </div>
                     </div>
-                    <img src="${p.image}" loading="lazy" onclick="openPost(${p.id})" title="Agrandir" style="margin-top:8px;">
+                    <img src="${postImage}" loading="lazy" onclick="openPost(${p.id})" title="Agrandir" style="margin-top:8px;">
                 </div>
 
                 <div class="info">
@@ -822,7 +826,7 @@ async function render(){
                         <span id="avatar-${p.id}">👤</span>
                         <span style="color:#00ccff; font-weight:600;">@${p.user_id}</span>
                     </div>
-                    <div>💰 <b>${p.price}</b></div>
+                    <div>💰 <b>${postPrice}</b></div>
                 </div>
 
                 <div style="display:flex; justify-content:space-between; align-items:center;">
