@@ -558,21 +558,16 @@ async function loadPosts(reset = false){
     }
 
     try {
+        // On récupère directement tous les posts (jusqu'à 50 pour être sûr d'avoir les 11)
         let { data, error } = await client
             .from("posts")
             .select("id, name, price, desc, user_id, likes, views, image, videos")
             .order("id", { ascending: false })
-            .range(offset, offset + limit - 1);
+            .range(0, 49); // Charge jusqu'à 50 posts d'un coup
 
         if(error){
             console.error("Erreur Supabase:", error);
-            if(error.code === '57014' && limit > 5) {
-                limit = 5;
-                loading = false;
-                loadPosts(reset);
-                return;
-            }
-            document.getElementById("feed").innerHTML = `<div style='display:flex; height:70vh; align-items:center; justify-content:center; opacity:0.6; text-align:center; padding:20px;'>Erreur serveur (Timeout). Réessaie.</div>`;
+            document.getElementById("feed").innerHTML = `<div style='display:flex; height:70vh; align-items:center; justify-content:center; opacity:0.6; text-align:center; padding:20px;'>Erreur serveur. Réessaie.</div>`;
             loading = false;
             return;
         }
@@ -580,18 +575,12 @@ async function loadPosts(reset = false){
         if(!data || data.length === 0){
             allLoaded = true;
             loading = false;
-            if(posts.length === 0){
-                document.getElementById("feed").innerHTML = "<div style='display:flex; height:70vh; align-items:center; justify-content:center; opacity:0.5;'>Aucune annonce trouvée</div>";
-            }
+            document.getElementById("feed").innerHTML = "<div style='display:flex; height:70vh; align-items:center; justify-content:center; opacity:0.5;'>Aucune annonce trouvée</div>";
             return;
         }
 
-        posts = posts.concat(data);
-        offset += limit;
-
-        if(data.length < limit){
-            allLoaded = true;
-        }
+        posts = data;
+        allLoaded = true; // Tout est chargé d'un coup
 
         render();
     } catch(err) {
