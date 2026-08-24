@@ -147,6 +147,29 @@ h1 {
     background: rgba(255, 255, 255, 0.08);
     transform: scale(0.98);
 }
+
+/* Modal pour l'inventaire */
+.modal{
+    position: fixed;
+    inset: 0;
+    background: rgba(0,0,0,0.85);
+    backdrop-filter: blur(12px);
+    display: none;
+    justify-content: center;
+    align-items: flex-end;
+    z-index: 1000;
+}
+.box{
+    width: 100%;
+    max-width: 500px;
+    background: #16161d;
+    padding: 22px;
+    border-radius: 28px 28px 0 0;
+    max-height: 88vh;
+    overflow-y: auto;
+    border-top: 1px solid rgba(255,255,255,0.12);
+    box-shadow: 0 -10px 40px rgba(0,0,0,0.6);
+}
 </style>
 </head>
 
@@ -173,7 +196,7 @@ h1 {
             <span>🏪 Marché</span>
             <span>➔</span>
         </button>
-        <button class="menu-btn" onclick="location.href='market.html'"> <!-- Ou inventaire.html si tu as recréé la page -->
+        <button class="menu-btn" onclick="openInv()">
             <span>📦 Inventaire</span>
             <span>➔</span>
         </button>
@@ -186,6 +209,11 @@ h1 {
 
 <div class="add-money-container">
     <button class="add-money-btn" onclick="addMoney()">+ 💰 Ajouter 100 pièces (Bonus)</button>
+</div>
+
+<!-- Modal global -->
+<div id="modal" class="modal">
+    <div class="box" id="box"></div>
 </div>
 
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
@@ -202,7 +230,6 @@ const supabaseUrl = "https://eezsocswqhqgkvghhygq.supabase.co";
 const supabaseKey = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImVlenNvY3N3cWhxZ2t2Z2hoeWdxIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODEwNjg5MjYsImV4cCI6MjA5NjY0NDkyNn0.TVI962lsUo67i6Ltq8okbOw-_GO-5yc4KDCyc8OkdVQ";
 const client = supabase.createClient(supabaseUrl, supabaseKey);
 
-// Charger le profil et l'avatar depuis Supabase
 async function initProfile() {
     document.getElementById("usernameDisplay").innerText = "@" + user;
     
@@ -225,6 +252,40 @@ function addMoney(){
     localStorage.setItem("argent", argent);
     document.getElementById("argent").innerText = argent;
     if (navigator.vibrate) navigator.vibrate(30);
+}
+
+// Fonction pour ouvrir l'inventaire directement depuis l'accueil
+async function openInv() {
+    document.getElementById("box").innerHTML = `
+        <h3 style="margin-top:0;">📦 Mon Inventaire</h3>
+        <div style="text-align:center; padding: 40px; opacity: 0.6;">Chargement...</div>
+        <button onclick="document.getElementById('modal').style.display='none'" style="width:100%; margin-top:15px; padding:12px; border:none; border-radius:12px; background:rgba(255,255,255,0.1); color:white; cursor:pointer; font-weight:bold;">Fermer</button>
+    `;
+    document.getElementById("modal").style.display = "flex";
+
+    let { data } = await client
+        .from("inventaire")
+        .select("id, item, price, image")
+        .eq("user_id", user)
+        .order("id", { ascending: false });
+
+    let items = data || [];
+
+    document.getElementById("box").innerHTML = `
+        <h3 style="margin-top:0;">📦 Mon Inventaire (${items.length})</h3>
+        <div style="max-height: 50vh; overflow-y: auto; display: grid; grid-template-columns: 1fr 1fr; gap: 10px;">
+            ${items.length === 0 ? "<p style='opacity:0.6; text-align:center; grid-column: span 2;'>Ton inventaire est vide</p>" : ""}
+            ${items.map(item => `
+                <div style="background:rgba(255,255,255,0.04); padding:10px; border-radius:12px; text-align:center;">
+                    <img src="${item.image}" loading="lazy" style="width:100%; height:90px; object-fit:cover; border-radius:8px; margin-bottom:6px;">
+                    <b style="font-size:13px; display:block; white-space:nowrap; overflow:hidden; text-overflow:ellipsis;">${item.item}</b>
+                    <span style="font-size:11px; color:#00ff99;">💰 ${item.price}</span>
+                </div>
+            `).join("")}
+        </div>
+        <button onclick="document.getElementById('modal').style.display='none'" style="width:100%; margin-top:15px; padding:12px; border:none; border-radius:12px; background:rgba(255,255,255,0.1); color:white; cursor:pointer; font-weight:bold;">Fermer</button>
+    `;
+    if (navigator.vibrate) navigator.vibrate(20);
 }
 
 let deferredPrompt;
