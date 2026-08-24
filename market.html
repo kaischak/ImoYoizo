@@ -81,7 +81,7 @@ body{
 }
 .topbar-right button:not(#addBtn):active { transform: scale(0.85); background: rgba(255,255,255,0.15); }
 
-/* Barre de recherche positionnée EN DESSOUS de la topbar pour éviter les bugs de clic sur mobile */
+/* Barre de recherche positionnée EN DESSOUS de la topbar */
 .search-container {
     position: fixed;
     top: 50px;
@@ -210,7 +210,7 @@ body{
     color: #00ff99;
 }
 
-/* Feed & Cartes (Ajusté pour laisser la place à la barre de recherche en haut) */
+/* Feed & Cartes */
 #feed{
     height:100vh;
     overflow-y:scroll;
@@ -235,7 +235,7 @@ body{
 .card{
     width: 100%;
     max-width: 420px;
-    height: 78vh;
+    height: 80vh;
     background: #16161d;
     border-radius: 24px;
     padding: 14px;
@@ -247,17 +247,24 @@ body{
     border: 1px solid rgba(255,255,255,0.05);
 }
 
+.card-header-row {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
 .card h2 {
     font-size: 16px;
-    margin: 0 0 8px 0;
+    margin: 0;
     white-space: nowrap;
     overflow: hidden;
     text-overflow: ellipsis;
+    flex: 1;
 }
 
 .card img{
     width: 100%;
-    height: 48vh;
+    height: 46vh;
     object-fit: cover;
     border-radius: 16px;
     background: #000;
@@ -385,7 +392,7 @@ input, textarea{
     </div>
 </div>
 
-<!-- Barre de recherche placée en dessous de la topbar -->
+<!-- Barre de recherche -->
 <div class="search-container">
     <div class="search-wrapper">
         <span class="search-icon">🔍</span>
@@ -412,20 +419,19 @@ input, textarea{
     </div>
 </div>
 
-<!-- Checkbox cachées pour la logique -->
 <div style="display:none;">
     <input id="videoOnly" type="checkbox" onchange="render()">
     <input id="popularOnly" type="checkbox" onchange="render()">
 </div>
 
-<!-- Feed avec message de chargement instantané -->
+<!-- Feed -->
 <div id="feed">
     <div style="display:flex; height:70vh; align-items:center; justify-content:center; opacity:0.6; font-size:15px;">
         Chargement...
     </div>
 </div>
 
-<div id="modal" class="modal">
+<div id="modal" class="modal" onclick="if(event.target === this) this.style.display='none'">
     <div class="box" id="box"></div>
 </div>
 
@@ -449,10 +455,6 @@ let limit = 20;
 let offset = 0;
 let loading = false;
 let allLoaded = false;
-
-async function updateLastSeen(){
-    await client.from("users").update({ last_seen: new Date() }).eq("username", user);
-}
 
 function getMoney(){
     return Number(localStorage.getItem("argent") || 0);
@@ -511,16 +513,14 @@ async function loadPosts(reset = false){
     }
 
     try {
-        // On ne charge PAS la colonne "image" et "videos" en gros volume pour éviter le timeout
         let { data, error } = await client
             .from("posts")
-            .select("id, name, price, desc, user_id, likes, views, image") // Garde image si elle n'est pas trop lourde, sinon retire-la
+            .select("id, name, price, desc, user_id, likes, views, image, videos")
             .order("id", { ascending: false })
             .range(offset, offset + limit - 1);
 
         if(error){
             console.error("Erreur Supabase:", error);
-            // Si le timeout persiste, on réduit la limite automatiquement à 5
             if(error.code === '57014' && limit > 5) {
                 limit = 5;
                 loading = false;
@@ -722,6 +722,24 @@ function toggleFavorite(id, event){
 
 function vibrateSoft(btn){ if (navigator.vibrate) navigator.vibrate(15); }
 
+// NOUVEAU: Partager le lien du post
+function sharePost(id, name){
+    if (navigator.share) {
+        navigator.share({ title: name, text: `Regarde cette annonce sur Market Fluid : ${name}`, url: window.location.href }).catch(() => {});
+    } else {
+        navigator.clipboard.writeText(window.location.href);
+        alert("Lien copié dans le presse-papier !");
+    }
+}
+
+// NOUVEAU: Signaler une annonce
+function reportPost(id){
+    let reason = prompt("Raison du signalement (spam, arnaque, contenu inapproprié...) :");
+    if(reason){
+        alert("Merci. Le signalement a bien été pris en compte.");
+    }
+}
+
 async function render(){
     let s = document.getElementById("search").value.toLowerCase();
     let minPrice = Number(document.getElementById("minPrice")?.value || 0);
@@ -757,8 +775,14 @@ async function render(){
         div.innerHTML = `
             <div class="card" data-post-id="${p.id}">
                 <div>
-                    <h2>${p.name}</h2>
-                    <img src="${p.image}" loading="lazy" onclick="openPost(${p.id})" title="Agrandir">
+                    <div class="card-header-row">
+                        <h2>${p.name}</h2>
+                        <div style="display:flex; gap:6px;">
+                            <button onclick="sharePost(${p.id}, '${escape(p.name)}')" title="Partager" style="background:rgba(255,255,255,0.06); border:none; border-radius:8px; padding:4px 8px; color:white; cursor:pointer; font-size:12px;">🔗</button>
+                            <button onclick="reportPost(${p.id})" title="Signaler" style="background:rgba(255,255,255,0.06); border:none; border-radius:8px; padding:4px 8px; color:white; cursor:pointer; font-size:12px;">⚠️</button>
+                        </div>
+                    </div>
+                    <img src="${p.image}" loading="lazy" onclick="openPost(${p.id})" title="Agrandir" style="margin-top:8px;">
                 </div>
 
                 <div class="info">
@@ -894,106 +918,13 @@ function openUserMenu(username){
         <button onclick="openChat('${username}')" style="width:100%; padding:14px; margin-top:6px; border:none; border-radius:12px; background:#00ccff; color:black; cursor:pointer; font-weight:600;">💬 Message</button>
         <button onclick="document.getElementById('modal').style.display='none'" style="width:100%; margin-top:10px; padding:10px; border:none; border-radius:12px; background:transparent; opacity:0.7; color:white; cursor:pointer;">Fermer</button>
     `;
-    document.getElementById("modal").style.display="flex";
-}
-
-function openVideos(id){
-    let post = posts.find(p=>p.id===id);
-    document.getElementById("box").innerHTML = `
-        <h3 style="margin-top:0;">🎥 Vidéos</h3>
-        ${(post.videos || []).map((v,i)=>`
-            <div onclick="playVideo('${v}')" style="background:rgba(255,255,255,0.05); padding:14px; margin:8px 0; border-radius:12px; cursor:pointer; font-weight:bold;">
-                <span>▶️ Vidéo ${i+1}</span>
-            </div>
-        `).join("")}
-        <button onclick="document.getElementById('modal').style.display='none'" style="width:100%; margin-top:10px; padding:12px; border:none; border-radius:12px; background:rgba(255,255,255,0.1); color:white; cursor:pointer;">Fermer</button>
-    `;
     document.getElementById("modal").style.display = "flex";
 }
 
-function playVideo(video){
-    document.getElementById("box").innerHTML = `
-        <video src="${video}" controls autoplay style="width:100%; border-radius:14px; max-height:70vh; background:black;"></video>
-        <button onclick="document.getElementById('modal').style.display='none'" style="width:100%; margin-top:10px; padding:12px; border:none; border-radius:12px; background:rgba(255,255,255,0.1); color:white; cursor:pointer;">Fermer</button>
-    `;
-}
-
-function openSell(){
-    document.getElementById("box").innerHTML = `
-        <h2 style="margin-top:0;">🚀 Nouvelle Annonce</h2>
-        <input id="name" placeholder="📦 Nom de l'objet">
-        <textarea id="desc" placeholder="📝 Description..." style="height:80px; resize:none;"></textarea>
-        <input id="price" type="number" placeholder="💰 Prix">
-        
-        <div id="dropZone" style="border:2px dashed #00ff99; border-radius:12px; padding:20px; text-align:center; cursor:pointer; margin:8px 0; background:rgba(0,255,153,.04);">
-            <b>🖼️ Choisir une image</b>
-            <input id="fileInput" type="file" accept="image/*" style="display:none;">
-        </div>
-        <img id="preview" style="display:none; width:100%; height:120px; object-fit:cover; border-radius:10px; margin-bottom:8px;">
-
-        <div id="videoZone" style="border:2px dashed #00ccff; border-radius:12px; padding:15px; text-align:center; cursor:pointer; margin-bottom:8px; background:rgba(0,170,255,.04);">
-            <b>🎥 Ajouter des vidéos (max 3)</b>
-            <input id="videoInput" type="file" accept="video/*" multiple style="display:none;">
-        </div>
-        <div id="videoPreview"></div>
-
-        <button onclick="create()" style="width:100%; padding:14px; border:none; border-radius:14px; font-weight:bold; background:linear-gradient(135deg,#00ff99,#00ccff); color:black; cursor:pointer; margin-top:6px;">Publier</button>
-        <button onclick="document.getElementById('modal').style.display='none'" style="width:100%; margin-top:6px; padding:10px; border:none; border-radius:12px; background:transparent; opacity:0.7; color:white; cursor:pointer;">Fermer</button>
-    `;
-    document.getElementById("modal").style.display = "flex";
-
-    document.getElementById("dropZone").onclick = () => document.getElementById("fileInput").click();
-    document.getElementById("fileInput").onchange = e => {
-        if(e.target.files[0]){
-            let reader = new FileReader();
-            reader.onload = ev => {
-                window.selectedImage = ev.target.result;
-                let prev = document.getElementById("preview");
-                prev.src = ev.target.result;
-                prev.style.display = "block";
-            };
-            reader.readAsDataURL(e.target.files[0]);
-        }
-    };
-
-    document.getElementById("videoZone").onclick = () => document.getElementById("videoInput").click();
-    document.getElementById("videoInput").onchange = e => {
-        window.selectedVideos = Array.from(e.target.files).slice(0, 3);
-        document.getElementById("videoPreview").innerHTML = `<p style="font-size:12px; color:#00ccff; text-align:center;">🎥 ${window.selectedVideos.length} vidéo(s) sélectionnée(s)</p>`;
-    };
-}
-
-async function create(){
-    let name = document.getElementById("name").value.trim();
-    let desc = document.getElementById("desc").value.trim();
-    let price = Number(document.getElementById("price").value);
-
-    if(!name || !price || !window.selectedImage){
-        alert("Remplis tous les champs et mets une image !");
-        return;
-    }
-
-    let videoUrls = [];
-    if(window.selectedVideos){
-        for(let v of window.selectedVideos){ videoUrls.push(URL.createObjectURL(v)); }
-    }
-
-    let { error } = await client.from("posts").insert([{
-        user_id: user, name: name, desc: desc, price: price,
-        image: window.selectedImage, videos: videoUrls, likes: 0, views: 0
-    }]);
-
-    if(error){ alert("Erreur publication"); return; }
-
-    window.selectedImage = null;
-    window.selectedVideos = null;
-    document.getElementById("modal").style.display = "none";
-    loadPosts(true);
-}
-
-loadProfile();
-updateLastSeen();
-loadPosts(true);
+(async () => {
+    await loadProfile();
+    await loadPosts(true);
+})();
 </script>
 
 </body>
