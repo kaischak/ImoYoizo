@@ -227,15 +227,16 @@ body{
     scroll-snap-stop: always;
     display: flex;
     justify-content: center;
-    align-items: center;
+    align-items: flex-end; /* Aligne la carte vers le bas pour qu'elle respire sous la barre */
     box-sizing: border-box;
+    padding-top: 115px; /* Force l'espace en haut pour le pas passer sous la recherche */
     padding-bottom: 20px;
 }
 
 .card{
     width: 100%;
     max-width: 420px;
-    height: 75vh; /* Réduit un peu pour tout faire tenir parfaitement */
+    height: 72vh; /* Hauteur ajustée pour que tout tienne sans être coupé */
     background: #16161d;
     border-radius: 24px;
     padding: 12px 14px;
@@ -264,7 +265,7 @@ body{
 
 .card img{
     width: 100%;
-    height: 40vh; 
+    height: 35vh; /* Image légèrement plus compacte pour libérer le haut et le bas */
     object-fit: cover;
     border-radius: 16px;
     background: #000;
