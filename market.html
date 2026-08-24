@@ -300,6 +300,40 @@ body{
     border-radius: 12px;
 }
 
+/* Style cliquable pour l'auteur du post */
+.post-author {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    cursor: pointer;
+    padding: 4px 8px;
+    border-radius: 8px;
+    background: rgba(255,255,255,0.04);
+    transition: background 0.2s;
+}
+.post-author:hover {
+    background: rgba(255,255,255,0.08);
+}
+
+/* Bouton 3 petits points */
+.options-btn {
+    background: rgba(255,255,255,0.05);
+    border: none;
+    color: white;
+    width: 32px;
+    height: 32px;
+    border-radius: 50%;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 16px;
+    transition: background 0.2s;
+}
+.options-btn:hover {
+    background: rgba(255,255,255,0.12);
+}
+
 .card-actions {
     display: grid;
     grid-template-columns: 1fr 1fr;
@@ -831,6 +865,21 @@ async function likePost(id, currentLikes, event){
 
 function scorePost(p){ return (p.likes || 0) * 3 + (p.views || 0) * 0.5; }
 
+// Fonction pour ouvrir le menu d'options (3 petits points) d'un post
+function openPostOptions(postId, postUser) {
+    let isMyPost = (postUser === user);
+    document.getElementById("box").innerHTML = `
+        <h3 style="margin-top:0; margin-bottom:14px;">⚙️ Options de l'annonce</h3>
+        <div style="display:flex; flex-direction:column; gap:8px;">
+            <button onclick="document.getElementById('modal').style.display='none'; location.href='profile.html?user=' + encodeURIComponent('${postUser}')" style="padding:12px; background:rgba(255,255,255,0.06); border:none; border-radius:12px; color:white; font-weight:600; text-align:left; cursor:pointer;">👤 Voir le profil de @${postUser}</button>
+            <button onclick="document.getElementById('modal').style.display='none'; openChat('${postUser}')" style="padding:12px; background:rgba(255,255,255,0.06); border:none; border-radius:12px; color:white; font-weight:600; text-align:left; cursor:pointer;">💬 Envoyer un message</button>
+            ${isMyPost ? `<button onclick="document.getElementById('modal').style.display='none'; deletePost(${postId})" style="padding:12px; background:rgba(255,0,0,0.15); border:none; border-radius:12px; color:#ff4d4d; font-weight:600; text-align:left; cursor:pointer;">🗑️ Supprimer cette annonce</button>` : ''}
+        </div>
+        <button onclick="document.getElementById('modal').style.display='none'" style="width:100%; margin-top:15px; padding:12px; border:none; border-radius:12px; background:rgba(255,255,255,0.1); color:white; cursor:pointer; font-weight:bold;">Fermer</button>
+    `;
+    document.getElementById("modal").style.display = "flex";
+}
+
 async function openInv() {
     document.getElementById("box").innerHTML = `
         <h3 style="margin-top:0;">📦 Mon Inventaire</h3>
@@ -900,7 +949,7 @@ function render(){
     let popularOnly = document.getElementById("popularOnly").checked;
 
     let filtered = posts.filter(p => {
-        let matchSearch = p.name.toLowerCase().includes(search) || (p.desc && p.desc.toLowerCase().includes(search)) || p.user_id.toLowerCase().includes(search);
+        let matchSearch = p.name.toLowerCase().includes(search) || (p.desc && p.desc.toLowerCase().includes(search));
         let matchPrice = p.price >= minPrice && p.price <= maxPrice;
         let matchVideo = !videoOnly || (p.videos && p.videos.length > 0);
         return matchSearch && matchPrice && matchVideo;
@@ -912,61 +961,53 @@ function render(){
 
     let feed = document.getElementById("feed");
     if(filtered.length === 0){
-        feed.innerHTML = "<div style='display:flex; height:70vh; align-items:center; justify-content:center; opacity:0.5;'>Aucune annonce ne correspond</div>";
+        feed.innerHTML = "<div style='display:flex; height:70vh; align-items:center; justify-content:center; opacity:0.5;'>Aucune annonce correspondante</div>";
         return;
     }
 
     feed.innerHTML = filtered.map(p => {
         let liked = isLiked(p.id);
-        let hasVideos = p.videos && p.videos.length > 0;
-        
         return `
             <div class="post">
                 <div class="card">
                     <div class="card-header-row">
-                        <div style="display:flex; align-items:center; gap:8px;">
-                            <div id="avatar-${p.id}" style="width:24px; height:24px; border-radius:50%; background:rgba(255,255,255,0.1); display:flex; align-items:center; justify-content:center; font-size:12px;">👤</div>
-                            <span style="font-size:12px; font-weight:600; opacity:0.8;">@${p.user_id}</span>
-                        </div>
-                        ${p.user_id === user ? `<button onclick="deletePost(${p.id})" style="background:none; border:none; color:#ff4d4d; font-size:14px; cursor:pointer;" title="Supprimer">🗑️</button>` : ''}
+                        <h2>${p.name}</h2>
+                        <!-- Bouton 3 petits points verticaux -->
+                        <button class="options-btn" onclick="openPostOptions(${p.id}, '${p.user_id}')" title="Options">⋮</button>
                     </div>
 
-                    <h2>${p.name}</h2>
-
-                    <img src="${p.image}" loading="lazy" onclick="openPostDetail(${p.id})">
+                    <img src="${p.image}" loading="lazy" onclick="openPostDetails(${p.id})">
 
                     <div class="info">
-                        <span>💰 <b>${p.price}</b> pièces</span>
-                        <span style="max-width: 180px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; opacity: 0.7;">${p.desc || ''}</span>
+                        <!-- Nom d'utilisateur cliquable menant vers le profil -->
+                        <div class="post-author" onclick="location.href='profile.html?user=' + encodeURIComponent('${p.user_id}')" title="Voir le profil">
+                            <span id="avatar-${p.id}">👤</span>
+                            <span>@${p.user_id}</span>
+                        </div>
+                        <span style="font-weight:bold; color:#00ff99; font-size:13px;">💰 ${p.price}</span>
                     </div>
 
                     <div class="card-actions">
                         <div class="buy-btn-wrapper">
-                            <button class="buy-btn" onclick="buyItem(${p.id}, ${p.price}, '${p.name.replace(/'/g, "\\'")}', '${p.image}')">Acheter</button>
-                            <div id="badge-${p.id}" class="success-badge">Acheté ! 🎉</div>
+                            <button class="buy-btn" onclick="buyItem(${p.id}, ${p.price}, '${p.name}', '${p.image}')">Acheter</button>
+                            <span id="badge-${p.id}" class="success-badge">Acheté ! 🎉</span>
                         </div>
-                        <button class="chat-btn-custom" onclick="openChat('${p.user_id}')">💬 Message</button>
-                        ${hasVideos ? `<button class="video-btn" onclick="openVideoModal(${p.id})">🎥 Vidéos (${p.videos.length})</button>` : '<div></div>'}
-                        
-                        <div style="display:flex; align-items:center; gap:6px; justify-content:flex-end;">
-                            <button class="comment-btn" onclick="openComments(${p.id})" style="width:36px; height:36px; border-radius:50%; border:none; cursor:pointer; display:flex; align-items:center; justify-content:center; font-size:14px;" title="Commentaires">💬</button>
-                            <button class="likeBtn ${liked ? 'liked' : ''}" onclick="likePost(${p.id}, ${p.likes || 0}, event)">
-                                ♥ <span id="likes-count-${p.id}" style="font-size:11px; margin-left:3px;">${p.likes || 0}</span>
-                            </button>
-                        </div>
+                        <button class="chat-btn-custom" onclick="openChat('${p.user_id}')">Contacter</button>
+                        ${p.videos && p.videos.length > 0 ? `<button class="video-btn" onclick="openVideosModal(${p.id})">🎥 Vidéos</button>` : `<button class="comment-btn" onclick="openComments(${p.id})">💬 Avis</button>`}
+                        <button class="likeBtn ${liked ? 'liked' : ''}" onclick="likePost(${p.id}, ${p.likes || 0}, event)">❤️ <span id="likes-count-${p.id}">${p.likes || 0}</span></button>
                     </div>
                 </div>
             </div>
         `;
     }).join("");
 
-    posts.forEach(p => loadAvatar(p));
+    filtered.forEach(p => loadAvatar(p));
 }
 
 async function buyItem(id, price, name, image){
     let currentMoney = getMoney();
     if(currentMoney < price){
-        alert("Tu n'as pas assez de pièces ! 🪙");
+        alert("Tu n'as pas assez d'argent ! 💸");
         return;
     }
 
@@ -989,40 +1030,38 @@ async function buyItem(id, price, name, image){
     let badge = document.getElementById(`badge-${id}`);
     if(badge){
         badge.classList.add("show");
-        if(navigator.vibrate) navigator.vibrate([30, 50, 30]);
-        setTimeout(() => {
-            badge.classList.remove("show");
-        }, 2000);
+        setTimeout(() => badge.classList.remove("show"), 2000);
     }
+    if(navigator.vibrate) navigator.vibrate(60);
 }
 
-function openPostDetail(id){
+function openPostDetails(id){
     let p = posts.find(x => x.id === id);
     if(!p) return;
 
     document.getElementById("box").innerHTML = `
-        <h3 style="margin-top:0;">${p.name}</h3>
-        <img src="${p.image}" style="width:100%; max-height:250px; object-fit:cover; border-radius:14px; margin-bottom:10px;">
-        <p style="font-size:13px; opacity:0.8;"><b>Vendeur :</b> @${p.user_id}</p>
-        <p style="font-size:13px; opacity:0.8;"><b>Prix :</b> 💰 ${p.price}</p>
-        <p style="font-size:13px; opacity:0.8;"><b>Description :</b><br>${p.desc || 'Aucune description'}</p>
-        ${p.videos && p.videos.length > 0 ? `<button onclick="openVideoModal(${p.id})" style="width:100%; padding:10px; background:rgba(255,255,255,0.1); border:none; border-radius:10px; color:white; font-weight:bold; margin-top:8px; cursor:pointer;">🎥 Voir les vidéos (${p.videos.length})</button>` : ''}
+        <h2 style="margin-top:0;">${p.name}</h2>
+        <img src="${p.image}" style="width:100%; max-height:250px; object-fit:cover; border-radius:12px; margin-bottom:10px;">
+        <p style="opacity:0.9; font-size:13px; line-height:1.4;">${p.desc || "Aucune description fournie."}</p>
+        <div style="display:flex; justify-content:space-between; align-items:center; margin-top:15px; padding-top:10px; border-top:1px solid rgba(255,255,255,0.1);">
+            <span onclick="location.href='profile.html?user=' + encodeURIComponent('${p.user_id}')" style="cursor:pointer; color:#00ccff; font-weight:600;">@${p.user_id}</span>
+            <span style="color:#00ff99; font-weight:bold;">💰 ${p.price}</span>
+        </div>
         <button onclick="document.getElementById('modal').style.display='none'" style="width:100%; margin-top:15px; padding:12px; border:none; border-radius:12px; background:rgba(255,255,255,0.1); color:white; cursor:pointer; font-weight:bold;">Fermer</button>
     `;
     document.getElementById("modal").style.display = "flex";
 }
 
-function openVideoModal(id){
+function openVideosModal(id){
     let p = posts.find(x => x.id === id);
-    if(!p || !p.videos || p.videos.length === 0) return;
+    if(!p || !p.videos) return;
 
     document.getElementById("box").innerHTML = `
         <h3 style="margin-top:0;">🎥 Vidéos de l'annonce</h3>
-        <div style="max-height: 60vh; overflow-y: auto; display:flex; flex-direction:column; gap:12px;">
+        <div style="display:flex; flex-direction:column; gap:12px; max-height:60vh; overflow-y:auto;">
             ${p.videos.map((vid, idx) => `
                 <div>
-                    <span style="font-size:11px; opacity:0.7; margin-bottom:4px; display:block;">Vidéo #${idx + 1}</span>
-                    <video src="${vid}" controls autoplay style="width:100%; border-radius:12px; background:#000; max-height:300px;"></video>
+                    <video src="${vid}" controls style="width:100%; border-radius:12px; background:#000;"></video>
                 </div>
             `).join("")}
         </div>
@@ -1031,8 +1070,10 @@ function openVideoModal(id){
     document.getElementById("modal").style.display = "flex";
 }
 
-loadProfile();
-loadPosts();
+window.onload = async () => {
+    await loadProfile();
+    await loadPosts();
+};
 </script>
 </body>
 </html>
