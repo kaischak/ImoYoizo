@@ -212,12 +212,12 @@ body{
 
 /* Feed & Cartes */
 #feed{
-    height:100vh;
-    overflow-y:scroll;
+    height: 100vh;
+    overflow-y: scroll;
     scroll-snap-type: y mandatory;
     -webkit-overflow-scrolling: touch;
     scroll-behavior: smooth;
-    padding-top: 105px;
+    padding-top: 125px; /* Ajusté pour passer sous la barre de recherche */
 }
 
 .post{
@@ -235,10 +235,10 @@ body{
 .card{
     width: 100%;
     max-width: 420px;
-    height: 80vh;
+    height: 75vh; /* Réduit un peu pour tout faire tenir parfaitement */
     background: #16161d;
     border-radius: 24px;
-    padding: 14px;
+    padding: 12px 14px;
     display: flex;
     flex-direction: column;
     justify-content: space-between;
@@ -264,7 +264,7 @@ body{
 
 .card img{
     width: 100%;
-    height: 46vh;
+    height: 40vh; 
     object-fit: cover;
     border-radius: 16px;
     background: #000;
